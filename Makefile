@@ -388,7 +388,10 @@ endif
 ifneq ($(GCC_TOOLCHAIN),)
 CLANG_GCC_TC	:= -gcc-toolchain $(GCC_TOOLCHAIN)
 endif
-CLANG_FLAGS	:= $(CLANG_TARGET) $(CLANG_GCC_TC)
+ifneq ($(CLANG_ENABLE_IA),1)
+CLANG_IA_FLAG	= -no-integrated-as
+endif
+CLANG_FLAGS	:= $(CLANG_TARGET) $(CLANG_GCC_TC) $(CLANG_IA_FLAG)
 endif
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
