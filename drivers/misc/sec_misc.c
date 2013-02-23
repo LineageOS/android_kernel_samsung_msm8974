@@ -281,7 +281,7 @@ static ssize_t drop_caches_store
 		si_meminfo(&i);
 		printk("[Before]\nMemFree : %8lu kB\n", K(i.freeram));
 		printk("Cached : %8lu kB\n\n", K(global_page_state(NR_FILE_PAGES) - \
-						total_swapcache_pages - i.bufferram));
+						total_swapcache_pages() - i.bufferram));
 
 		iterate_supers(drop_pagecache_sb, NULL);
 		drop_slab();
@@ -289,7 +289,7 @@ static ssize_t drop_caches_store
 		si_meminfo(&i);
 		printk("[After]\nMemFree : %8lu kB\n", K(i.freeram));
 		printk("Cached : %8lu kB\n\n", K(global_page_state(NR_FILE_PAGES) - \
-						total_swapcache_pages - i.bufferram));
+						total_swapcache_pages() - i.bufferram));
 		printk("Cached Drop done!\n");
 	}
 out:
