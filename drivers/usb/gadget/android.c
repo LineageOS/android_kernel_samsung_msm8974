@@ -112,6 +112,7 @@
 #ifdef CONFIG_USB_LOCK_SUPPORT_FOR_MDM
 #include <linux/power_supply.h>
 #endif
+#include "f_charger.c"
 
 MODULE_AUTHOR("Mike Lockwood");
 MODULE_DESCRIPTION("Android Composite USB Driver");
@@ -600,7 +601,7 @@ ffs_aliases_show(struct device *pdev, struct device_attribute *attr, char *buf)
 	int ret;
 
 	dev = list_first_entry(&android_dev_list, struct android_dev,
-					list_item);
+			list_item);
 
 	mutex_lock(&dev->mutex);
 	ret = sprintf(buf, "%s\n", dev->ffs_aliases);
@@ -617,7 +618,7 @@ ffs_aliases_store(struct device *pdev, struct device_attribute *attr,
 	char buff[256];
 
 	dev = list_first_entry(&android_dev_list, struct android_dev,
-					list_item);
+			list_item);
 
 	mutex_lock(&dev->mutex);
 
@@ -1759,6 +1760,19 @@ static struct android_usb_function ccid_function = {
 	.bind_config	= ccid_function_bind_config,
 };
 
+/* Charger */
+static int charger_function_bind_config(struct android_usb_function *f,
+						struct usb_configuration *c)
+{
+	return charger_bind_config(c);
+}
+
+static struct android_usb_function charger_function = {
+	.name		= "charging",
+	.bind_config	= charger_function_bind_config,
+};
+
+
 static int
 mtp_function_init(struct android_usb_function *f,
 		struct usb_composite_dev *cdev)
@@ -2573,6 +2587,7 @@ static struct android_usb_function *supported_functions[] = {
 	&audio_source_function,
 #endif
 	&uasp_function,
+	&charger_function,
 	NULL
 };
 
@@ -2923,11 +2938,10 @@ functions_store(struct device *pdev, struct device_attribute *attr,
 					ffs_enabled = 1;
 				continue;
 			}
-
 			err = android_enable_function(dev, conf, name);
 			if (err)
 				pr_err("android_usb: Cannot enable '%s' (%d)",
-								   name, err);
+						name, err);
 		}
 	}
 
