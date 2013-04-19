@@ -420,8 +420,7 @@ static void f_midi_unbind(struct usb_configuration *c, struct usb_function *f)
 	kfree(midi->id);
 	midi->id = NULL;
 
-	usb_free_descriptors(f->descriptors);
-	usb_free_descriptors(f->hs_descriptors);
+	usb_free_all_descriptors(f);
 	kfree(midi);
 }
 

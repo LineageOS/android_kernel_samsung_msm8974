@@ -112,7 +112,6 @@ struct usb_configuration;
 struct usb_function {
 	const char			*name;
 	struct usb_gadget_strings	**strings;
-	struct usb_descriptor_header	**descriptors;
 	struct usb_descriptor_header	**hs_descriptors;
 	struct usb_descriptor_header	**ss_descriptors;
 	struct usb_descriptor_header	**fs_descriptors;
