@@ -356,6 +356,10 @@ int msm_isp_axi_check_stream_state(
 	enum msm_vfe_axi_state valid_state =
 		(stream_cfg_cmd->cmd == START_STREAM) ? INACTIVE : ACTIVE;
 
+	if (stream_cfg_cmd->num_streams > MAX_NUM_STREAM) {
+		return -EINVAL;
+	}
+
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
 		if (HANDLE_TO_IDX(stream_cfg_cmd->stream_handle[i]) >= MAX_NUM_STREAM) {
 			return -EINVAL;
@@ -935,6 +939,10 @@ void msm_isp_update_camif_output_count(
 	struct msm_vfe_axi_stream *stream_info;
 	struct msm_vfe_axi_shared_data *axi_data = &vfe_dev->axi_data;
 
+	if (stream_cfg_cmd->num_streams > MAX_NUM_STREAM) {
+		return;
+	}
+
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
 		if (HANDLE_TO_IDX(stream_cfg_cmd->stream_handle[i]) >= MAX_NUM_STREAM) {
 			return;
@@ -1253,6 +1261,10 @@ static int msm_isp_start_axi_stream(struct vfe_device *vfe_dev,
 	struct msm_vfe_axi_shared_data *axi_data = &vfe_dev->axi_data;
 	enum msm_vfe_input_src input_src = 0;
 
+	if (stream_cfg_cmd->num_streams > MAX_NUM_STREAM) {
+		return -EINVAL;
+	}
+
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
 		if (HANDLE_TO_IDX(stream_cfg_cmd->stream_handle[i]) >= MAX_NUM_STREAM) {
 			return -EINVAL;
@@ -1320,6 +1332,10 @@ static int msm_isp_stop_axi_stream(struct vfe_device *vfe_dev,
 	struct msm_vfe_axi_shared_data *axi_data = &vfe_dev->axi_data;
 	uint8_t src_state, wait_for_complete = 0;
 	enum msm_vfe_input_src input_src = 0;
+
+	if (stream_cfg_cmd->num_streams > MAX_NUM_STREAM) {
+		return -EINVAL;
+	}
 
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
 		if (HANDLE_TO_IDX(stream_cfg_cmd->stream_handle[i]) >= MAX_NUM_STREAM) {
@@ -1412,6 +1428,11 @@ int msm_isp_update_axi_stream(struct vfe_device *vfe_dev, void *arg)
 	    atomic_read(&axi_data->axi_cfg_update)) {
 		pr_err("%s: AXI stream config updating\n", __func__);
 		return -EBUSY;
+	}
+
+	/*num_stream is uint32 and update_info[] bound by MAX_NUM_STREAM*/
+	if (update_cmd->num_streams > MAX_NUM_STREAM) {
+		return -EINVAL;
 	}
 
 	for (i = 0; i < update_cmd->num_streams; i++) {
