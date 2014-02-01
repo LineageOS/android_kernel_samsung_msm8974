@@ -2381,6 +2381,11 @@
 					0xfa00000 0x800000>; /* Address and Size of Hole */
         };
 
+	ram_console {
+		compatible = "ram_console";
+		bootinfo = <0>;
+	};
+
 /*	uart7: uart@f995d000 { /*BLSP #2, UART #7 */
 /*		compatible = "qcom,msm-hsuart-v14";
 		status = "disabled";
