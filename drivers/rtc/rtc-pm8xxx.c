@@ -461,6 +461,8 @@ static int __devinit pm8xxx_rtc_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, rtc_dd);
 
+	device_init_wakeup(&pdev->dev, 1);
+
 	/* Register the RTC device */
 	rtc_dd->rtc = rtc_device_register("pm8xxx_rtc", &pdev->dev,
 				&pm8xxx_rtc_ops, THIS_MODULE);
@@ -479,8 +481,6 @@ static int __devinit pm8xxx_rtc_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Request IRQ failed (%d)\n", rc);
 		goto fail_req_irq;
 	}
-
-	device_init_wakeup(&pdev->dev, 1);
 
 	dev_dbg(&pdev->dev, "Probe success !!\n");
 
