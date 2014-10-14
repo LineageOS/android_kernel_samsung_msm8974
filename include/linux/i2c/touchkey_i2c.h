@@ -360,6 +360,7 @@ struct cypress_touchkey_info {
 
 	u8	touchkeyid;
 	bool	support_fw_update;
+	atomic_t	keypad_enable;
 	bool	do_checksum;
 	struct wake_lock fw_wakelock;
 };
