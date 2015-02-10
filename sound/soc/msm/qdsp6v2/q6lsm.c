@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -740,6 +740,15 @@ int q6lsm_snd_model_buf_alloc(struct lsm_client *client, size_t len)
 		client->sound_model.size = len;
 		pad_zero = (LSM_ALIGN_BOUNDARY -
 			   (len % LSM_ALIGN_BOUNDARY));
+		if ((len > SIZE_MAX - pad_zero) ||
+		    (len + pad_zero >
+		     SIZE_MAX - lsm_cal.cal_size)) {
+			pr_err("%s: invalid allocation size, len = %zd, pad_zero =%zd, cal_size = %zd\n",
+				__func__, len, pad_zero,
+				lsm_cal.cal_size);
+			rc = -EINVAL;
+			goto fail;
+		}
 		total_mem = pad_zero + len + lsm_cal.cal_size;
 		pr_debug("%s: Pad zeros sound model %d Total mem %d\n",
 				 __func__, pad_zero, total_mem);
