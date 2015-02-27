@@ -158,6 +158,7 @@ enum zone_stat_item {
 	NR_CMA_ACTIVE_FILE,
 	NR_CMA_UNEVICTABLE,
 #endif
+	NR_SWAPCACHE,
 	NR_VM_ZONE_STAT_ITEMS };
 
 /*
