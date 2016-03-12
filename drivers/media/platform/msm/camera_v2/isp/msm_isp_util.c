@@ -1015,8 +1015,7 @@ void msm_isp_reset_burst_count_and_frame_drop(
 	    stream_info->stream_type != BURST_STREAM) {
 		return;
 	}
-	if (stream_info->stream_type == BURST_STREAM &&
-	    stream_info->num_burst_capture != 0) {
+	if (stream_info->num_burst_capture != 0) {
 		stream_cfg_cmd.axi_stream_handle =
 			stream_info->stream_handle;
 		stream_cfg_cmd.burst_count =
