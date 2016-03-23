@@ -674,7 +674,10 @@ struct mxt_data {
 	struct mxt_patch patch;
 #endif
 #if TSP_CHANGE_CONFIG_FOR_INPUT
-bool is_inputmethod;
+	bool is_inputmethod;
+#endif
+#if ENABLE_TOUCH_KEY
+	atomic_t keypad_enable;
 #endif
 };
 
