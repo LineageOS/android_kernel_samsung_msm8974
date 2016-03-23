@@ -2108,6 +2108,39 @@ static ssize_t boost_level_store(struct device *dev,
 }
 #endif
 
+#if ENABLE_TOUCH_KEY
+static ssize_t sec_keypad_enable_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct mxt_data *data = dev_get_drvdata(dev);
+
+	return sprintf(buf, "%d\n", atomic_read(&data->keypad_enable));
+}
+
+static ssize_t sec_keypad_enable_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct mxt_data *data = dev_get_drvdata(dev);
+	int i;
+
+	unsigned int val = 0;
+	sscanf(buf, "%d", &val);
+	atomic_set(&data->keypad_enable, !!val);
+	if (val) {
+		for (i = 0; i < data->pdata->num_touchkey; i++)
+			set_bit(data->pdata->touchkey[i].keycode,
+					data->input_dev->keybit);
+	} else {
+		for (i = 0; i < data->pdata->num_touchkey; i++)
+			clear_bit(data->pdata->touchkey[i].keycode,
+					data->input_dev->keybit);
+	}
+	input_sync(data->input_dev);
+
+	return count;
+}
+#endif
+
 static DEVICE_ATTR(touchkey_d_menu, S_IRUGO | S_IWUSR | S_IWGRP, touchkey_d_menu_show, NULL);
 static DEVICE_ATTR(touchkey_d_home1, S_IRUGO | S_IWUSR | S_IWGRP, touchkey_d_home1_show, NULL);
 static DEVICE_ATTR(touchkey_d_home2, S_IRUGO | S_IWUSR | S_IWGRP, touchkey_d_home2_show, NULL);
@@ -2124,6 +2157,10 @@ static DEVICE_ATTR(extra_button_event, S_IRUGO | S_IWUSR | S_IWGRP,
 					touchkey_report_dummy_key_show, touchkey_report_dummy_key_store);
 #if MXT_TKEY_BOOSTER
 static DEVICE_ATTR(boost_level, S_IWUSR | S_IWGRP, NULL, boost_level_store);
+#endif
+#if ENABLE_TOUCH_KEY
+static DEVICE_ATTR(keypad_enable, S_IRUGO | S_IWUSR | S_IWGRP,
+		sec_keypad_enable_show, sec_keypad_enable_store);
 #endif
 
 static struct attribute *touchkey_attributes[] = {
@@ -2142,6 +2179,9 @@ static struct attribute *touchkey_attributes[] = {
 	&dev_attr_extra_button_event.attr,
 #if MXT_TKEY_BOOSTER
 	&dev_attr_boost_level.attr,
+#endif
+#if ENABLE_TOUCH_KEY
+	&dev_attr_keypad_enable.attr,
 #endif
 	NULL,
 };
@@ -2667,6 +2707,10 @@ static int mxt_sysfs_init_for_touchkeyled(struct mxt_data *data)
 		&touchkey_attr_group);
 	if (error)
 		dev_err(dev, "Failed to create touchscreen sysfs group\n");
+
+#if ENABLE_TOUCH_KEY
+	atomic_set(&data->keypad_enable, 1);
+#endif
 
 	return 0;
 }
