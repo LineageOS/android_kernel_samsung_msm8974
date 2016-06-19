@@ -49,6 +49,8 @@
 #include <linux/skbuff.h>
 #include <linux/serial_core.h>
 
+#include <linux/jiffies.h>
+
 #ifdef CONFIG_SERIAL_MSM_HS
 #include <mach/msm_serial_hs.h>
 #endif
@@ -93,7 +95,7 @@ enum hci_ibs_clock_state_vote_e {
 };
 
 static unsigned long wake_retrans = 1;
-static unsigned long tx_idle_delay = (HZ * 2);
+static unsigned long tx_idle_delay = msecs_to_jiffies(2000);
 
 struct hci_ibs_cmd {
 	u8 cmd;
@@ -270,7 +272,7 @@ static void ibs_wq_awake_device(struct work_struct *work)
 	ibs->ibs_sent_wakes++; /* debug */
 
 	/* start retransmit timer */
-	mod_timer(&ibs->wake_retrans_timer, jiffies + wake_retrans);
+	mod_timer(&ibs->wake_retrans_timer, jiffies + msecs_to_jiffies(wake_retrans));
 
 	spin_unlock_irqrestore(&ibs->hci_ibs_lock, flags);
 
@@ -392,7 +394,7 @@ static void hci_ibs_wake_retrans_timeout(unsigned long arg)
 			goto out;
 		}
 		ibs->ibs_sent_wakes++; /* debug */
-		mod_timer(&ibs->wake_retrans_timer, jiffies + wake_retrans);
+		mod_timer(&ibs->wake_retrans_timer, jiffies + msecs_to_jiffies(wake_retrans));
 		break;
 	}
 out:
@@ -656,7 +658,7 @@ static void ibs_device_woke_up(struct hci_uart *hu)
 			skb_queue_tail(&ibs->txq, skb);
 		/* switch timers and change state to HCI_IBS_TX_AWAKE */
 		del_timer(&ibs->wake_retrans_timer);
-		mod_timer(&ibs->tx_idle_timer, jiffies + tx_idle_delay);
+		mod_timer(&ibs->tx_idle_timer, jiffies + msecs_to_jiffies(tx_idle_delay));
 		ibs->tx_ibs_state = HCI_IBS_TX_AWAKE;
 	}
 
@@ -686,7 +688,7 @@ static int ibs_enqueue(struct hci_uart *hu, struct sk_buff *skb)
 	case HCI_IBS_TX_AWAKE:
 		BT_DBG("device awake, sending normally");
 		skb_queue_tail(&ibs->txq, skb);
-		mod_timer(&ibs->tx_idle_timer, jiffies + tx_idle_delay);
+		mod_timer(&ibs->tx_idle_timer, jiffies + msecs_to_jiffies(tx_idle_delay));
 		break;
 
 	case HCI_IBS_TX_ASLEEP:
@@ -902,7 +904,7 @@ int ibs_deinit(void)
 }
 
 module_param(wake_retrans, ulong, 0644);
-MODULE_PARM_DESC(wake_retrans, "Delay (1/HZ) to retransmit WAKE_IND");
+MODULE_PARM_DESC(wake_retrans, "Delay (ms) to retransmit WAKE_IND");
 
 module_param(tx_idle_delay, ulong, 0644);
-MODULE_PARM_DESC(tx_idle_delay, "Delay (1/HZ) since last tx for SLEEP_IND");
+MODULE_PARM_DESC(tx_idle_delay, "Delay (ms) since last tx for SLEEP_IND");

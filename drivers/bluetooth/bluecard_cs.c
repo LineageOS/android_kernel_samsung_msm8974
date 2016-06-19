@@ -39,6 +39,8 @@
 #include <linux/skbuff.h>
 #include <linux/io.h>
 
+#include <linux/jiffies.h>
+
 #include <pcmcia/cistpl.h>
 #include <pcmcia/ciscode.h>
 #include <pcmcia/ds.h>
@@ -46,8 +48,6 @@
 
 #include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
-
-
 
 /* ======================== Module parameters ======================== */
 
@@ -184,14 +184,14 @@ static void bluecard_enable_activity_led(bluecard_info_t *info)
 		/* Enable activity LED */
 		outb(0x10 | 0x40, iobase + 0x30);
 
-		/* Stop the LED after HZ/4 */
-		mod_timer(&(info->timer), jiffies + HZ / 4);
+		/* Stop the LED after 250 ms */
+		mod_timer(&(info->timer), jiffies + msecs_to_jiffies(250));
 	} else {
 		/* Enable power LED */
 		outb(0x08 | 0x20, iobase + 0x30);
 
-		/* Stop the LED after HZ/2 */
-		mod_timer(&(info->timer), jiffies + HZ / 2);
+		/* Stop the LED after 500 ms */
+		mod_timer(&(info->timer), jiffies + msecs_to_jiffies(500));
 	}
 }
 
@@ -303,7 +303,7 @@ static void bluecard_write_wakeup(bluecard_info_t *info)
 
 			/* Wait until the command reaches the baseband */
 			prepare_to_wait(&wq, &wait, TASK_INTERRUPTIBLE);
-			schedule_timeout(HZ/10);
+			schedule_timeout(msecs_to_jiffies(100));
 			finish_wait(&wq, &wait);
 
 			/* Set baud on baseband */
@@ -317,7 +317,7 @@ static void bluecard_write_wakeup(bluecard_info_t *info)
 
 			/* Wait before the next HCI packet can be send */
 			prepare_to_wait(&wq, &wait, TASK_INTERRUPTIBLE);
-			schedule_timeout(HZ);
+			schedule_timeout(msecs_to_jiffies(1000));
 			finish_wait(&wq, &wait);
 		}
 

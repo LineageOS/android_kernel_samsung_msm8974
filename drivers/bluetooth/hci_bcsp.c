@@ -42,6 +42,8 @@
 #include <linux/bitrev.h>
 #include <asm/unaligned.h>
 
+#include <linux/jiffies.h>
+
 #include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
 
@@ -312,7 +314,7 @@ static struct sk_buff *bcsp_dequeue(struct hci_uart *hu)
 		struct sk_buff *nskb = bcsp_prepare_pkt(bcsp, skb->data, skb->len, bt_cb(skb)->pkt_type);
 		if (nskb) {
 			__skb_queue_tail(&bcsp->unack, skb);
-			mod_timer(&bcsp->tbcsp, jiffies + HZ / 4);
+			mod_timer(&bcsp->tbcsp, jiffies + msecs_to_jiffies(250));
 			spin_unlock_irqrestore(&bcsp->unack.lock, flags);
 			return nskb;
 		} else {
