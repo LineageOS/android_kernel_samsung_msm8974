@@ -626,8 +626,7 @@ static ssize_t mode_show(struct device *dev,
 	DPRINT("Current Background Mode : %s\n",
 		background_name[mdnie_tun_state.background]);
 
-	return snprintf(buf, 256, "Current Background Mode : %s\n",
-		background_name[mdnie_tun_state.background]);
+	return snprintf(buf, 256, "%d\n", mdnie_tun_state.background);
 }
 
 static ssize_t mode_store(struct device *dev,
@@ -670,8 +669,7 @@ static ssize_t scenario_show(struct device *dev,
 	DPRINT("Current Scenario Mode : %s\n",
 		scenario_name[mdnie_tun_state.scenario]);
 
-	return snprintf(buf, 256, "Current Scenario Mode : %s\n",
-		scenario_name[mdnie_tun_state.scenario]);
+	return snprintf(buf, 256, "%d\n", mdnie_tun_state.scenario);
 }
 
 static ssize_t scenario_store(struct device *dev,
@@ -790,8 +788,7 @@ static ssize_t outdoor_show(struct device *dev,
 	DPRINT("Current outdoor Mode : %s\n",
 		outdoor_name[mdnie_tun_state.outdoor]);
 
-	return snprintf(buf, 256, "Current outdoor Mode : %s\n",
-		outdoor_name[mdnie_tun_state.outdoor]);
+	return snprintf(buf, 256, "%d\n", mdnie_tun_state.outdoor);
 }
 
 static ssize_t outdoor_store(struct device *dev,
@@ -963,8 +960,7 @@ static ssize_t accessibility_show(struct device *dev,
 	DPRINT("Current accessibility Mode : %s\n",
 		accessibility_name[mdnie_tun_state.accessibility]);
 
-	return snprintf(buf, 256, "Current accessibility Mode : %s\n",
-		accessibility_name[mdnie_tun_state.accessibility]);
+	return snprintf(buf, 256, "%d\n", mdnie_tun_state.accessibility);
 }
 
 static ssize_t accessibility_store(struct device *dev,
