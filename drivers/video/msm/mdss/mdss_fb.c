@@ -2,7 +2,7 @@
  * Core MDSS framebuffer driver.
  *
  * Copyright (C) 2007 Google Incorporated
- * Copyright (c) 2008-2015, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2008-2016, The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -519,7 +519,7 @@ static ssize_t mdss_set_rgb(struct device *dev,
 	if (count > 19)
 		return -EINVAL;
 
-	sscanf(buf, "%d %d %d", &r, &g, &b);
+	sscanf(buf, "%u %u %u", &r, &g, &b);
 
 	if (r < 0 || r > 32768)
 		return -EINVAL;
