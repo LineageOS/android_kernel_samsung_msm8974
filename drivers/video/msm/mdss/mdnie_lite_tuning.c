@@ -662,6 +662,13 @@ static ssize_t mode_store(struct device *dev,
 
 static DEVICE_ATTR(mode, 0664, mode_show, mode_store);
 
+static ssize_t mode_max_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return snprintf(buf, 256, "%d\n", MAX_BACKGROUND_MODE);
+}
+static DEVICE_ATTR(mode_max, 0444, mode_max_show, NULL);
+
 static ssize_t scenario_show(struct device *dev,
 					 struct device_attribute *attr,
 					 char *buf)
@@ -713,6 +720,13 @@ static ssize_t scenario_store(struct device *dev,
 }
 static DEVICE_ATTR(scenario, 0664, scenario_show,
 		   scenario_store);
+
+static ssize_t scenario_max_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return snprintf(buf, 256, "%d\n", MAX_mDNIe_MODE);
+}
+static DEVICE_ATTR(scenario_max, 0444, scenario_max_show, NULL);
 
 static ssize_t mdnieset_user_select_file_cmd_show(struct device *dev,
 						  struct device_attribute *attr,
@@ -829,6 +843,13 @@ static ssize_t outdoor_store(struct device *dev,
 }
 
 static DEVICE_ATTR(outdoor, 0664, outdoor_show, outdoor_store);
+
+static ssize_t outdoor_max_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return snprintf(buf, 256, "%d\n", MAX_OUTDOOR_MODE);
+}
+static DEVICE_ATTR(outdoor_max, 0444, outdoor_max_show, NULL);
 
 
 #if defined(AUTO_BRIGHTNESS_CABC_FUNCTION)
@@ -1056,6 +1077,13 @@ static ssize_t accessibility_store(struct device *dev,
 static DEVICE_ATTR(accessibility, 0664,
 			accessibility_show,
 			accessibility_store);
+
+static ssize_t accessibility_max_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return snprintf(buf, 256, "%d\n", ACCESSIBILITY_MAX);
+}
+static DEVICE_ATTR(accessibility_max, 0444, accessibility_max_show, NULL);
 
 #if defined(CONFIG_FB_MSM_MIPI_SAMSUNG_OCTA_CMD_WQHD_PT_PANEL)
 static ssize_t sensorRGB_show(struct device *dev,
@@ -1317,6 +1345,11 @@ void init_mdnie_class(void)
 	       dev_attr_scenario.attr.name);
 
 	if (device_create_file
+	    (tune_mdnie_dev, &dev_attr_scenario_max) < 0)
+		pr_err("Failed to create device file(%s)!\n",
+	       dev_attr_scenario_max.attr.name);
+
+	if (device_create_file
 	    (tune_mdnie_dev,
 	     &dev_attr_mdnieset_user_select_file_cmd) < 0)
 		pr_err("Failed to create device file(%s)!\n",
@@ -1333,9 +1366,19 @@ void init_mdnie_class(void)
 			dev_attr_mode.attr.name);
 
 	if (device_create_file
+		(tune_mdnie_dev, &dev_attr_mode_max) < 0)
+		pr_err("Failed to create device file(%s)!\n",
+			dev_attr_mode_max.attr.name);
+
+	if (device_create_file
 		(tune_mdnie_dev, &dev_attr_outdoor) < 0)
 		pr_err("Failed to create device file(%s)!\n",
 	       dev_attr_outdoor.attr.name);
+
+	if (device_create_file
+		(tune_mdnie_dev, &dev_attr_outdoor_max) < 0)
+		pr_err("Failed to create device file(%s)!\n",
+	       dev_attr_outdoor_max.attr.name);
 
 #if defined(AUTO_BRIGHTNESS_CABC_FUNCTION)
 	if (device_create_file
@@ -1360,6 +1403,11 @@ void init_mdnie_class(void)
 		(tune_mdnie_dev, &dev_attr_accessibility) < 0)
 		pr_err("Failed to create device file(%s)!=n",
 			dev_attr_accessibility.attr.name);
+
+	if (device_create_file
+		(tune_mdnie_dev, &dev_attr_accessibility_max) < 0)
+		pr_err("Failed to create device file(%s)!=n",
+			dev_attr_accessibility_max.attr.name);
 
 #if defined(CONFIG_FB_MSM_MIPI_SAMSUNG_OCTA_CMD_WQHD_PT_PANEL)
 	if (device_create_file
