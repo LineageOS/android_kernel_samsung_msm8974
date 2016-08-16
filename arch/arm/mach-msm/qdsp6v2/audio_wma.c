@@ -47,6 +47,8 @@ static long audio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 				break;
 			}
 		}
+		memset(&wma_config, 0, sizeof(wma_config));
+
 		wma_config = (struct msm_audio_wma_config_v2 *)audio->codec_cfg;
 		wma_cfg.format_tag = wma_config->format_tag;
 		wma_cfg.ch_cfg = wma_config->numchannels;
