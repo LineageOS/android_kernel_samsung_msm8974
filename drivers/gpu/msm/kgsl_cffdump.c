@@ -426,7 +426,7 @@ void kgsl_cffdump_syncmem(struct kgsl_device *device,
 	src = (uint *)kgsl_gpuaddr_to_vaddr(memdesc, gpuaddr);
 	if (memdesc->hostptr == NULL) {
 		KGSL_CORE_ERR(
-		"no kernel map for gpuaddr: 0x%08x, m->host: 0x%p, phys: %pa\n",
+		"no kernel map for gpuaddr: 0x%08x, m->host: 0x%pK, phys: %pa\n",
 		gpuaddr, memdesc->hostptr, &memdesc->physaddr);
 		return;
 	}
