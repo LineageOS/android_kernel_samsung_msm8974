@@ -51,12 +51,12 @@ struct ss_vib {
 
 void vibe_set_intensity(int intensity)
 {
-	if (0 == intensity)
+	if (intensity == 0)
 		vibe_pwm_onoff(0);
 	else {
-		if (MAX_INTENSITY == intensity)
+		if (intensity == MAX_INTENSITY)
 			intensity = 1;
-		else if (0 != intensity) {
+		else if (intensity != 0) {
 			int tmp = MAX_INTENSITY - intensity;
 			intensity = (tmp / 79);	// 79 := 10000 / 127
 		}
@@ -245,7 +245,8 @@ static void set_vibrator(struct ss_vib *vib)
 		gpio_direction_output(vibrator_drvdata.vib_en_gpio,VIBRATION_ON);
 		gpio_set_value(vibrator_drvdata.vib_en_gpio,VIBRATION_ON);
 #endif
-		hrtimer_start(&vib->vib_timer, ktime_set(vib->timevalue / 1000, (vib->timevalue % 1000) * 1000000),HRTIMER_MODE_REL);
+		hrtimer_start(&vib->vib_timer, ktime_set(vib->timevalue / 1000,
+			(vib->timevalue % 1000) * 1000000),HRTIMER_MODE_REL);
 	} else {
 		if(vibrator_drvdata.is_pmic_vib_pwm){  //PMIC PWM 
 			gpio_set_value(vibrator_drvdata.vib_pwm_gpio, \
@@ -299,7 +300,8 @@ static void vibrator_enable(struct timed_output_dev *dev, int value)
 		pr_info("[VIB]: OFF\n");
 		vib->state = 0;
 	} else {
-		pr_info("[VIB]: ON, Duration : %d msec, intensity : %d\n", value, vib->intensity);
+		pr_info("[VIB]: ON, Duration : %d msec, intensity : %d\n",
+			value, vib->intensity);
 		vib->state = 1;
 		vib->timevalue = value;
 	}
@@ -717,27 +719,27 @@ static ssize_t store_vib_tuning(struct device *dev,
 			g_nlra_gp_clk_m, g_nlra_gp_clk_n, g_nlra_gp_clk_d,
 			g_nlra_gp_clk_pwm_mul, motor_strength, motor_min_strength);
 
-	return count;                                                              
-}                                                                                  
+	return count;
+}
 
-static DEVICE_ATTR(vib_tuning, 0660, show_vib_tuning, store_vib_tuning);           
+static DEVICE_ATTR(vib_tuning, 0660, show_vib_tuning, store_vib_tuning);
 
 static ssize_t intensity_store(struct device *dev,
 		struct device_attribute *devattr, const char *buf, size_t count)
 {
 	struct timed_output_dev *t_dev = dev_get_drvdata(dev);
-	struct ss_vib *vib = container_of(t_dev, struct ss_vib, timed_dev); 
-	int ret = 0, set_intensity = 0; 
+	struct ss_vib *vib = container_of(t_dev, struct ss_vib, timed_dev);
+	int ret = 0, set_intensity = 0;
 
 	ret = kstrtoint(buf, 0, &set_intensity);
 
-	if ((set_intensity < 0) || (set_intensity > MAX_INTENSITY)) {
-		pr_err("[VIB]: %sout of rage\n", __func__);
+	if ((set_intensity < 0) || (set_intensity > (MAX_INTENSITY / 100))) {
+		pr_err("[VIB]: %sout of range\n", __func__);
 		return -EINVAL;
 	}
 
-	vibe_set_intensity(set_intensity);
-	vib->intensity = set_intensity;
+	vibe_set_intensity((set_intensity * 100));
+	vib->intensity = (set_intensity * 100);
 
 	return count;
 }
@@ -746,12 +748,40 @@ static ssize_t intensity_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	struct timed_output_dev *t_dev = dev_get_drvdata(dev);
-	struct ss_vib *vib = container_of(t_dev, struct ss_vib, timed_dev); 
+	struct ss_vib *vib = container_of(t_dev, struct ss_vib, timed_dev);
 
-	return sprintf(buf, "intensity: %u\n", vib->intensity);
+	return sprintf(buf, "%u\n", (vib->intensity / 100));
 }
 
-static DEVICE_ATTR(intensity, 0660, intensity_show, intensity_store);
+static ssize_t pwm_default_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", (DEFAULT_INTENSITY / 100));
+}
+
+static ssize_t pwm_max_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", (MAX_INTENSITY / 100));
+}
+
+static ssize_t pwm_min_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", 0);
+}
+
+static ssize_t pwm_threshold_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", 75);
+}
+
+static DEVICE_ATTR(pwm_default, 0444, pwm_default_show, NULL);
+static DEVICE_ATTR(pwm_max, 0444, pwm_max_show, NULL);
+static DEVICE_ATTR(pwm_min, 0444, pwm_min_show, NULL);
+static DEVICE_ATTR(pwm_threshold, 0444, pwm_threshold_show, NULL);
+static DEVICE_ATTR(pwm_value, 0644, intensity_show, intensity_store);
 
 static int ss_vibrator_probe(struct platform_device *pdev)
 {
@@ -795,7 +825,7 @@ static int ss_vibrator_probe(struct platform_device *pdev)
 	vibrator_drvdata.pwm_dev = NULL;
 
 	vib->state = 0;
-	vib->intensity = MAX_INTENSITY;
+	vib->intensity = DEFAULT_INTENSITY;
 	vib->timeout = VIB_DEFAULT_TIMEOUT;
 	
 	vibrator_initialize();
@@ -824,7 +854,11 @@ static int ss_vibrator_probe(struct platform_device *pdev)
 		goto err_read_vib;
 	}
 
-	rc = sysfs_create_file(&vib->timed_dev.dev->kobj, &dev_attr_intensity.attr);
+	rc = sysfs_create_file(&vib->timed_dev.dev->kobj, &dev_attr_pwm_default.attr);
+	rc = sysfs_create_file(&vib->timed_dev.dev->kobj, &dev_attr_pwm_min.attr);
+	rc = sysfs_create_file(&vib->timed_dev.dev->kobj, &dev_attr_pwm_max.attr);
+	rc = sysfs_create_file(&vib->timed_dev.dev->kobj, &dev_attr_pwm_threshold.attr);
+	rc = sysfs_create_file(&vib->timed_dev.dev->kobj, &dev_attr_pwm_value.attr);
 	if (rc < 0) {
 		pr_err("[VIB]: Failed to register sysfs intensity: %d\n", rc);
 	}

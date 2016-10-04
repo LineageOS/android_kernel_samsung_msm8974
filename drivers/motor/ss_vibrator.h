@@ -33,6 +33,7 @@ struct pm_gpio vib_pwm = {
 #define VIBRATION_ON		1
 #define VIBRATION_OFF		0
 
+#define DEFAULT_INTENSITY	5000
 #define MAX_INTENSITY		10000
 
 #if defined(CONFIG_MACH_KS01SKT) \
