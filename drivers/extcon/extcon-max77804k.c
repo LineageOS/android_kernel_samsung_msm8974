@@ -1056,7 +1056,7 @@ void max77804k_muic_send_event(int val)
 	kobject_uevent_env(&gInfo->dev->kobj, KOBJ_CHANGE, envp);
 }
 
-extern int system_rev;
+extern unsigned int system_rev;
 
 #if defined(CONFIG_MUIC_DET_JACK)
 static void max77804k_muic_earjack_detect_workfunc(struct work_struct *work)

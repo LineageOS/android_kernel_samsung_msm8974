@@ -109,7 +109,7 @@ struct sii8240_platform_data {
 	bool is_smartdock;
 #endif
 };
-extern int system_rev;
+extern unsigned int system_rev;
 int acc_register_notifier(struct notifier_block *nb);
 #endif /* __SII8240_H__ */
 
