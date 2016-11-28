@@ -186,6 +186,8 @@ static void recover_inode(struct inode *inode, struct page *page)
 	inode->i_ctime.tv_nsec = le32_to_cpu(raw->i_ctime_nsec);
 	inode->i_mtime.tv_nsec = le32_to_cpu(raw->i_mtime_nsec);
 
+	F2FS_I(inode)->i_advise = raw->i_advise;
+
 	if (file_enc_name(inode))
 		name = "<encrypted>";
 	else
@@ -458,7 +460,8 @@ static int do_recover_data(struct f2fs_sb_info *sbi, struct inode *inode,
 			continue;
 		}
 
-		if ((start + 1) << PAGE_SHIFT > i_size_read(inode))
+		if (!file_keep_isize(inode) &&
+				(i_size_read(inode) <= (start << PAGE_SHIFT)))
 			f2fs_i_size_write(inode, (start + 1) << PAGE_SHIFT);
 
 		/*
@@ -506,8 +509,10 @@ err:
 	f2fs_put_dnode(&dn);
 out:
 	f2fs_msg(sbi->sb, KERN_NOTICE,
-		"recover_data: ino = %lx, recovered = %d blocks, err = %d",
-		inode->i_ino, recovered, err);
+		"recover_data: ino = %lx (i_size: %s) recovered = %d, err = %d",
+		inode->i_ino,
+		file_keep_isize(inode) ? "keep" : "recover",
+		recovered, err);
 	return err;
 }
 
