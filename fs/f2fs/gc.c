@@ -558,6 +558,9 @@ static void move_encrypted_block(struct inode *inode, block_t bidx)
 	if (!page)
 		return;
 
+	if (f2fs_is_atomic_file(inode))
+		goto out;
+
 	set_new_dnode(&dn, inode, NULL, NULL, 0);
 	err = get_dnode_of_data(&dn, bidx, LOOKUP_NODE);
 	if (err)
@@ -644,6 +647,9 @@ static void move_data_page(struct inode *inode, block_t bidx, int gc_type)
 	page = get_lock_data_page(inode, bidx, true);
 	if (IS_ERR(page))
 		return;
+
+	if (f2fs_is_atomic_file(inode))
+		goto out;
 
 	if (gc_type == BG_GC) {
 		if (PageWriteback(page))
