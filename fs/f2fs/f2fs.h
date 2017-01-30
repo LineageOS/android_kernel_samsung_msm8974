@@ -147,9 +147,9 @@ struct f2fs_mount_info {
 #define F2FS_HAS_FEATURE(sb, mask)					\
 	((F2FS_SB(sb)->raw_super->feature & cpu_to_le32(mask)) != 0)
 #define F2FS_SET_FEATURE(sb, mask)					\
-	F2FS_SB(sb)->raw_super->feature |= cpu_to_le32(mask)
+	(F2FS_SB(sb)->raw_super->feature |= cpu_to_le32(mask))
 #define F2FS_CLEAR_FEATURE(sb, mask)					\
-	F2FS_SB(sb)->raw_super->feature &= ~cpu_to_le32(mask)
+	(F2FS_SB(sb)->raw_super->feature &= ~cpu_to_le32(mask))
 
 #define CRCPOLY_LE 0xedb88320
 
@@ -2031,7 +2031,7 @@ void f2fs_set_link(struct inode *, struct f2fs_dir_entry *,
 				struct page *, struct inode *);
 int update_dent_inode(struct inode *, struct inode *, const struct qstr *);
 void f2fs_update_dentry(nid_t ino, umode_t mode, struct f2fs_dentry_ptr *,
-			const struct qstr *, f2fs_hash_t , unsigned int);
+			const struct qstr *, f2fs_hash_t, unsigned int);
 int f2fs_add_regular_entry(struct inode *, const struct qstr *,
 			const struct qstr *, struct inode *, nid_t, umode_t);
 int __f2fs_add_link(struct inode *, const struct qstr *, struct inode *, nid_t,
