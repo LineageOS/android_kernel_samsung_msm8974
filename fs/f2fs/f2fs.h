@@ -525,7 +525,6 @@ struct f2fs_inode_info {
 	f2fs_hash_t chash;		/* hash value of given file name */
 	unsigned int clevel;		/* maximum level of given file name */
 	nid_t i_xattr_nid;		/* node id that contains xattrs */
-	unsigned long long xattr_ver;	/* cp version of xattr modification */
 	loff_t	last_disk_size;		/* lastly written file size */
 
 	struct list_head dirty_list;	/* dirty list for dirs and files */
@@ -2095,7 +2094,7 @@ void alloc_nid_done(struct f2fs_sb_info *, nid_t);
 void alloc_nid_failed(struct f2fs_sb_info *, nid_t);
 int try_to_free_nids(struct f2fs_sb_info *, int);
 void recover_inline_xattr(struct inode *, struct page *);
-void recover_xattr_data(struct inode *, struct page *, block_t);
+int recover_xattr_data(struct inode *, struct page *, block_t);
 int recover_inode_page(struct f2fs_sb_info *, struct page *);
 int restore_node_summary(struct f2fs_sb_info *, unsigned int,
 				struct f2fs_summary_block *);
