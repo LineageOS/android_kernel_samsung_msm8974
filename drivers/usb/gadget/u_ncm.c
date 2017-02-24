@@ -253,7 +253,7 @@ static int create_terminal_attribute(struct device **pdev)
 {
 	int err;
 	if (IS_ERR(*pdev)) {
-		printk(KERN_DEBUG "usb: %s error pdev(%p)\n",
+		printk(KERN_DEBUG "usb: %s error pdev(%pK)\n",
 				__func__, *pdev);
 		return PTR_ERR(*pdev);
 	}
