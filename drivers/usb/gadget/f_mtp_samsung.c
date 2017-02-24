@@ -656,7 +656,7 @@ requeue_req:
 						__func__, __LINE__, r);
 				goto fail;
 			} else {
-				DEBUG_MTPR("[%s]rx req queue%p\n",
+				DEBUG_MTPR("[%s]rx req queue%pK\n",
 							 __func__, req);
 			}
 		}
@@ -673,7 +673,7 @@ requeue_req:
 			else
 				xfer = count;
 
-			DEBUG_MTPR("[%s]copy_to_user 0x%x bytes on EP %p\n",
+			DEBUG_MTPR("[%s]copy_to_user 0x%x bytes on EP %pK\n",
 				__func__, dev->read_count, dev->bulk_out);
 
 			if (copy_to_user(buf, dev->read_buf, xfer)) {
@@ -710,7 +710,7 @@ requeue_req:
 		ret = wait_event_interruptible(dev->read_wq,
 				 ((req = mtpg_req_get(dev, &dev->rx_done))
 							 || dev->error));
-		DEBUG_MTPR("[%s]\t%d: dev->error %d and req = %p\n",
+		DEBUG_MTPR("[%s]\t%d: dev->error %d and req = %pK\n",
 				 __func__, __LINE__, dev->error, req);
 
 		if (req != 0) {
@@ -725,7 +725,7 @@ requeue_req:
 			dev->read_count = req->actual;
 			dev->read_buf = req->buf;
 
-			DEBUG_MTPR("[%s]\t%d: rx_req=%p req->actual=%d\n",
+			DEBUG_MTPR("[%s]\t%d: rx_req=%pK req->actual=%d\n",
 					__func__, __LINE__, req, req->actual);
 		}
 
