@@ -32,6 +32,10 @@
 #endif
 #include <linux/of_gpio.h>
 
+#ifdef CONFIG_FB
+#include <linux/fb.h>
+#endif
+
 bool ums_binary;
 unsigned char screen_rotate;
 unsigned char user_hand = 1;
@@ -1427,6 +1431,10 @@ static int wacom_i2c_remove(struct i2c_client *client)
 	input_unregister_device(wac_i2c->input_dev);
 	input_free_device(wac_i2c->input_dev);
 
+#ifdef CONFIG_FB
+	fb_unregister_client(&wac_i2c->fb_notif);
+#endif
+
 	kfree(wac_i2c);
 
 	return 0;
@@ -1454,6 +1462,11 @@ static void wacom_i2c_late_resume(struct early_suspend *h)
 
 	wacom_i2c_enable(wac_i2c);
 }
+#endif
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+	unsigned long event, void *data);
 #endif
 
 static int wacom_i2c_probe(struct i2c_client *client,
@@ -1762,6 +1775,12 @@ static int wacom_i2c_probe(struct i2c_client *client,
 	schedule_delayed_work(&wac_i2c->work_wacom_reset, msecs_to_jiffies(5000));
 #endif
 
+#ifdef CONFIG_FB
+	wac_i2c->fb_notif.notifier_call = fb_notifier_callback;
+	if (fb_register_client(&wac_i2c->fb_notif))
+		pr_err("%s: could not create fb notifier\n", __func__);
+#endif
+
 	return 0;
 
 err_request_irq_pen_inster:
@@ -1803,6 +1822,35 @@ err_wacom_i2c_bootloader_ver:
  err_i2c_fail:
 	return ret;
 }
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	struct wacom_i2c *wac_i2c = container_of(self, struct wacom_i2c, fb_notif);
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		int *blank = evdata->data;
+		switch (*blank) {
+		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+		case FB_BLANK_VSYNC_SUSPEND:
+		case FB_BLANK_HSYNC_SUSPEND:
+			wacom_i2c_enable(wac_i2c);
+			break;
+		case FB_BLANK_POWERDOWN:
+			wacom_i2c_disable(wac_i2c);
+			break;
+		default:
+			/* Don't handle what we don't understand */
+			break;
+		}
+	}
+
+	return 0;
+}
+#endif
 
 static const struct i2c_device_id wacom_i2c_id[] = {
 	{"wacom_g5sp_i2c", 0},
