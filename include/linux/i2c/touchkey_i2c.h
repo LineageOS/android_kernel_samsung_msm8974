@@ -363,6 +363,13 @@ struct cypress_touchkey_info {
 	atomic_t	keypad_enable;
 	bool	do_checksum;
 	struct wake_lock fw_wakelock;
+<<<<<<< HEAD   (ecfdc5 scripts/dtc: Remove redundant YYLOC global declaration)
+=======
+
+#if defined(CONFIG_FB) && (defined(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) || defined(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY_H))
+	struct notifier_block fb_notif;
+#endif
+>>>>>>> CHANGE (f4bae9 input: keyboard: cypress_touchkey_h: Add FB notifier callbac)
 };
 
 #ifdef TK_INFORM_CHARGER
