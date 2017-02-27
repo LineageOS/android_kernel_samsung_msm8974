@@ -41,6 +41,10 @@
 #include "issp_extern.h"
 #include <linux/mfd/pm8xxx/pm8921.h>
 
+#ifdef CONFIG_FB
+#include <linux/fb.h>
+#endif
+
 #ifdef USE_OPEN_CLOSE
 static int cypress_input_open(struct input_dev *dev);
 static void cypress_input_close(struct input_dev *dev);
@@ -2463,6 +2467,11 @@ static int cypress_parse_dt(struct device *dev,
 }
 #endif
 
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+	unsigned long event, void *data);
+#endif
+
 static int __devinit cypress_touchkey_probe(struct i2c_client *client,
 				  const struct i2c_device_id *id)
 {
@@ -2646,6 +2655,13 @@ static int __devinit cypress_touchkey_probe(struct i2c_client *client,
 /*
    cypress_power_onoff(info, 0);
 */
+
+#ifdef CONFIG_FB
+	info->fb_notif.notifier_call = fb_notifier_callback;
+	if (fb_register_client(&info->fb_notif))
+		pr_err("%s: could not create fb notifier\n", __func__);
+#endif
+
 	dev_info(&info->client->dev, "%s: done\n", __func__);
 	return 0;
 
@@ -2690,6 +2706,9 @@ static int __devexit cypress_touchkey_remove(struct i2c_client *client)
 		gpio_free(info->pdata->vdd_led);
 	input_unregister_device(info->input_dev);
 	input_free_device(info->input_dev);
+#ifdef CONFIG_FB
+	fb_unregister_client(&info->fb_notif);
+#endif
 	kfree(info);
 	return 0;
 }
@@ -2815,6 +2834,36 @@ static void cypress_input_close(struct input_dev *dev)
 
 	dev_info(&info->client->dev, "%s.\n", __func__);
 	cypress_touchkey_suspend(&info->client->dev);
+}
+#endif
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	struct cypress_touchkey_info *info =
+			container_of(self, struct cypress_touchkey_info, fb_notif);
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		int *blank = evdata->data;
+		switch (*blank) {
+		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+		case FB_BLANK_VSYNC_SUSPEND:
+		case FB_BLANK_HSYNC_SUSPEND:
+			cypress_touchkey_resume(&info->client->dev);
+			break;
+		case FB_BLANK_POWERDOWN:
+			cypress_touchkey_suspend(&info->client->dev);
+			break;
+		default:
+			/* Don't handle what we don't understand */
+			break;
+		}
+	}
+
+	return 0;
 }
 #endif
 

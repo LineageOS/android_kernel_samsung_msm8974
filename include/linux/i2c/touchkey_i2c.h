@@ -34,6 +34,10 @@ extern int poweroff_charging;
 #include <linux/mutex.h>
 #include <linux/wakelock.h>
 
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#endif
+
 #if defined(CONFIG_SEC_K_PROJECT)
 #define CYPRESS_SUPPORT_DUAL_INT_MODE
 #define CYPRESS_RECENT_BACK_REPORT_FW_VER	0x1D
@@ -363,6 +367,10 @@ struct cypress_touchkey_info {
 	atomic_t	keypad_enable;
 	bool	do_checksum;
 	struct wake_lock fw_wakelock;
+
+#if defined(CONFIG_FB) && defined(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY)
+	struct notifier_block fb_notif;
+#endif
 };
 
 #ifdef TK_INFORM_CHARGER
