@@ -368,7 +368,7 @@ struct cypress_touchkey_info {
 	bool	do_checksum;
 	struct wake_lock fw_wakelock;
 
-#if defined(CONFIG_FB) && defined(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY)
+#if defined(CONFIG_FB) && (defined(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) || defined(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY_H))
 	struct notifier_block fb_notif;
 #endif
 };
