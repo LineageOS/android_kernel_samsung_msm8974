@@ -353,16 +353,18 @@ void f2fs_evict_inode(struct inode *inode)
 	if (inode->i_nlink || is_bad_inode(inode))
 		goto no_delete;
 
-#ifdef CONFIG_F2FS_FAULT_INJECTION
-	if (time_to_inject(FAULT_EVICT_INODE))
-		goto no_delete;
-#endif
-
 	set_inode_flag(inode, FI_NO_ALLOC);
 	i_size_write(inode, 0);
 retry:
 	if (F2FS_HAS_BLOCKS(inode))
 		err = f2fs_truncate(inode);
+
+#ifdef CONFIG_F2FS_FAULT_INJECTION
+	if (time_to_inject(sbi, FAULT_EVICT_INODE)) {
+		f2fs_show_injection_info(FAULT_EVICT_INODE);
+		err = -EIO;
+	}
+#endif
 
 	if (!err) {
 		f2fs_lock_op(sbi);
