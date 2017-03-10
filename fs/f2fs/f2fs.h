@@ -2402,7 +2402,7 @@ extern struct kmem_cache *inode_entry_slab;
 bool f2fs_may_inline_data(struct inode *);
 bool f2fs_may_inline_dentry(struct inode *);
 void read_inline_data(struct page *, struct page *);
-bool truncate_inline_inode(struct page *, u64);
+void truncate_inline_inode(struct inode *inode, struct page *ipage, u64);
 int f2fs_read_inline_data(struct inode *, struct page *);
 int f2fs_convert_inline_page(struct dnode_of_data *, struct page *);
 int f2fs_convert_inline_inode(struct inode *);

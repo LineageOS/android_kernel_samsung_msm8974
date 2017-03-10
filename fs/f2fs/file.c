@@ -589,10 +589,10 @@ int truncate_blocks(struct inode *inode, u64 from, bool lock)
 	}
 
 	if (f2fs_has_inline_data(inode)) {
-		truncate_inline_inode(ipage, from);
-		f2fs_put_page(ipage, 1);
-		truncate_page = true;
-		goto out;
+		truncate_inline_inode(inode, ipage, from);
+  		f2fs_put_page(ipage, 1);
+  		truncate_page = true;
+  		goto out;
 	}
 
 	set_new_dnode(&dn, inode, ipage, NULL, 0);
