@@ -5676,26 +5676,43 @@ done:
 
 
 int
-dhd_iovar(dhd_pub_t *pub, int ifidx, char *name, char *cmd_buf, uint cmd_len, int set)
+dhd_iovar(dhd_pub_t *pub, int ifidx, char *name, char *param_buf,
+	  uint param_len, int set)
 {
-	char buf[strlen(name) + 1 + cmd_len];
-	int len = sizeof(buf);
+	char *buf;
+	int input_len;
 	wl_ioctl_t ioc;
 	int ret;
 
-	len = bcm_mkiovar(name, cmd_buf, cmd_len, buf, len);
+	if (param_len > WLC_IOCTL_MAXLEN)
+		return BCME_BADARG;
+
+	input_len = strlen(name) + 1 + param_len;
+	if (input_len > WLC_IOCTL_MAXLEN)
+		return BCME_BADARG;
+	buf = kzalloc(input_len, GFP_KERNEL);
+	if (!buf) {
+		DHD_ERROR(("%s: mem alloc failed\n", __FUNCTION__));
+		return BCME_NOMEM;
+	}
+	ret = bcm_mkiovar(name, param_buf, param_len, buf, input_len);
+	if (!ret) {
+		ret = BCME_NOMEM;
+		goto exit;
+	}
 
 	memset(&ioc, 0, sizeof(ioc));
 
 	ioc.cmd = set? WLC_SET_VAR : WLC_GET_VAR;
 	ioc.buf = buf;
-	ioc.len = len;
+	ioc.len = input_len;
 	ioc.set = set;
 
 	ret = dhd_wl_ioctl(pub, ifidx, &ioc, ioc.buf, ioc.len);
 	if (!set && ret >= 0)
-		memcpy(cmd_buf, buf, cmd_len);
-
+		memcpy(param_buf, buf, param_len);
+exit:
+	kfree(buf);
 	return ret;
 }
 
