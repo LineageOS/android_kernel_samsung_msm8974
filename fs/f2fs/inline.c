@@ -299,7 +299,7 @@ struct f2fs_dir_entry *find_in_inline_dir(struct inode *dir,
 
 	inline_dentry = inline_data_addr(ipage);
 
-	make_dentry_ptr(NULL, &d, (void *)inline_dentry, 2);
+	make_dentry_ptr_inline(NULL, &d, inline_dentry);
 	de = find_target_dentry(fname, namehash, NULL, &d);
 	unlock_page(ipage);
 	if (de)
@@ -318,7 +318,7 @@ int make_empty_inline_dir(struct inode *inode, struct inode *parent,
 
 	dentry_blk = inline_data_addr(ipage);
 
-	make_dentry_ptr(NULL, &d, (void *)dentry_blk, 2);
+	make_dentry_ptr_inline(NULL, &d, dentry_blk);
 	do_make_empty_dir(inode, parent, &d);
 
 	set_page_dirty(ipage);
@@ -399,7 +399,7 @@ static int f2fs_add_inline_entries(struct inode *dir,
 	unsigned long bit_pos = 0;
 	int err = 0;
 
-	make_dentry_ptr(NULL, &d, (void *)inline_dentry, 2);
+	make_dentry_ptr_inline(NULL, &d, inline_dentry);
 
 	while (bit_pos < d.max) {
 		struct f2fs_dir_entry *de;
@@ -531,7 +531,7 @@ int f2fs_add_inline_entry(struct inode *dir, const struct qstr *new_name,
 	f2fs_wait_on_page_writeback(ipage, NODE, true);
 
 	name_hash = f2fs_dentry_hash(new_name);
-	make_dentry_ptr(NULL, &d, (void *)dentry_blk, 2);
+	make_dentry_ptr_inline(NULL, &d, dentry_blk);
 	f2fs_update_dentry(ino, mode, &d, new_name, name_hash, bit_pos);
 
 	set_page_dirty(ipage);
@@ -623,7 +623,7 @@ int f2fs_read_inline_dir(struct file *file, void *dirent, filldir_t filldir,
 
 	inline_dentry = inline_data_addr(ipage);
 
-	make_dentry_ptr(inode, &d, (void *)inline_dentry, 2);
+	make_dentry_ptr_inline(inode, &d, inline_dentry);
 
 	if (!f2fs_fill_dentries(file, dirent, filldir, &d, 0, bit_pos, fstr))
 		file->f_pos = NR_INLINE_DENTRY;
