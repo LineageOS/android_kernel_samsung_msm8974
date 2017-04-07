@@ -227,7 +227,7 @@ static unsigned int get_cb_cost(struct f2fs_sb_info *sbi, unsigned int segno)
 
 	for (i = 0; i < sbi->segs_per_sec; i++)
 		mtime += get_seg_entry(sbi, start + i)->mtime;
-	vblocks = get_valid_blocks(sbi, segno, sbi->segs_per_sec);
+	vblocks = get_valid_blocks(sbi, segno, true);
 
 	mtime = div_u64(mtime, sbi->segs_per_sec);
 	vblocks = div_u64(vblocks, sbi->segs_per_sec);
@@ -250,7 +250,7 @@ static unsigned int get_greedy_cost(struct f2fs_sb_info *sbi,
 						unsigned int segno)
 {
 	unsigned int valid_blocks =
-			get_valid_blocks(sbi, segno, sbi->segs_per_sec);
+			get_valid_blocks(sbi, segno, true);
 
 	return IS_DATASEG(get_seg_entry(sbi, segno)->type) ?
 				valid_blocks * 2 : valid_blocks;
@@ -901,12 +901,6 @@ static int do_garbage_collect(struct f2fs_sb_info *sbi,
 				(type == SUM_TYPE_NODE) ? NODE : DATA, WRITE);
 
 	blk_finish_plug(&plug);
-
-	if (gc_type == FG_GC) {
-		while (start_segno < end_segno)
-			if (get_valid_blocks(sbi, start_segno++, 1) == 0)
-				seg_freed++;
-	}
 
 	stat_inc_call_count(sbi->stat_info);
 
