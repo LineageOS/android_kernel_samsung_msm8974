@@ -30,6 +30,7 @@ struct ahash_request_priv {
 	crypto_completion_t complete;
 	void *data;
 	u8 *result;
+	u32 flags;
 	void *ubuf[] CRYPTO_MINALIGN_ATTR;
 };
 
@@ -221,6 +222,7 @@ static int ahash_save_req(struct ahash_request *req, crypto_completion_t cplt)
 	priv->result = req->result;
 	priv->complete = req->base.complete;
 	priv->data = req->base.data;
+	priv->flags = req->base.flags;
 
 	req->result = PTR_ALIGN((u8 *)priv->ubuf, alignmask + 1);
 	req->base.complete = cplt;
@@ -230,37 +232,43 @@ static int ahash_save_req(struct ahash_request *req, crypto_completion_t cplt)
 	return 0;
 }
 
-static void ahash_restore_req(struct ahash_request *req)
+static void ahash_restore_req(struct ahash_request *req, int err)
 {
 	struct ahash_request_priv *priv = req->priv;
 
+	if (!err)
+		memcpy(priv->result, req->result,
+		       crypto_ahash_digestsize(crypto_ahash_reqtfm(req)));
+
 	/* Restore the original crypto request. */
 	req->result = priv->result;
-	req->base.complete = priv->complete;
-	req->base.data = priv->data;
+
+	ahash_request_set_callback(req, priv->flags,
+				   priv->complete, priv->data);
 	req->priv = NULL;
 
 	/* Free the req->priv.priv from the ADJUSTED request. */
 	kzfree(priv);
 }
 
-static void ahash_op_unaligned_finish(struct ahash_request *req, int err)
+static void ahash_notify_einprogress(struct ahash_request *req)
 {
 	struct ahash_request_priv *priv = req->priv;
+	struct crypto_async_request oreq;
 
-	if (err == -EINPROGRESS)
-		return;
+	oreq.data = priv->data;
 
-	if (!err)
-		memcpy(priv->result, req->result,
-		       crypto_ahash_digestsize(crypto_ahash_reqtfm(req)));
-
-	ahash_restore_req(req);
+	priv->complete(&oreq, -EINPROGRESS);
 }
 
 static void ahash_op_unaligned_done(struct crypto_async_request *req, int err)
 {
 	struct ahash_request *areq = req->data;
+
+	if (err == -EINPROGRESS) {
+		ahash_notify_einprogress(areq);
+		return;
+	}
 
 	/*
 	 * Restore the original request, see ahash_op_unaligned() for what
@@ -272,7 +280,7 @@ static void ahash_op_unaligned_done(struct crypto_async_request *req, int err)
 	 */
 
 	/* First copy req->result into req->priv.result */
-	ahash_op_unaligned_finish(areq, err);
+	ahash_restore_req(areq, err);
 
 	/* Complete the ORIGINAL request. */
 	areq->base.complete(&areq->base, err);
@@ -288,7 +296,12 @@ static int ahash_op_unaligned(struct ahash_request *req,
 		return err;
 
 	err = op(req);
-	ahash_op_unaligned_finish(req, err);
+	if (err == -EINPROGRESS ||
+	    (err == -EBUSY && (ahash_request_flags(req) &
+			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
+		return err;
+
+	ahash_restore_req(req, err);
 
 	return err;
 }
@@ -328,25 +341,14 @@ int crypto_ahash_digest(struct ahash_request *req)
 }
 EXPORT_SYMBOL_GPL(crypto_ahash_digest);
 
-static void ahash_def_finup_finish2(struct ahash_request *req, int err)
-{
-	struct ahash_request_priv *priv = req->priv;
-
-	if (err == -EINPROGRESS)
-		return;
-
-	if (!err)
-		memcpy(priv->result, req->result,
-		       crypto_ahash_digestsize(crypto_ahash_reqtfm(req)));
-
-	ahash_restore_req(req);
-}
-
 static void ahash_def_finup_done2(struct crypto_async_request *req, int err)
 {
 	struct ahash_request *areq = req->data;
 
-	ahash_def_finup_finish2(areq, err);
+	if (err == -EINPROGRESS)
+		return;
+
+	ahash_restore_req(areq, err);
 
 	areq->base.complete(&areq->base, err);
 }
@@ -357,11 +359,15 @@ static int ahash_def_finup_finish1(struct ahash_request *req, int err)
 		goto out;
 
 	req->base.complete = ahash_def_finup_done2;
-	req->base.flags &= ~CRYPTO_TFM_REQ_MAY_SLEEP;
+
 	err = crypto_ahash_reqtfm(req)->final(req);
+	if (err == -EINPROGRESS ||
+	    (err == -EBUSY && (ahash_request_flags(req) &
+			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
+		return err;
 
 out:
-	ahash_def_finup_finish2(req, err);
+	ahash_restore_req(req, err);
 	return err;
 }
 
@@ -369,7 +375,16 @@ static void ahash_def_finup_done1(struct crypto_async_request *req, int err)
 {
 	struct ahash_request *areq = req->data;
 
+	if (err == -EINPROGRESS) {
+		ahash_notify_einprogress(areq);
+		return;
+	}
+
+	areq->base.flags &= ~CRYPTO_TFM_REQ_MAY_SLEEP;
+
 	err = ahash_def_finup_finish1(areq, err);
+	if (areq->priv)
+		return;
 
 	areq->base.complete(&areq->base, err);
 }
@@ -384,6 +399,11 @@ static int ahash_def_finup(struct ahash_request *req)
 		return err;
 
 	err = tfm->update(req);
+	if (err == -EINPROGRESS ||
+	    (err == -EBUSY && (ahash_request_flags(req) &
+			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
+		return err;
+
 	return ahash_def_finup_finish1(req, err);
 }
 
