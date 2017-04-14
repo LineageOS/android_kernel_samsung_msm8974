@@ -223,7 +223,8 @@ static bool is_same_inode(struct inode *inode, struct page *ipage)
 	return true;
 }
 
-static int find_fsync_dnodes(struct f2fs_sb_info *sbi, struct list_head *head)
+static int find_fsync_dnodes(struct f2fs_sb_info *sbi, struct list_head *head,
+				bool check_only)
 {
 	unsigned long long cp_ver = cur_cp_version(F2FS_CKPT(sbi));
 	struct curseg_info *curseg;
@@ -255,7 +256,8 @@ static int find_fsync_dnodes(struct f2fs_sb_info *sbi, struct list_head *head)
 			if (!is_same_inode(entry->inode, page))
 				goto next;
 		} else {
-			if (IS_INODE(page) && is_dent_dnode(page)) {
+			if (!check_only &&
+					IS_INODE(page) && is_dent_dnode(page)) {
 				err = recover_inode_page(sbi, page);
 				if (err)
 					break;
@@ -602,7 +604,7 @@ int recover_fsync_data(struct f2fs_sb_info *sbi, bool check_only)
 	blkaddr = NEXT_FREE_BLKADDR(sbi, curseg);
 
 	/* step #1: find fsynced inode numbers */
-	err = find_fsync_dnodes(sbi, &inode_list);
+	err = find_fsync_dnodes(sbi, &inode_list, check_only);
 	if (err || list_empty(&inode_list))
 		goto out;
 
