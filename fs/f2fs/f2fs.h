@@ -2452,6 +2452,8 @@ void f2fs_leave_shrinker(struct f2fs_sb_info *);
 /*
  * extent_cache.c
  */
+bool __check_rb_tree_consistence(struct f2fs_sb_info *sbi,
+						struct rb_root *root);
 unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *, int);
 bool f2fs_init_extent_tree(struct inode *, struct f2fs_extent *);
 void f2fs_drop_extent_tree(struct inode *);
