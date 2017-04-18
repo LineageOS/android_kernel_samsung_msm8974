@@ -802,6 +802,7 @@ struct f2fs_io_info {
 	block_t old_blkaddr;	/* old block address before Cow */
 	struct page *page;	/* page to be written */
 	struct page *encrypted_page;	/* encrypted page */
+	bool cp_rwsem_locked;	/* indicate cp_rwsem is held */
 };
 
 #define is_read_io(rw)	(((rw) & 1) == READ)
