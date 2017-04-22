@@ -1081,14 +1081,20 @@ long diagchar_ioctl(struct file *filp,
 		result = DIAG_DCI_NO_ERROR;
 		break;
 	case DIAG_IOCTL_DCI_EVENT_STATUS:
+		mutex_lock(&driver->dci_mutex);
 		if (copy_from_user(&le_stats, (void *)ioarg,
-					sizeof(struct diag_log_event_stats)))
+					sizeof(struct diag_log_event_stats))) {
+			mutex_unlock(&driver->dci_mutex);
 			return -EFAULT;
+		}
 		le_stats.is_set = diag_dci_query_event_mask(le_stats.code);
 		if (copy_to_user((void *)ioarg, &le_stats,
-				sizeof(struct diag_log_event_stats)))
+				sizeof(struct diag_log_event_stats))) {
+			mutex_unlock(&driver->dci_mutex);
 			return -EFAULT;
+		}
 		result = DIAG_DCI_NO_ERROR;
+		mutex_unlock(&driver->dci_mutex);
 		break;
 	case DIAG_IOCTL_DCI_CLEAR_LOGS:
 		if (copy_from_user((void *)&client_id, (void *)ioarg,
