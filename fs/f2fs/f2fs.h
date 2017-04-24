@@ -733,8 +733,8 @@ struct f2fs_sm_info {
 
 	/* for small discard management */
 	struct list_head discard_list;		/* 4KB discard list */
-	int nr_discards;			/* # of discards in the list */
-	int max_discards;			/* max. discards to be issued */
+	unsigned int nr_discards;		/* # of discards in the list */
+	unsigned int max_discards;		/* max. discards to be issued */
 
 	/* for batched trimming */
 	unsigned int trim_sections;		/* # of sections to trim */
