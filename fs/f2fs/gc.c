@@ -685,6 +685,7 @@ static void move_data_page(struct inode *inode, block_t bidx, int gc_type)
 			.sbi = F2FS_I_SB(inode),
 			.type = DATA,
 			.rw = WRITE_SYNC,
+			.old_blkaddr = NULL_ADDR,
 			.page = page,
 			.encrypted_page = NULL,
 		};

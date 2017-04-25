@@ -1213,9 +1213,20 @@ int do_write_data_page(struct f2fs_io_info *fio)
 	struct page *page = fio->page;
 	struct inode *inode = page->mapping->host;
 	struct dnode_of_data dn;
+	struct extent_info ei = {0,0,0};
+	bool ipu_force = false;
 	int err = 0;
 
 	set_new_dnode(&dn, inode, NULL, NULL, 0);
+	if (need_inplace_update(fio) &&
+			f2fs_lookup_extent_cache(inode, page->index, &ei)) {
+		fio->old_blkaddr = ei.blk + page->index - ei.fofs;
+		if (fio->old_blkaddr != NULL_ADDR &&
+				fio->old_blkaddr != NEW_ADDR) {
+			ipu_force = true;
+			goto got_it;
+		}
+	}
 	err = get_dnode_of_data(&dn, page->index, LOOKUP_NODE);
 	if (err)
 		return err;
@@ -1227,7 +1238,7 @@ int do_write_data_page(struct f2fs_io_info *fio)
 		ClearPageUptodate(page);
 		goto out_writepage;
 	}
-
+got_it:
 	err = encrypt_one_page(fio);
 	if (err)
 		goto out_writepage;
@@ -1238,7 +1249,7 @@ int do_write_data_page(struct f2fs_io_info *fio)
 	 * If current allocation needs SSR,
 	 * it had better in-place writes for updated data.
 	 */
-	if (need_inplace_update(fio)) {
+	if (ipu_force || need_inplace_update(fio)) {
 		f2fs_bug_on(fio->sbi, !fio->cp_rwsem_locked);
 		f2fs_unlock_op(fio->sbi);
 		fio->cp_rwsem_locked = false;
@@ -1274,6 +1285,7 @@ static int __write_data_page(struct page *page,
 		.sbi = sbi,
 		.type = DATA,
 		.rw = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE,
+		.old_blkaddr = NULL_ADDR,
 		.page = page,
 		.encrypted_page = NULL,
 		.cp_rwsem_locked = true,
