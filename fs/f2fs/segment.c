@@ -318,7 +318,6 @@ static int __commit_inmem_pages(struct inode *inode,
 		.sbi = sbi,
 		.type = DATA,
 		.rw = WRITE_SYNC | REQ_PRIO,
-		.encrypted_page = NULL,
 	};
 	bool submit_bio = false;
 	int err = 0;
@@ -337,6 +336,7 @@ static int __commit_inmem_pages(struct inode *inode,
 
 			fio.page = page;
 			fio.old_blkaddr = NULL_ADDR;
+			fio.encrypted_page = NULL;
 			err = do_write_data_page(&fio);
 			if (err) {
 				unlock_page(page);
