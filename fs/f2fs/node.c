@@ -1819,6 +1819,9 @@ void build_free_nids(struct f2fs_sb_info *sbi)
 	int i = 0;
 	nid_t nid = nm_i->next_scan_nid;
 
+	if (unlikely(nid >= nm_i->max_nid))
+		nid = 0;
+
 	/* Enough entries */
 	if (nm_i->nid_cnt[FREE_NID_LIST] >= NAT_ENTRY_PER_BLOCK)
 		return;
