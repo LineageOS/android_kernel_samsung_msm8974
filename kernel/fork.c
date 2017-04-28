@@ -293,6 +293,8 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	if (err)
 		goto out;
 
+	tsk->flags &= ~PF_SU;
+
 	tsk->stack = ti;
 
 	setup_thread_stack(tsk, orig);
