@@ -2249,7 +2249,8 @@ struct f2fs_stat_info {
 	s64 ndirty_node, ndirty_dent, ndirty_meta, ndirty_data, ndirty_imeta;
 	s64 inmem_pages;
 	unsigned int ndirty_dirs, ndirty_files, ndirty_all;
-	int nats, dirty_nats, sits, dirty_sits, free_nids, alloc_nids;
+	int nats, dirty_nats, sits, dirty_sits;
+	int free_nids, avail_nids, alloc_nids;
 	int total_count, utilization;
 	int bg_gc, wb_bios;
 	int inline_xattr, inline_inode, inline_dir, orphans;
