@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2014, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2014, 2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -556,8 +556,13 @@ static int rmnet_ctl_open(struct inode *inode, struct file *file)
 	if (!dev)
 		return -ENODEV;
 
-	if (test_bit(RMNET_CTRL_DEV_OPEN, &dev->status))
+	mutex_lock(&dev->dev_lock);
+	if (test_bit(RMNET_CTRL_DEV_OPEN, &dev->status)) {
+		mutex_unlock(&dev->dev_lock);
 		goto already_opened;
+	}
+	set_bit(RMNET_CTRL_DEV_OPEN, &dev->status);
+	mutex_unlock(&dev->dev_lock);
 
 	if (dev->mdm_wait_timeout &&
 			!test_bit(RMNET_CTRL_DEV_READY, &dev->status)) {
@@ -568,10 +573,15 @@ static int rmnet_ctl_open(struct inode *inode, struct file *file)
 		if (retval == 0) {
 			dev_err(dev->devicep, "%s: Timeout opening %s\n",
 						__func__, dev->name);
-			return -ETIMEDOUT;
-		} else if (retval < 0) {
+			retval = -ETIMEDOUT;
+		} else if (retval < 0)
 			dev_err(dev->devicep, "%s: Error waiting for %s\n",
 						__func__, dev->name);
+
+		if (retval < 0) {
+			mutex_lock(&dev->dev_lock);
+			clear_bit(RMNET_CTRL_DEV_OPEN, &dev->status);
+			mutex_unlock(&dev->dev_lock);
 			return retval;
 		}
 	}
@@ -579,10 +589,11 @@ static int rmnet_ctl_open(struct inode *inode, struct file *file)
 	if (!test_bit(RMNET_CTRL_DEV_READY, &dev->status)) {
 		dev_dbg(dev->devicep, "%s: Connection timedout opening %s\n",
 					__func__, dev->name);
+		mutex_lock(&dev->dev_lock);
+		clear_bit(RMNET_CTRL_DEV_OPEN, &dev->status);
+		mutex_unlock(&dev->dev_lock);
 		return -ETIMEDOUT;
 	}
-
-	set_bit(RMNET_CTRL_DEV_OPEN, &dev->status);
 
 	file->private_data = dev;
 
@@ -617,7 +628,9 @@ static int rmnet_ctl_release(struct inode *inode, struct file *file)
 	}
 	spin_unlock_irqrestore(&dev->rx_lock, flag);
 
+	mutex_lock(&dev->dev_lock);
 	clear_bit(RMNET_CTRL_DEV_OPEN, &dev->status);
+	mutex_unlock(&dev->dev_lock);
 
 	time = usb_wait_anchor_empty_timeout(&dev->tx_submitted,
 			UNLINK_TIMEOUT_MS);
@@ -688,6 +701,7 @@ ctrl_read:
 
 	list_elem = list_first_entry(&dev->rx_list,
 				     struct ctrl_pkt_list_elem, list);
+	list_del(&list_elem->list);
 	bytes_to_read = (uint32_t)(list_elem->cpkt.data_size);
 	if (bytes_to_read > count) {
 		spin_unlock_irqrestore(&dev->rx_lock, flags);
@@ -704,11 +718,11 @@ ctrl_read:
 			dev_err(dev->devicep,
 				"%s: copy_to_user failed for %s\n",
 				__func__, dev->name);
+		spin_lock_irqsave(&dev->rx_lock, flags);
+		list_add(&list_elem->list, &dev->rx_list);
+		spin_unlock_irqrestore(&dev->rx_lock, flags);
 		return -EFAULT;
 	}
-	spin_lock_irqsave(&dev->rx_lock, flags);
-	list_del(&list_elem->list);
-	spin_unlock_irqrestore(&dev->rx_lock, flags);
 
 	kfree(list_elem->cpkt.data);
 	kfree(list_elem);
