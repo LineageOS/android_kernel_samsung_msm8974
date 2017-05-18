@@ -36,10 +36,6 @@
 #include <linux/cleancache.h>
 #include "internal.h"
 
-#ifdef CONFIG_SDP
-#include <sdp/cache_cleanup.h>
-#endif
-
 /*
  * FIXME: remove all knowledge of the buffer layer from the core VM
  */
@@ -117,11 +113,6 @@
 void __delete_from_page_cache(struct page *page)
 {
 	struct address_space *mapping = page->mapping;
-
-#ifdef CONFIG_SDP
-	if(mapping_sensitive(mapping))
-		sdp_page_cleanup(page);
-#endif
 
 	/*
 	 * if we're uptodate, flush out into the cleancache, otherwise

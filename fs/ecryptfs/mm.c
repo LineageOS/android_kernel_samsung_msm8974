@@ -28,8 +28,6 @@
 #include <linux/pagemap.h>
 
 #include "ecryptfs_kernel.h"
-#include "ecryptfs_dek.h"
-
 
 extern spinlock_t inode_sb_list_lock;
 static int ecryptfs_mm_debug = 0;

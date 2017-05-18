@@ -24,9 +24,6 @@ enum mapping_flags {
 	AS_ENOSPC	= __GFP_BITS_SHIFT + 1,	/* ENOSPC on async write */
 	AS_MM_ALL_LOCKS	= __GFP_BITS_SHIFT + 2,	/* under mm_take_all_locks() */
 	AS_UNEVICTABLE	= __GFP_BITS_SHIFT + 3,	/* e.g., ramdisk, SHM_LOCK */
-#ifdef CONFIG_SDP
-	AS_SENSITIVE = __GFP_BITS_SHIFT + 5, /* Group of sensitive pages to be cleaned up */
-#endif
 };
 
 static inline void mapping_set_error(struct address_space *mapping, int error)
@@ -70,25 +67,6 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
 	m->flags = (m->flags & ~(__force unsigned long)__GFP_BITS_MASK) |
 				(__force unsigned long)mask;
 }
-
-#ifdef CONFIG_SDP
-static inline void mapping_set_sensitive(struct address_space *mapping)
-{
-    set_bit(AS_SENSITIVE, &mapping->flags);
-}
-
-static inline void mapping_clear_sensitive(struct address_space *mapping)
-{
-    clear_bit(AS_SENSITIVE, &mapping->flags);
-}
-
-static inline int mapping_sensitive(struct address_space *mapping)
-{
-    if (mapping)
-        return test_bit(AS_SENSITIVE, &mapping->flags);
-    return !!mapping;
-}
-#endif
 
 /*
  * The page cache can done in larger chunks than

@@ -35,10 +35,6 @@
 #include <linux/slab.h>
 #include "ecryptfs_kernel.h"
 
-#ifdef CONFIG_SDP
-#include "ecryptfs_dek.h"
-#endif
-
 /**
  * request_key returned an error instead of a valid key address;
  * determine the type of error, make appropriate log entries, and
@@ -1903,22 +1899,6 @@ int ecryptfs_parse_packet_set(struct ecryptfs_crypt_stat *crypt_stat,
 			rc = -EIO;
 			goto out_wipe_list;
 			break;
-#ifdef CONFIG_SDP
-		case ECRYPTFS_DEK_PACKET_TYPE:
-			printk("%s() ECRYPTFS_DEK_PACKET_TYPE \n",
-					__func__);
-			rc = parse_dek_packet(
-					(unsigned char *)&src[i], crypt_stat,
-					&packet_size);
-			if (rc) {
-				ecryptfs_printk(KERN_ERR, "Error parsing "
-						"dek packet %d\n", rc);
-			rc = -EIO;
-			goto out_wipe_list;
-			}
-			i += packet_size;
-			break;
-#endif
 		default:
 			ecryptfs_printk(KERN_DEBUG, "No packet at offset [%zd] "
 					"of the file header; hex value of "
@@ -2018,15 +1998,6 @@ found_matching_auth_tok:
 		BUG();
 	}
 
-#ifdef CONFIG_SDP
-	if((crypt_stat->flags & ECRYPTFS_DEK_IS_SENSITIVE)) {
-		rc = ecryptfs_get_sdp_dek(crypt_stat);
-		if (rc) {
-			ecryptfs_printk(KERN_ERR, "Error setting sdp key after parse\n");
-			goto out_wipe_list;
-		}
-	}
-#endif
 	rc = ecryptfs_compute_root_iv(crypt_stat);
 	if (rc) {
 		ecryptfs_printk(KERN_ERR, "Error computing "
@@ -2472,20 +2443,9 @@ encrypted_session_key_set:
 	       ECRYPTFS_SALT_SIZE);
 	(*packet_size) += ECRYPTFS_SALT_SIZE;	/* salt */
 	dest[(*packet_size)++] = 0x60;	/* hash iterations (65536) */
-#ifdef CONFIG_SDP
-	if ((crypt_stat->flags & ECRYPTFS_DEK_IS_SENSITIVE)) {
-		ecryptfs_printk(KERN_DEBUG, "Sensitive file, tag_3 to zeroes\n");
-		memset(&dest[(*packet_size)], 0, key_rec->enc_key_size);
-	} else {
-		memcpy(&dest[(*packet_size)], key_rec->enc_key,
-		       key_rec->enc_key_size);
-	}
-	(*packet_size) += key_rec->enc_key_size;
-#else
 	memcpy(&dest[(*packet_size)], key_rec->enc_key,
 	       key_rec->enc_key_size);
 	(*packet_size) += key_rec->enc_key_size;
-#endif
 out:
 	if (rc)
 		(*packet_size) = 0;
@@ -2570,19 +2530,6 @@ ecryptfs_generate_key_packet_set(char *dest_base,
 				goto out_free;
 			}
 			(*len) += written;
-#ifdef CONFIG_SDP
-			if (crypt_stat->flags & ECRYPTFS_DEK_SDP_ENABLED &&
-				crypt_stat->flags & ECRYPTFS_DEK_IS_SENSITIVE) {
-				rc = write_dek_packet(dest_base + (*len), crypt_stat,
-						&written);
-				if (rc) {
-					ecryptfs_printk(KERN_WARNING, "Error "
-							"writing dek packet\n");
-					goto out_free;
-				}
-				(*len) += written;
-			}
-#endif
 		} else if (auth_tok->token_type == ECRYPTFS_PRIVATE_KEY) {
 			rc = write_tag_1_packet(dest_base + (*len), &max,
 						auth_tok_key, auth_tok,

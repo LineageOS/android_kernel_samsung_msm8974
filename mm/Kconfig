@@ -506,8 +506,3 @@ config MIN_DIRTY_THRESH_PAGES
 	  It is only effective when dirty_ratio is used. (Setting dirty_bytes
 	  disables this option.)
 	  Do not use it if you unsure.
-
-config SDP_CACHE_CLEANUP
-	bool "SDP requirement. cache cleanup"
-	depends on SDP
-	default n

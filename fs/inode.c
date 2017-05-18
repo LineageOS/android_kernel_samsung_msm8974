@@ -168,9 +168,6 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
 	mapping->assoc_mapping = NULL;
 	mapping->backing_dev_info = &default_backing_dev_info;
 	mapping->writeback_index = 0;
-#ifdef CONFIG_SDP
-	mapping->userid = 0;
-#endif
 
 	/*
 	 * If the block_device provides a backing_dev_info for client

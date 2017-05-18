@@ -235,8 +235,6 @@ CONFIG_NET_SCH_INGRESS=y # classifier for ingress packet
 #optimize mmc block delay on resume
 CONFIG_MMC_BLOCK_DEFERRED_RESUME=y
 
-CONFIG_SDP=y
-
 # SAMP : HOTNESS
 CONFIG_SAMP_HOTNESS=y
 

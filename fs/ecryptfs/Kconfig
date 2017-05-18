@@ -28,17 +28,6 @@ config ECRYPT_FS_VIRTUAL_FAT_XATTR
 	help
 	  Modification of encrypted filesystem for virtual FAT xattr
 
-config SDP
-	bool "Enables SDP"
-	default n
-	depends on ECRYPT_FS
-	help
-	Sensitive Data Protection
-	
-config SDP_KEY_DUMP
-	bool "SDP KEY DUMP"
-	default n
-
 config FORCE_DISABLE_FIPS
 	bool "Force disable FIPS config"
 	default n

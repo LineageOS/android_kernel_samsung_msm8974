@@ -40,11 +40,6 @@
 #include <linux/nsproxy.h>
 #include <linux/backing-dev.h>
 #include <linux/ecryptfs.h>
-#ifdef CONFIG_SDP
-#include <sdp/dek_common.h>
-#include <linux/list.h>
-#include <linux/spinlock.h>
-#endif
 
 #ifdef CONFIG_WTL_ENCRYPTION_FILTER
 #define ENC_NAME_FILTER_MAX_INSTANCE 5
@@ -62,10 +57,6 @@
 #define ECRYPTFS_DEFAULT_NUM_USERS 4
 #define ECRYPTFS_MAX_NUM_USERS 32768
 #define ECRYPTFS_XATTR_NAME "user.ecryptfs"
-
-#ifdef CONFIG_SDP
-#define PKG_NAME_SIZE 16
-#endif
 
 void ecryptfs_dump_auth_tok(struct ecryptfs_auth_tok *auth_tok);
 extern void ecryptfs_to_hex(char *dst, char *src, size_t src_size);
@@ -242,12 +233,6 @@ struct ecryptfs_crypt_stat {
 #ifdef CONFIG_WTL_ENCRYPTION_FILTER
 #define ECRYPTFS_ENCRYPTED_OTHER_DEVICE 0x00008000
 #endif
-#ifdef CONFIG_SDP
-#define ECRYPTFS_DEK_SDP_ENABLED      0x00100000
-#define ECRYPTFS_DEK_IS_SENSITIVE     0x00200000
-#define ECRYPTFS_DEK_MULTI_ENGINE     0x00400000 // eCryptfs header contains engine id.
-#define ECRYPTFS_SDP_IS_CHAMBER_DIR   0x02000000
-#endif
 
 	u32 flags;
 	unsigned int file_version;
@@ -269,10 +254,6 @@ struct ecryptfs_crypt_stat {
 	struct mutex cs_tfm_mutex;
 	struct mutex cs_hash_tfm_mutex;
 	struct mutex cs_mutex;
-#ifdef CONFIG_SDP
-	int engine_id;
-	dek_t sdp_dek;
-#endif
 };
 
 /* inode private data. */
@@ -370,9 +351,6 @@ struct ecryptfs_mount_crypt_stat {
 #if defined(CONFIG_CRYPTO_FIPS) && !defined(CONFIG_FORCE_DISABLE_FIPS)
 #define ECRYPTFS_ENABLE_CC                     0x00000400
 #endif
-#ifdef CONFIG_SDP
-#define ECRYPTFS_MOUNT_SDP_ENABLED             0x80000000
-#endif
 
 	u32 flags;
 	struct list_head global_auth_tok_list;
@@ -391,13 +369,6 @@ struct ecryptfs_mount_crypt_stat {
 	char enc_filter_ext[ENC_EXT_FILTER_MAX_INSTANCE]
 				[ENC_EXT_FILTER_MAX_LEN + 1];
 #endif
-#ifdef CONFIG_SDP
-	int userid;
-	struct list_head chamber_dir_list;
-	spinlock_t chamber_dir_list_lock;
-	int partition_id;
-#endif
-
 };
 
 /* superblock private data. */
@@ -405,9 +376,6 @@ struct ecryptfs_sb_info {
 	struct super_block *wsi_sb;
 	struct ecryptfs_mount_crypt_stat mount_crypt_stat;
 	struct backing_dev_info bdi;
-#ifdef CONFIG_SDP
-	int userid;
-#endif
 };
 
 /* file private data. */
