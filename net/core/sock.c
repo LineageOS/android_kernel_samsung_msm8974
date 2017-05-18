@@ -1125,10 +1125,6 @@ static struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority,
 	if (slab != NULL) {
 		sk = kmem_cache_alloc(slab, priority & ~__GFP_ZERO);
 		if (!sk) {
-			// ------------- START of KNOX_VPN ------------------//
-            sk->knox_uid = current->cred->uid;
-            sk->knox_pid = current->tgid;
-			// ------------- END of KNOX_VPN -------------------//
 			return sk;
 		}
 		if (priority & __GFP_ZERO) {
@@ -1149,11 +1145,6 @@ static struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority,
 		if (!try_module_get(prot->owner))
 			goto out_free_sec;
 		sk_tx_queue_clear(sk);
-
-// ------------- START of KNOX_VPN ------------------//
-        sk->knox_uid = current->cred->uid;
-        sk->knox_pid = current->tgid;
-// ------------- END of KNOX_VPN -------------------//
 	}
 
 	return sk;

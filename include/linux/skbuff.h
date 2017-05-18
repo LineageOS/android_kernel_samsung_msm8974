@@ -278,13 +278,6 @@ struct skb_shared_info {
 	/* Intermediate layers must ensure that destructor_arg
 	 * remains valid until skb destructor */
 	void *		destructor_arg;
-    
- // ------------- START of KNOX_VPN ------------------//
-	uid_t uid;
-	pid_t pid;
-	u_int32_t knox_mark;
- // ------------- END of KNOX_VPN -------------------//
-
 
 	/* must be last field, see pskb_expand_head() */
 	skb_frag_t	frags[MAX_SKB_FRAGS];
