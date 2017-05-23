@@ -2158,11 +2158,6 @@ static ssize_t f2fs_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
 	struct blk_plug plug;
 	ssize_t ret;
 
-	if (f2fs_encrypted_inode(inode) &&
-				!fscrypt_has_encryption_key(inode) &&
-				fscrypt_get_encryption_info(inode))
-		return -EACCES;
-
 	ret = generic_segment_checks(iov, &nr_segs, &count, VERIFY_READ);
 	if (ret)
 		return ret;
