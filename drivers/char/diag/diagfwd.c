@@ -2596,6 +2596,7 @@ void diagfwd_init(void)
 	driver->supports_apps_hdlc_encoding = 1;
 	mutex_init(&driver->diag_hdlc_mutex);
 	mutex_init(&driver->diag_cntl_mutex);
+	mutex_init(&driver->cmd_reg_mutex);
 	spin_lock_init(&driver->ws_lock);
 	driver->ws_ref_count = 0;
 	driver->copy_count = 0;
