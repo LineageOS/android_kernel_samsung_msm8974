@@ -234,7 +234,7 @@ static int f2fs_set_acl(struct inode *inode, int type,
 		value = f2fs_acl_to_disk(acl, &size);
 		if (IS_ERR(value)) {
 			clear_inode_flag(inode, FI_ACL_MODE);
-			return (int)PTR_ERR(value);
+			return PTR_ERR(value);
 		}
 	}
 
