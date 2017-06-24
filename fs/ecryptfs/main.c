@@ -201,9 +201,6 @@ enum { ecryptfs_opt_sig, ecryptfs_opt_ecryptfs_sig,
 #ifdef CONFIG_SDP
 	ecryptfs_opt_userid, ecryptfs_opt_sdp, ecryptfs_opt_chamber_dirs, ecryptfs_opt_partition_id,
 #endif
-#ifdef CONFIG_DLP
-	   ecryptfs_opt_dlp,
-#endif
        ecryptfs_opt_err };
 
 static const match_table_t tokens = {
@@ -232,9 +229,6 @@ static const match_table_t tokens = {
 	{ecryptfs_opt_userid, "userid=%s"},
     {ecryptfs_opt_sdp, "sdp_enabled"},
     {ecryptfs_opt_partition_id, "partition_id=%u"},
-#endif
-#ifdef CONFIG_DLP
-	{ecryptfs_opt_dlp, "dlp_enabled"},
 #endif
 	{ecryptfs_opt_err, NULL}
 };
@@ -553,11 +547,6 @@ static int ecryptfs_parse_options(struct ecryptfs_sb_info *sbi, char *options,
                            &partition_id_str, 0);
             printk("%s : partition_id : %d", __func__, mount_crypt_stat->partition_id);
 		}
-		break;
-#endif
-#ifdef CONFIG_DLP
-		case ecryptfs_opt_dlp:
-			mount_crypt_stat->flags |= ECRYPTFS_MOUNT_DLP_ENABLED;
 		break;
 #endif
 		case ecryptfs_opt_err:

@@ -178,12 +178,6 @@ static int ecryptfs_show_options(struct seq_file *m, struct dentry *root)
 	    seq_printf(m, ",partition_id=%d", mount_crypt_stat->partition_id);
 	}
 #endif
-
-#ifdef CONFIG_DLP
-	if (mount_crypt_stat->flags & ECRYPTFS_MOUNT_DLP_ENABLED){
-		seq_printf(m, ",dlp_enabled");
-	}
-#endif
 	seq_printf(m, ",ecryptfs_cipher=%s",
 		mount_crypt_stat->global_default_cipher_name);
 

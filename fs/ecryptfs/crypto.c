@@ -1268,9 +1268,6 @@ static struct ecryptfs_flag_map_elem ecryptfs_flag_map[] = {
 #else
 	{0x00000008, ECRYPTFS_ENCRYPT_FILENAMES},
 #endif
-#ifdef CONFIG_DLP
-	{0x00080000, ECRYPTFS_DLP_ENABLED},
-#endif
 };
 
 /**

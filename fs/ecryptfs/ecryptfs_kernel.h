@@ -248,9 +248,6 @@ struct ecryptfs_crypt_stat {
 #define ECRYPTFS_DEK_MULTI_ENGINE     0x00400000 // eCryptfs header contains engine id.
 #define ECRYPTFS_SDP_IS_CHAMBER_DIR   0x02000000
 #endif
-#ifdef CONFIG_DLP
-#define ECRYPTFS_DLP_ENABLED		  0x04000000
-#endif
 
 	u32 flags;
 	unsigned int file_version;
@@ -375,9 +372,6 @@ struct ecryptfs_mount_crypt_stat {
 #endif
 #ifdef CONFIG_SDP
 #define ECRYPTFS_MOUNT_SDP_ENABLED             0x80000000
-#endif
-#ifdef CONFIG_DLP
-#define ECRYPTFS_MOUNT_DLP_ENABLED             0x40000000
 #endif
 
 	u32 flags;
