@@ -227,3 +227,9 @@ config USB_LIBUSUAL
 		options libusual bias="ub"
 
 	  If unsure, say N.
+
+config USB_STORAGE_DETECT
+	bool "Detect inserting sdcard"
+	depends on USB
+	help
+	  This is samsung patch

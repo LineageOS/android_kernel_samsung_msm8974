@@ -23,7 +23,11 @@
 #include <linux/string.h>
 #include <linux/atomic.h>
 #include <linux/of.h>
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 #include <linux/io.h>
+#else
+#include <asm/io.h>
+#endif
 #include <asm-generic/sizes.h>
 #include <mach/memory.h>
 #include <mach/msm_rtb.h>
@@ -35,7 +39,8 @@
 
 #define RTB_COMPAT_STR	"qcom,msm-rtb"
 
-/* Write
+/* If enalbe "CONFIG_MSM_RTB_TIMESTAMP"
+ * Write
  * 1) 3 bytes sentinel
  * 2) 1 bytes of log type
  * 3) 8 bytes of where the caller came from
@@ -44,14 +49,29 @@
  * 5) 8 bytes for timestamp
  *
  * Total = 32 bytes.
+ * If disable "CONFIG_MSM_RTB_TIMESTAMP"
+ * Write
+ * 1) 3 bytes sentinel
+ * 2) 1 bytes of log type
+ * 3) 4 bytes of where the caller came from
+ * 4) 4 bytes index
+ * 4) 4 bytes extra data from the caller
+ *
+ * Total = 16 bytes.
  */
 struct msm_rtb_layout {
 	unsigned char sentinel[3];
 	unsigned char log_type;
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 	uint32_t idx;
 	uint64_t caller;
 	uint64_t data;
 	uint64_t timestamp;
+#else
+	void *caller;
+	unsigned long idx;
+	void *data;
+#endif
 } __attribute__ ((__packed__));
 
 
@@ -72,10 +92,18 @@ DEFINE_PER_CPU(atomic_t, msm_rtb_idx_cpu);
 static atomic_t msm_rtb_idx;
 #endif
 
+
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 static struct msm_rtb_state msm_rtb = {
 	.filter = 1 << LOGK_LOGBUF,
-	.enabled = 1,
+	.enabled = 0,
 };
+#else
+struct msm_rtb_state msm_rtb = {
+	.filter = 1 << LOGK_LOGBUF,
+	.enabled = 0,
+};
+#endif
 
 module_param_named(filter, msm_rtb.filter, uint, 0644);
 module_param_named(enable, msm_rtb.enabled, int, 0644);
@@ -111,29 +139,47 @@ static void msm_rtb_write_type(enum logk_event_type log_type,
 	start->log_type = (char)log_type;
 }
 
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 static void msm_rtb_write_caller(uint64_t caller, struct msm_rtb_layout *start)
+#else
+static void msm_rtb_write_caller(void *caller, struct msm_rtb_layout *start)
+#endif
 {
 	start->caller = caller;
 }
 
-static void msm_rtb_write_idx(uint32_t idx,
-				struct msm_rtb_layout *start)
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
+static void msm_rtb_write_idx(uint32_t idx, struct msm_rtb_layout *start)
+#else
+static void msm_rtb_write_idx(unsigned long idx, struct msm_rtb_layout *start)
+#endif
 {
 	start->idx = idx;
 }
 
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 static void msm_rtb_write_data(uint64_t data, struct msm_rtb_layout *start)
+#else
+static void msm_rtb_write_data(void *data, struct msm_rtb_layout *start)
+#endif
 {
 	start->data = data;
 }
 
-static void msm_rtb_write_timestamp(struct msm_rtb_layout *start)
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
+void msm_rtb_write_timestamp(struct msm_rtb_layout *start)
 {
 	start->timestamp = sched_clock();
 }
+#endif
 
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 static void uncached_logk_pc_idx(enum logk_event_type log_type, uint64_t caller,
 				 uint64_t data, int idx)
+#else
+static void uncached_logk_pc_idx(enum logk_event_type log_type, void *caller,
+						 void *data, int idx)
+#endif
 {
 	struct msm_rtb_layout *start;
 
@@ -144,7 +190,9 @@ static void uncached_logk_pc_idx(enum logk_event_type log_type, uint64_t caller,
 	msm_rtb_write_caller(caller, start);
 	msm_rtb_write_idx(idx, start);
 	msm_rtb_write_data(data, start);
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 	msm_rtb_write_timestamp(start);
+#endif
 	mb();
 
 	return;
@@ -153,10 +201,21 @@ static void uncached_logk_pc_idx(enum logk_event_type log_type, uint64_t caller,
 static void uncached_logk_timestamp(int idx)
 {
 	unsigned long long timestamp;
+#if !defined(CONFIG_MSM_RTB_TIMESTAMP)
+	void *timestamp_upper, *timestamp_lower;
+#endif
 	timestamp = sched_clock();
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 	uncached_logk_pc_idx(LOGK_TIMESTAMP|LOGTYPE_NOPC,
 			(uint64_t)lower_32_bits(timestamp),
 			(uint64_t)upper_32_bits(timestamp), idx);
+#else
+	timestamp_lower = (void *)lower_32_bits(timestamp);
+	timestamp_upper = (void *)upper_32_bits(timestamp);
+
+	uncached_logk_pc_idx(LOGK_TIMESTAMP|LOGTYPE_NOPC, timestamp_lower,
+			timestamp_upper, idx);
+#endif
 }
 
 #if defined(CONFIG_MSM_RTB_SEPARATE_CPUS)
@@ -218,9 +277,12 @@ int notrace uncached_logk_pc(enum logk_event_type log_type, void *caller,
 
 	i = msm_rtb_get_idx();
 
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 	uncached_logk_pc_idx(log_type, (uint64_t)((unsigned long) caller),
 				(uint64_t)((unsigned long) data), i);
-
+#else
+	uncached_logk_pc_idx(log_type, caller, data, i);
+#endif
 	return 1;
 }
 EXPORT_SYMBOL(uncached_logk_pc);
@@ -231,7 +293,11 @@ noinline int notrace uncached_logk(enum logk_event_type log_type, void *data)
 }
 EXPORT_SYMBOL(uncached_logk);
 
+#if defined(CONFIG_MSM_RTB_TIMESTAMP)
 static int msm_rtb_probe(struct platform_device *pdev)
+#else
+int msm_rtb_probe(struct platform_device *pdev)
+#endif
 {
 	struct msm_rtb_platform_data *d = pdev->dev.platform_data;
 #if defined(CONFIG_MSM_RTB_SEPARATE_CPUS)
@@ -295,6 +361,10 @@ static int msm_rtb_probe(struct platform_device *pdev)
 
 	atomic_notifier_chain_register(&panic_notifier_list,
 						&msm_rtb_panic_blk);
+#ifdef CONFIG_ARCH_MSM8226
+	/* Adding msm_rtb.filter" here, as removed from Board kernel cmdline */
+	msm_rtb.filter = 0x37;
+#endif
 	msm_rtb.initialized = 1;
 	return 0;
 }
@@ -303,6 +373,10 @@ static struct of_device_id msm_match_table[] = {
 	{.compatible = RTB_COMPAT_STR},
 	{},
 };
+
+#if !defined(CONFIG_MSM_RTB_TIMESTAMP)
+EXPORT_COMPAT(RTB_COMPAT_STR);
+#endif
 
 static struct platform_driver msm_rtb_driver = {
 	.driver         = {

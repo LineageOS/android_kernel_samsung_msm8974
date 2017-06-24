@@ -189,8 +189,7 @@ struct msm_gpio_set_tbl {
 };
 
 struct msm_camera_gpio_num_info {
-	uint16_t gpio_num[10];
-	uint8_t valid[10];
+	uint16_t gpio_num[13];
 };
 
 struct msm_camera_gpio_conf {
@@ -529,6 +528,10 @@ struct msm_mhl_platform_data {
  *       runtime pm (optimizes for power).
  * @master_id master id number of the i2c core or its wrapper (BLSP/GSBI).
  *       When zero, clock path voting is disabled.
+ * @noise_rjct_sda Number of low samples on data line to consider it low.
+ *       Range of values is 0-3. When missing default to 0.
+ * @noise_rjct_scl Number of low samples on clock line to consider it low.
+ *       Range of values is 0-3. When missing default to 0.
  */
 struct msm_i2c_platform_data {
 	int clk_freq;
@@ -541,6 +544,10 @@ struct msm_i2c_platform_data {
 	int aux_clk;
 	int aux_dat;
 	int src_clk_rate;
+#if defined(CONFIG_MACH_KS01EUR) || defined(CONFIG_SEC_CHAGALL_PROJECT)
+	int noise_rjct_sda;
+	int noise_rjct_scl;
+#endif
 	int use_gsbi_shared_mode;
 	int keep_ahb_clk_on;
 	void (*msm_i2c_config_gpio)(int iface, int config_type);
@@ -682,6 +689,20 @@ void msm_snddev_tx_route_deconfig(void);
 
 extern phys_addr_t msm_shared_ram_phys; /* defined in arch/arm/mach-msm/io.c */
 
-
 u32 wcnss_rf_read_reg(u32 rf_reg_addr);
+
+#if defined(CONFIG_BT_BCM4335) || defined(CONFIG_BT_BCM4339)
+void msm8974_bt_init(void);
+#endif
+
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || \
+    defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE) || \
+    defined(CONFIG_BCM4354) || defined(CONFIG_BCM4354_MODULE)
+int brcm_wlan_init(void);
+int brcm_wifi_status_register(
+	void (*callback)(int card_present, void *dev_id),
+	void *dev_id, void *mmc_host);
+unsigned int brcm_wifi_status(struct device *dev);
+#endif
+
 #endif

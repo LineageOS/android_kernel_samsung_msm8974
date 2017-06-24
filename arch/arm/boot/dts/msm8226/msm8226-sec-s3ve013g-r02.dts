@@ -1,0 +1,57 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+ /* qcom,msm-id =<Chip_id Board_version Other_Specific_info>
+ * All these three fields are unsigned 32 bit integers
+ * For OtherSpecificInfo = 0xABCDEFGH [32 bits in total]
+ *  G[4BITS]:MODEL_VARIANT i.e. 0 for MS01,1 for ULC8_3G
+ *  H[4BITS]:Hardware Revision
+ * Please refer to .../lk/platform/msm_shared/dev_tree.c also
+ */
+
+/dts-v1/;
+/include/ "msm8226-v2.dtsi"
+/include/ "msm8226-sec-s3ve013g-r02.dtsi"
+
+
+/ {
+	model = "[SM-G7102]QC MSM 8226v2 HW rev 3 MTP";
+	compatible = "qcom,msm8226-mtp", "qcom,msm8226", "qcom,mtp";
+	qcom,msm-id = <145 8 0x20033>,
+		      <158 8 0x20033>,
+		      <159 8 0x20033>,
+		      <198 8 0x20033>,
+		      <205 8 0x20033>,
+		      <221 8 0x20033>,
+		      <222 8 0x20033>,
+		      <223 8 0x20033>;
+};
+
+&soc {
+
+	earjack {
+
+		/*Override GPIO properties*/
+		qcom,earjack-detect-gpio = <&msmgpio 69 0>;
+		qcom,earjack-sendend-gpio = <&msmgpio 35 0>;
+		/*Override det and btn zone ADC Values*/
+		det-zones-list = <&det_zones 3 10000 10 0>,
+                             <&det_zones 900 10000 10 0>,
+                             <&det_zones 901 10000 10 1>,
+                             <&det_zones 9999 10000 10 1>;
+		but-zones-list = <&but_zones 0 0 310>,
+                             <&but_zones 1 311 440>,
+                             <&but_zones 2 441 9999>;
+
+	};
+};
+

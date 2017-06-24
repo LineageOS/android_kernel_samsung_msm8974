@@ -35,7 +35,6 @@
 /* RBCPR Version Register */
 #define REG_RBCPR_VERSION		0
 #define RBCPR_VER_2			0x02
-
 /* RBCPR Gate Count and Target Registers */
 #define REG_RBCPR_GCNT_TARGET(n)	(0x60 + 4 * n)
 
@@ -134,7 +133,6 @@
 #define CPR_FUSE_MIN_QUOT_DIFF		100
 
 #define BYTES_PER_FUSE_ROW		8
-
 #define FLAGS_IGNORE_1ST_IRQ_STATUS	BIT(0)
 #define FLAGS_SET_MIN_VOLTAGE		BIT(1)
 #define FLAGS_UPLIFT_QUOT_VOLT		BIT(2)
@@ -627,6 +625,7 @@ static void cpr_scale(struct cpr_regulator *cpr_vreg,
 			cpr_debug_irq("gcnt = 0x%08x (quot = %d)\n", gcnt,
 					quot);
 
+
 			/* Maximize the UP threshold */
 			reg_mask = RBCPR_CTL_UP_THRESHOLD_MASK <<
 					RBCPR_CTL_UP_THRESHOLD_SHIFT;
@@ -934,6 +933,7 @@ static int cpr_suspend(struct cpr_regulator *cpr_vreg)
 	cpr_vreg->is_cpr_suspended = true;
 
 	mutex_unlock(&cpr_vreg->cpr_mutex);
+
 	return 0;
 }
 
@@ -1068,7 +1068,7 @@ static int __devinit cpr_fuse_is_setting_expected(struct cpr_regulator *cpr_vreg
 					u32 sel_array[5])
 {
 	u64 fuse_bits;
-	u32 ret;
+	int ret;
 
 	fuse_bits = cpr_read_efuse_row(cpr_vreg, sel_array[0], sel_array[4]);
 	ret = (fuse_bits >> sel_array[1]) & ((1 << sel_array[2]) - 1);
@@ -1462,12 +1462,12 @@ static int cpr_get_corner_quot_adjustment(struct cpr_regulator *cpr_vreg,
 		return 0;
 	}
 
-	size = prop->length / sizeof(u32);
-	tmp = kzalloc(sizeof(u32) * size, GFP_KERNEL);
+		size = prop->length / sizeof(u32);
+		tmp = kzalloc(sizeof(u32) * size, GFP_KERNEL);
 	if (!tmp) {
 		pr_err("memory alloc failed\n");
-		return -ENOMEM;
-	}
+			return -ENOMEM;
+	}		
 	rc = of_property_read_u32_array(dev->of_node,
 		"qcom,cpr-corner-frequency-map", tmp, size);
 	if (rc < 0) {
@@ -1556,7 +1556,6 @@ static int cpr_get_corner_quot_adjustment(struct cpr_regulator *cpr_vreg,
 	kfree(freq_mappings);
 	return 0;
 }
-
 static int __devinit cpr_init_cpr_efuse(struct platform_device *pdev,
 				     struct cpr_regulator *cpr_vreg)
 {
@@ -1975,7 +1974,6 @@ static int cpr_voltage_uplift_enable_check(struct cpr_regulator *cpr_vreg,
 	}
 	return 0;
 }
-
 static int __devinit cpr_voltage_plan_init(struct platform_device *pdev,
 					struct cpr_regulator *cpr_vreg)
 {

@@ -43,6 +43,9 @@
 #include <asm/localtimer.h>
 #include <asm/smp_plat.h>
 #include <asm/mach/arch.h>
+#ifdef CONFIG_SEC_DEBUG
+#include <mach/sec_debug.h>
+#endif
 
 /*
  * as from 2.5, kernels no longer have an init_tasks structure
@@ -567,6 +570,9 @@ static void ipi_cpu_stop(unsigned int cpu, struct pt_regs *regs)
 		raw_spin_lock(&stop_lock);
 		printk(KERN_CRIT "CPU%u: stopping\n", cpu);
 		dump_stack();
+#ifdef CONFIG_SEC_DEBUG
+		sec_debug_dump_stack();
+#endif
 		raw_spin_unlock(&stop_lock);
 	}
 
@@ -696,7 +702,9 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
 
 void smp_send_reschedule(int cpu)
 {
-	BUG_ON(cpu_is_offline(cpu));
+#if defined(CONFIG_ARCH_MSM8974) || defined(CONFIG_ARCH_MSM8974PRO)
+	WARN_ON(cpu_is_offline(cpu));
+#endif
 	smp_cross_call(cpumask_of(cpu), IPI_RESCHEDULE);
 }
 

@@ -1144,4 +1144,14 @@ config RTC_DRV_QPNP
 	  To compile this driver as a module, choose M here: the
 	  module will be called qpnp-rtc.
 
+config PM8926_BATTERY_CHECK_INTERRUPT
+        bool "Battery removal check by PM8926 interrupt "
+	depends on RTC_DRV_QPNP
+        default n
+        help
+          Say Y to include support for PM8926 battery removal interrupt support
+          Enable this feature to implement battery removal check by
+	  PMIC interrupt for SAMSUNG battery driver.
+
+
 endif # RTC_CLASS

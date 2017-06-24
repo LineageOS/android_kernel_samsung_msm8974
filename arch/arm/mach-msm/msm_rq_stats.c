@@ -206,15 +206,30 @@ static int cpu_hotplug_handler(struct notifier_block *nb,
 	return NOTIFY_OK;
 }
 
+#ifdef CONFIG_SEC_SMART_MGR_RUNQUEUE_AVG
+static unsigned int run_queue_avg_ignore_count = 0;
+static unsigned int sum_avg = 0;
+static unsigned int sum_avg_cnt = 0;
+#endif
+
 static int system_suspend_handler(struct notifier_block *nb,
 				unsigned long val, void *data)
 {
 	switch (val) {
 	case PM_POST_HIBERNATION:
-	case PM_POST_SUSPEND:
 	case PM_POST_RESTORE:
 		rq_info.hotplug_disabled = 0;
 		break;
+	case PM_POST_SUSPEND:
+		rq_info.hotplug_disabled = 0;
+#ifdef CONFIG_SEC_SMART_MGR_RUNQUEUE_AVG
+		{
+			pr_err("system_suspend_handler PM_POST_SUSPEND");
+			run_queue_avg_ignore_count =2;
+		}
+#endif
+		break;
+
 	case PM_HIBERNATION_PREPARE:
 	case PM_SUSPEND_PREPARE:
 		rq_info.hotplug_disabled = 1;
@@ -258,12 +273,56 @@ static ssize_t run_queue_avg_show(struct kobject *kobj,
 	/* rq avg currently available only on one core */
 	val = rq_info.rq_avg;
 	rq_info.rq_avg = 0;
+#ifdef CONFIG_SEC_SMART_MGR_RUNQUEUE_AVG
+	sum_avg += val;
+	sum_avg_cnt++;
+	/*If none read this smt_mgr_run_queue_avg more than 30 seconds clear itself*/
+	if(sum_avg_cnt * 50 /* <- decision_ms*/ >= 30 * 1000) {
+		sum_avg = 0;
+		sum_avg_cnt = 0;
+	}
+#endif
 	spin_unlock_irqrestore(&rq_lock, flags);
 
 	return snprintf(buf, PAGE_SIZE, "%d.%d\n", val/10, val%10);
 }
 
 static struct kobj_attribute run_queue_avg_attr = __ATTR_RO(run_queue_avg);
+
+#ifdef CONFIG_SEC_SMART_MGR_RUNQUEUE_AVG
+static ssize_t run_queue_smt_mgr_avg_show(struct kobject *kobj,
+		struct kobj_attribute *attr, char *buf)
+{
+	unsigned int val = 0;
+	unsigned long flags = 0;
+
+	spin_lock_irqsave(&rq_lock, flags);
+
+	//added msg for test
+	pr_err("run_queue_smt_mgr_avg_show [%d] [%d]\n",sum_avg_cnt, sum_avg);
+
+	/* ignore 1st 2times resume's run queue counts */
+	if(run_queue_avg_ignore_count > 0)
+	{
+		pr_err("run_queue_smt_mgr_avg_show cleared ..[%d]\n",run_queue_avg_ignore_count);
+		run_queue_avg_ignore_count --;
+		sum_avg = 0;
+		sum_avg_cnt = 0;
+	}
+	
+	if(sum_avg_cnt==0) {
+		val = 0;
+	} else {
+		val = sum_avg/sum_avg_cnt;
+	}
+	sum_avg = sum_avg_cnt = 0;
+
+	spin_unlock_irqrestore(&rq_lock, flags);
+	return snprintf(buf, PAGE_SIZE, "%d.%d\n", val/10, val%10);
+}
+
+static struct kobj_attribute run_queue_smt_mgr_avg_attr = __ATTR_RO(run_queue_smt_mgr_avg);
+#endif
 
 static ssize_t show_run_queue_poll_ms(struct kobject *kobj,
 				      struct kobj_attribute *attr, char *buf)
@@ -339,6 +398,9 @@ static struct attribute *rq_attrs[] = {
 	&cpu_normalized_load_attr.attr,
 	&def_timer_ms_attr.attr,
 	&run_queue_avg_attr.attr,
+#ifdef CONFIG_SEC_SMART_MGR_RUNQUEUE_AVG
+	&run_queue_smt_mgr_avg_attr.attr,
+#endif
 	&run_queue_poll_ms_attr.attr,
 	&hotplug_disabled_attr.attr,
 	NULL,

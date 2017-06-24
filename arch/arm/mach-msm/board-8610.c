@@ -37,6 +37,9 @@
 #ifdef CONFIG_ION_MSM
 #include <mach/ion.h>
 #endif
+#ifdef CONFIG_SEC_DEBUG
+#include <mach/sec_debug.h>
+#endif
 #include <linux/regulator/qpnp-regulator.h>
 #include <mach/msm_memtypes.h>
 #include <mach/socinfo.h>
@@ -53,6 +56,16 @@
 #include "spm.h"
 #include "pm.h"
 #include "modem_notifier.h"
+#include <linux/device.h>
+#include <linux/export.h>
+
+#if defined(CONFIG_SEC_THERMISTOR)
+#include <mach/msm8x10-thermistor.h>
+#endif
+
+#ifdef CONFIG_PROC_AVC
+#include <linux/proc_avc.h>
+#endif
 
 static struct memtype_reserve msm8610_reserve_table[] __initdata = {
 	[MEMTYPE_SMI] = {
@@ -117,18 +130,52 @@ void __init msm8610_add_drivers(void)
 		msm_clock_init(&msm8610_rumi_clock_init_data);
 	else
 		msm_clock_init(&msm8610_clock_init_data);
+#if defined(CONFIG_SEC_THERMISTOR)
+	platform_device_register(&sec_device_thermistor);
+#endif
 }
+
+struct class *sec_class;
+EXPORT_SYMBOL(sec_class);
+
+static void samsung_sys_class_init(void)
+{
+	pr_info("samsung sys class init.\n");
+
+	sec_class = class_create(THIS_MODULE, "sec");
+
+	if (IS_ERR(sec_class)) {
+		pr_err("Failed to create class(sec)!\n");
+		return;
+	}
+
+	pr_info("samsung sys class end.\n");
+};
+
+#if defined(CONFIG_BATTERY_SAMSUNG)
+extern void __init samsung_init_battery(void);
+#endif
 
 void __init msm8610_init(void)
 {
 	struct of_dev_auxdata *adata = msm8610_auxdata_lookup;
+
+#ifdef CONFIG_SEC_DEBUG
+	sec_debug_init();
+#endif
+
+#ifdef CONFIG_PROC_AVC
+	sec_avc_log_init();
+#endif
 
 	if (socinfo_init() < 0)
 		pr_err("%s: socinfo_init() failed\n", __func__);
 
 	msm8610_init_gpiomux();
 	board_dt_populate(adata);
+	samsung_sys_class_init();
 	msm8610_add_drivers();
+
 }
 
 static const char *msm8610_dt_match[] __initconst = {

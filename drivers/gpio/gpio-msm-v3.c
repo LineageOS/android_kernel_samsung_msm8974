@@ -125,6 +125,36 @@ void __msm_gpio_set_config_direction(unsigned gpio, int input, int val)
 	}
 }
 
+static inline void set_gpio_bits_no_log(unsigned n, void __iomem *reg)
+{
+	__raw_writel_no_log(__raw_readl_no_log(reg) | n, reg);
+}
+
+static inline void clr_gpio_bits_no_log(unsigned n, void __iomem *reg)
+{
+	__raw_writel_no_log(__raw_readl_no_log(reg) & ~n, reg);
+}
+
+unsigned __msm_gpio_get_inout_no_log(unsigned gpio)
+{
+	return __raw_readl_no_log(GPIO_IN_OUT(gpio)) & BIT(GPIO_IN_BIT);
+}
+
+void __msm_gpio_set_inout_no_log(unsigned gpio, unsigned val)
+{
+	__raw_writel_no_log(val ? BIT(GPIO_OUT_BIT) : 0, GPIO_IN_OUT(gpio));
+}
+
+void __msm_gpio_set_config_direction_no_log(unsigned gpio, int input, int val)
+{
+	if (input) {
+		clr_gpio_bits_no_log(BIT(GPIO_OE_BIT), GPIO_CONFIG(gpio));
+	} else {
+		__msm_gpio_set_inout_no_log(gpio, val);
+		set_gpio_bits_no_log(BIT(GPIO_OE_BIT), GPIO_CONFIG(gpio));
+	}
+}
+
 void __msm_gpio_set_polarity(unsigned gpio, unsigned val)
 {
 	if (val)

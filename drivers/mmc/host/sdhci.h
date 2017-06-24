@@ -143,21 +143,20 @@
 
 #define  SDHCI_INT_CMD_MASK	(SDHCI_INT_RESPONSE | SDHCI_INT_TIMEOUT | \
 		SDHCI_INT_CRC | SDHCI_INT_END_BIT | SDHCI_INT_INDEX | \
-				 SDHCI_INT_AUTO_CMD_ERR)
-
+		SDHCI_INT_AUTO_CMD_ERR)
 #define  SDHCI_INT_DATA_MASK	(SDHCI_INT_DATA_END | SDHCI_INT_DMA_END | \
 		SDHCI_INT_DATA_AVAIL | SDHCI_INT_SPACE_AVAIL | \
 		SDHCI_INT_DATA_TIMEOUT | SDHCI_INT_DATA_CRC | \
 		SDHCI_INT_DATA_END_BIT | SDHCI_INT_ADMA_ERROR)
 #define SDHCI_INT_ALL_MASK	((unsigned int)-1)
 
-#define SDHCI_AUTO_CMD_ERR		0x3C
-#define SDHCI_AUTO_CMD12_NOT_EXEC	0x0001
-#define SDHCI_AUTO_CMD_TIMEOUT_ERR	0x0002
-#define SDHCI_AUTO_CMD_CRC_ERR		0x0004
-#define SDHCI_AUTO_CMD_ENDBIT_ERR	0x0008
-#define SDHCI_AUTO_CMD_INDEX_ERR	0x0010
-#define SDHCI_AUTO_CMD12_NOT_ISSUED	0x0080
+#define SDHCI_AUTO_CMD_ERR	0x3C
+#define SDHCI_AUTO_CMD12_EXEC_ERR	0x0001
+#define SDHCI_AUTO_CMD_TIMEOUT		0x0002
+#define SDHCI_AUTO_CMD_CRC		0x0004
+#define SDHCI_AUTO_CMD_ENDBIT		0x0008
+#define SDHCI_AUTO_CMD_INDEX		0x0010
+#define SDHCI_AUTO_CMD_ISSUED		0x0080
 
 #define SDHCI_HOST_CONTROL2		0x3E
 #define  SDHCI_CTRL_UHS_MASK		0x0007
@@ -297,6 +296,7 @@ struct sdhci_ops {
 	unsigned int	(*get_max_segments)(void);
 	void	(*platform_bus_voting)(struct sdhci_host *host, u32 enable);
 	void    (*disable_data_xfer)(struct sdhci_host *host);
+	void    (*dump_vendor_regs)(struct sdhci_host *host);
 	int	(*enable_controller_clock)(struct sdhci_host *host);
 };
 

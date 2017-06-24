@@ -24,8 +24,10 @@
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/scatterlist.h>
-#include <linux/spinlock.h>
 #include <linux/string.h>
+#ifndef CONFIG_CRYPTO_DRBG
+#include <linux/spinlock.h>
+#endif
 
 struct eseqiv_request_ctx {
 	struct scatterlist src[2];
@@ -34,7 +36,9 @@ struct eseqiv_request_ctx {
 };
 
 struct eseqiv_ctx {
+#ifndef CONFIG_CRYPTO_DRBG
 	spinlock_t lock;
+#endif
 	unsigned int reqoff;
 	char salt[];
 };
@@ -146,6 +150,7 @@ out:
 	return err;
 }
 
+#ifndef CONFIG_CRYPTO_DRBG
 static int eseqiv_givencrypt_first(struct skcipher_givcrypt_request *req)
 {
 	struct crypto_ablkcipher *geniv = skcipher_givcrypt_reqtfm(req);
@@ -168,6 +173,7 @@ unlock:
 
 	return eseqiv_givencrypt(req);
 }
+#endif
 
 static int eseqiv_init(struct crypto_tfm *tfm)
 {
@@ -176,7 +182,9 @@ static int eseqiv_init(struct crypto_tfm *tfm)
 	unsigned long alignmask;
 	unsigned int reqsize;
 
+#ifndef CONFIG_CRYPTO_DRBG
 	spin_lock_init(&ctx->lock);
+#endif
 
 	alignmask = crypto_tfm_ctx_alignment() - 1;
 	reqsize = sizeof(struct eseqiv_request_ctx);
@@ -197,6 +205,10 @@ static int eseqiv_init(struct crypto_tfm *tfm)
 
 	tfm->crt_ablkcipher.reqsize = reqsize +
 				      sizeof(struct ablkcipher_request);
+#ifdef CONFIG_CRYPTO_DRBG
+	crypto_rng_get_bytes(crypto_default_rng, ctx->salt,
+						crypto_ablkcipher_ivsize(geniv));
+#endif
 
 	return skcipher_geniv_init(tfm);
 }
@@ -220,7 +232,11 @@ static struct crypto_instance *eseqiv_alloc(struct rtattr **tb)
 	if (inst->alg.cra_ablkcipher.ivsize != inst->alg.cra_blocksize)
 		goto free_inst;
 
+#ifdef CONFIG_CRYPTO_DRBG
+	inst->alg.cra_ablkcipher.givencrypt = eseqiv_givencrypt;
+#else
 	inst->alg.cra_ablkcipher.givencrypt = eseqiv_givencrypt_first;
+#endif
 
 	inst->alg.cra_init = eseqiv_init;
 	inst->alg.cra_exit = skcipher_geniv_exit;

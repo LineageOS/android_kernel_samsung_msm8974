@@ -118,4 +118,11 @@ config OF_BATTERYDATA
 	help
 	  OpenFirmware BatteryData accessors
 
+config OF_SUBCMDLINE_PARSE
+	bool "subcmdline"
+	default n
+	help
+	  OpenFirmware subcmdline parsing, it is add to meet
+		many customized bootargs.
+
 endmenu # OF

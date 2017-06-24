@@ -1,0 +1,67 @@
+menuconfig SS_VIBRATOR
+	tristate "SS_VIBRATOR"
+	default n
+	help
+	  Say Y to enable SAMSUNG_VIBRATOR support.
+
+config MOTOR_DRV_MAX77803
+	tristate "Maxim MAX77803 motor"
+	default n
+
+	depends on MFD_MAX77803
+
+config MOTOR_DRV_MAX77804K
+	tristate "Maxim MAX77804K motor"
+	default n
+
+	depends on MFD_MAX77804K
+
+config MOTOR_DRV_MAX77828
+	tristate "Maxim MAX77828 motor"
+	default n
+	depends on MFD_MAX77828
+
+config MOTOR_DRV_MAX77888
+	tristate "Maxim MAX77888 motor"
+	default n
+	depends on MFD_MAX77888
+
+config MOTOR_DRV_ISA1400
+	tristate "ISA1400 motor"
+	default n
+	depends on I2C
+	help
+	  Say Y to enalbe the ISA1400 IC.
+
+config MOTOR_DRV_DRV2603
+	tristate "DRV2603 motor"
+	default n
+	help
+	  Say Y to enalbe the DRV2603 IC.
+
+config MOTOR_ISA1000
+	tristate "ISA1000 motor"
+	default n
+	depends on SS_VIBRATOR 
+
+#
+# vibrator controlled by PMIC regualtor configuration
+#
+menuconfig MSM_VIBRATOR
+	tristate "MSM_VIBRATOR"
+	default n
+	help
+	Say Y to enable MSM_VIBRATOR support.
+
+menuconfig MAX77826_VIBRATOR
+	tristate "MAX77826_VIBRATOR"
+	default n
+	help
+	  Say Y to enable MAX77826_VIBRATOR support.
+
+config CONFIG_HAPTIC_ISA1200
+	tristate "ISA1200 motor"
+	default n
+	depends on I2C
+	help
+	  Say Y to enable the ISA1200 IC.

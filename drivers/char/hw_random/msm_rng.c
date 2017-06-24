@@ -501,6 +501,7 @@ static int __devinit msm_rng_probe(struct platform_device *pdev)
 
 unregister_chrdev:
 	unregister_chrdev(QRNG_IOC_MAGIC, DRIVER_NAME);
+	class_destroy(msm_rng_class);
 rollback_clk:
 	clk_put(msm_rng_dev->prng_clk);
 err_clk_get:

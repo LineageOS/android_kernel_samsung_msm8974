@@ -73,7 +73,25 @@ void msm_slim_put_ctrl(struct msm_slim_ctrl *dev)
 		pm_runtime_put_sync(dev->dev);
 #endif
 }
-
+#if defined(CONFIG_SND_SOC_ES705)
+void msm_slim_es705_func(struct slim_device *gen0_client)
+{
+	struct msm_slim_ctrl *dev = slim_get_ctrldata(gen0_client->ctrl);
+	msm_slim_get_ctrl(dev);
+	msm_slim_put_ctrl(dev);
+}
+EXPORT_SYMBOL(msm_slim_es705_func);
+#endif
+#if defined(CONFIG_SND_SOC_ES325_ATLANTIC)
+void msm_slim_vote_func(struct slim_device *gen0_client)
+{
+	struct msm_slim_ctrl *dev = slim_get_ctrldata(gen0_client->ctrl);
+	pr_info("%s()", __func__);
+	msm_slim_get_ctrl(dev);
+	msm_slim_put_ctrl(dev);
+}
+EXPORT_SYMBOL(msm_slim_vote_func);
+#endif
 irqreturn_t msm_slim_port_irq_handler(struct msm_slim_ctrl *dev, u32 pstat)
 {
 	int i;

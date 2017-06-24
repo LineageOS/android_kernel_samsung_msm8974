@@ -2125,6 +2125,7 @@ error_clk_off:
  *
  * Power up the GPU and initialize it.  If priority is specified then elevate
  * the thread priority for the duration of the start operation
+
  */
 static int adreno_start(struct kgsl_device *device, int priority)
 {

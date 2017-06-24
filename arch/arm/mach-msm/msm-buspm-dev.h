@@ -36,6 +36,21 @@ enum msm_buspm_ioc_cmds {
 	MSM_BUSPM_SPDM_CLK_EN,
 };
 
+struct msm_buspm_bus_set {
+	char op;
+	char nocid;
+	char set;
+	unsigned int max;
+	unsigned int min;
+};
+
+enum msm_buspm_busio {
+	MSM_BUSPM_BUS_MAX_SET = 1,
+	MSM_BUSPM_BUS_MAX_CLR,
+	MSM_BUSPM_BUS_MIN_SET,
+	MSM_BUSPM_BUS_MIN_CLR,
+};
+
 #define MSM_BUSPM_IOC_MAGIC	'p'
 
 #define MSM_BUSPM_IOC_FREE	\

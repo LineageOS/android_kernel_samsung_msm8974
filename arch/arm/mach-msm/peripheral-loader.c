@@ -41,12 +41,30 @@
 
 #include "peripheral-loader.h"
 
+#ifdef CONFIG_SEC_PERIPHERAL_SECURE_CHK
+#include <mach/sec_debug.h>
+#endif
+
+/* This will be replaced by device specific configuration flag in future */
+#ifdef CONFIG_ARCH_MSM8226
+/* for hw_rev */
+#include <mach/msm_smem.h>
+#include <asm/io.h>
+#endif 
+
+extern int poweroff_charging;
+
 #define pil_err(desc, fmt, ...)						\
 	dev_err(desc->dev, "%s: " fmt, desc->name, ##__VA_ARGS__)
 #define pil_info(desc, fmt, ...)					\
 	dev_info(desc->dev, "%s: " fmt, desc->name, ##__VA_ARGS__)
 
 #define PIL_IMAGE_INFO_BASE	(MSM_IMEM_BASE + 0x94c)
+
+/* This will be replaced by device specific configuration flag in future */
+#ifdef CONFIG_ARCH_MSM8226
+extern unsigned int system_rev;
+#endif
 
 /**
  * proxy_timeout - Override for proxy vote timeouts
@@ -619,13 +637,19 @@ int pil_boot(struct pil_desc *desc)
 	struct pil_seg *seg;
 	const struct firmware *fw;
 	struct pil_priv *priv = desc->priv;
+#ifdef CONFIG_SEC_PERIPHERAL_SECURE_CHK
+	static int load_count_fwd;
+#endif
 
 	/* Reinitialize for new image */
 	pil_release_mmap(desc);
 
 	down_read(&pil_pm_rwsem);
 	snprintf(fw_name, sizeof(fw_name), "%s.mdt", desc->name);
-	ret = request_firmware(&fw, fw_name, desc->dev);
+	if ( poweroff_charging && strcmp("mba.mdt",fw_name)==0)   /* skip locating mba.mdt during poweroff charging */
+		ret = -2; 
+	else	
+		ret = request_firmware(&fw, fw_name, desc->dev);
 	if (ret) {
 		pil_err(desc, "Failed to locate %s\n", fw_name);
 		goto out;
@@ -666,6 +690,22 @@ int pil_boot(struct pil_desc *desc)
 		ret = desc->ops->init_image(desc, fw->data, fw->size);
 	if (ret) {
 		pil_err(desc, "Invalid firmware metadata\n");
+#ifdef CONFIG_SEC_PERIPHERAL_SECURE_CHK
+		if ((!strcmp(desc->name, "mba")) || (!strcmp(desc->name, "modem"))) {
+			if (++load_count_fwd > 5) {
+				release_firmware(fw);
+				up_read(&pil_pm_rwsem);
+
+				if (priv->region) {
+					ion_free(ion, priv->region);
+					priv->region = NULL;
+				}
+
+				pil_release_mmap(desc);
+				sec_peripheral_secure_check_fail();
+			}
+		}
+#endif
 		goto release_fw;
 	}
 
@@ -693,6 +733,20 @@ int pil_boot(struct pil_desc *desc)
 	ret = desc->ops->auth_and_reset(desc);
 	if (ret) {
 		pil_err(desc, "Failed to bring out of reset\n");
+#ifdef CONFIG_SEC_PERIPHERAL_SECURE_CHK
+		if ((!strcmp(desc->name, "mba")) || (!strcmp(desc->name, "modem"))) {
+			pil_proxy_unvote(desc, ret);
+			release_firmware(fw);
+			up_read(&pil_pm_rwsem);
+			if (priv->region) {
+				ion_free(ion, priv->region);
+				priv->region = NULL;
+			}
+
+			pil_release_mmap(desc);
+			sec_peripheral_secure_check_fail();
+		}
+#endif
 		goto err_boot;
 	}
 	pil_info(desc, "Brought out of reset\n");
@@ -846,11 +900,30 @@ static struct notifier_block pil_pm_notifier = {
 	.notifier_call = pil_pm_notify,
 };
 
+/* This will be replaced by device specific configuration flag in future */
+#ifdef CONFIG_ARCH_MSM8226
+void write_hw_rev_to_smem(unsigned int hw_rev)
+{
+	unsigned int *hw_rev_sdata = NULL;
+	hw_rev_sdata = smem_alloc2(SMEM_ID_VENDOR1, sizeof(unsigned int));
+	if(unlikely(!hw_rev_sdata)) {
+		pr_err("Could not allocate SMEM region to write hardware revision\n");
+		return;
+	}
+	/* write hw_rev to smem region */
+	writel_relaxed(hw_rev, hw_rev_sdata); 
+	pr_info("hw_rev just written = %u\n", readl_relaxed(hw_rev_sdata));
+}
+#endif
+
 static int __init msm_pil_init(void)
 {
 	ion = msm_ion_client_create(UINT_MAX, "pil");
 	if (IS_ERR(ion)) /* Can't support relocatable images */
 		ion = NULL;
+#ifdef CONFIG_ARCH_MSM8226
+	write_hw_rev_to_smem(system_rev);
+#endif
 	return register_pm_notifier(&pil_pm_notifier);
 }
 device_initcall(msm_pil_init);

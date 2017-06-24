@@ -16,8 +16,8 @@
 #define STATS_IDX(idx) (idx & 0xFF)
 
 void msm_isp_process_stats_irq(struct vfe_device *vfe_dev,
-	uint32_t irq_status0, uint32_t irq_status1,
-	struct msm_isp_timestamp *ts);
+			       uint32_t irq_status0, uint32_t irq_status1,
+			       struct msm_isp_timestamp *ts);
 void msm_isp_stats_stream_update(struct vfe_device *vfe_dev);
 int msm_isp_cfg_stats_stream(struct vfe_device *vfe_dev, void *arg);
 int msm_isp_release_stats_stream(struct vfe_device *vfe_dev, void *arg);

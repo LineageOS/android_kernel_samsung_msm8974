@@ -1,0 +1,191 @@
+/* Copyright (c) 2012, Samsung Electronics Corporation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&mdss_mdp {
+
+	dsi_samsung_fhd_fortius: mdss_dsi_jdi_tft_fhd_video {
+		qcom,mdss-dsi-panel-name = "jdi,mdss-tft-dsi-panel";
+		label = "jdi tft 1080p video mode dsi S6D6FA0 panel";
+		status = "disable";
+		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
+		qcom,enable-gpio = <&msmgpio 120 0>;
+		qcom,rst-gpio = <&pm8941_gpios 19 0>;
+		qcom,bl-on-gpio = <&pm8941_gpios 26 1>;
+		qcom,cont-splash-enabled = <1>;
+		qcom,mdss-pan-res = <1080 1920>;
+		qcom,mdss-pan-size = <63 111>; /* <Width> <Height> real size of panel in mm */
+		qcom,mdss-pan-bpp = <24>;
+		qcom,mdss-pan-dest = "display_1";
+		qcom,mdss-clk-rate=<906000000>;
+		qcom,mdss-pan-porch-values = <100 14 97 6 2 8>; /* <HBP> <HPW> <HFP> <VBP> <VPW> <VFP> */
+		qcom,mdss-pan-underflow-clr = <0xff>;
+		qcom,mdss-brightness-max-level = <0xff>;
+		qcom,mdss-pan-bl-ctrl = "bl_ctrl_dcs_cmds";
+		qcom,mdss-pan-bl-levels = <1 255>;
+		qcom,mdss-pan-dsi-mode = <0>;
+		qcom,mdss-pan-dsi-h-pulse-mode = <0>;
+		qcom,mdss-pan-dsi-h-power-stop = <0 0 0>;
+		qcom,mdss-pan-dsi-bllp-power-stop = <1 1>;
+		qcom,mdss-pan-dsi-traffic-mode = <2>;
+		qcom,mdss-pan-dsi-dst-format = <3>;
+		qcom,mdss-pan-dsi-vc = <0>;
+		qcom,mdss-pan-dsi-rgb-swap = <0>;
+		qcom,mdss-force-clk-lane-hs = <1>;
+		samsung,mdss-early-lcd-on = <1>;
+		qcom,mdss-pan-dsi-data-lanes = <1 1 1 1>;
+		qcom,mdss-pan-dsi-dlane-swap = <0>;
+		qcom,mdss-pan-dsi-t-clk = <0x2d 0x04>;
+		qcom,mdss-pan-dsi-stream = <0>;
+		qcom,mdss-pan-dsi-mdp-tr = <0x0>;
+		qcom,mdss-pan-dsi-dma-tr = <0x04>;
+		qcom,mdss-pan-dsi-frame-rate = <60>;
+		qcom,panel-phy-regulatorSettings = [07 09 03 00  /* Regualotor settings */
+						    20 00 01];
+		qcom,panel-phy-timingSettings = [E6 49 27 00 69 72
+							2B 4C 41 03 04 A0];
+		qcom,panel-phy-strengthCtrl = [ff 06];		/*!!!! */
+		qcom,panel-phy-bistCtrl = [00 00 b1 ff           /*!!!! BIST Ctrl settings */
+					   00 00];
+		qcom,panel-phy-laneConfig = [
+		00 00 00 00 00 00 00 01 97 /* lane0 config */
+		00 00 00 00 05 00 00 01 97 /* lane1 config */
+		00 00 00 00 0a 00 00 01 97 /* lane2 config */
+		00 00 00 00 0f 00 00 01 97 /* lane3 config */
+		00 c0 00 00 00 00 00 01 bb]; /* Clk ln config */
+
+		qcom,panel-on-cmds = [
+					39 01 00 00 00 00 02 53 2C /* Brightness control */
+					39 01 00 00 78 00 02 11 00 /* Sleep out */
+					39 01 00 00 28 00 02 29 00 /* Display on */
+					39 01 00 00 00 00 02 35 01 /* HSYNC On*/
+					];
+		qcom,on-cmds-dsi-state = "dsi_hs_mode";
+		qcom,panel-off-cmds = [
+					39 01 00 00 28 00 02 28 00 /* Display off */
+					39 01 00 00 78 00 02 10 00 /* Sleep in */
+					];
+		qcom,off-cmds-dsi-state = "dsi_hs_mode";
+
+		qcom,panel-touchsensing-on-cmds = [ 39 01 00 00 00 00 02 35 01 ];
+		qcom,panel-touchsensing-off-cmds = [ 39 01 00 00 00 00 02 35 00 ];
+		samsung,panel-hsync-on-cmds = [ 39 01 00 00 00 00 02 35 01 ];
+		samsung,panel-hsync-off-cmds = [ 39 01 00 00 00 00 02 35 00 ];
+		qcom,panel-display-on-cmds = [05 01 00 00 32 00 02 29 00];
+		qcom,panel-display-off-cmds = [05 01 00 00 32 00 02 28 00];
+
+		qcom,panel-display-unblank-cmds = [05 01 00 00 32 00 02 13 00];			/*Normal mode command*/
+		qcom,panel-display-blank-cmds = [05 01 00 00 45 00 02 22 00];		 /* All pixel off - for making display black*/
+
+		samsung,panel-late-on-cmds = [ 29 01 00 00 05 00 02 29 00 ]; /* Late on */
+		samsung,panel-early-off-cmds = [ 29 01 00 00 00 00 02 28 00 ]; /* Early off */
+		samsung,panel-brightness-cmds = [ 39 01 00 00 00 00 02 51 B6 ]; /* brightness packet */
+		samsung,panel-mtp-enable-cmds = [
+							29 01 00 00 00 00 02 b0 04
+							29 01 00 00 00 00 04 00 00 00 00
+							29 01 00 00 00 00 04 00 00 00 00
+							];
+		samsung,panel-mtp-disable-cmds = [ 29 01 00 00 00 00 02 b0 03 ];
+		samsung,panel-cabc-on-cmds = [
+							29 01 00 00 00 00 02 CE 00
+							29 01 00 00 00 00 02 55 01
+							];
+		samsung,panel-cabc-off-cmds = [
+							29 01 00 00 00 00 0F CE 80 19 19 19 19 19 19 19 19 19 19 19 19 19
+							29 01 00 00 00 00 02 55 00
+							];
+
+			/* the last byte in all read commands will represent READ LENGH */
+			samsung,panel-manufacture-id-read-cmds = [
+								06 01 00 00 00 00 01 da 01 00
+								06 01 00 00 00 00 01 db 01 00
+								06 01 00 00 00 00 01 dc 01 00];
+
+		/*
+		 * ************************************************************************************************************************
+		 * candela to index mappings
+		 * ************************************************************************************************************************
+		 */
+		samsung,panel-candela-mapping-table = <
+			/*<idx>		<from>		<till>		<candella>	<tft-pwm>	<cabc-pwm> */
+			0		0		10		3		2		2
+			1		11		11		3		2		2
+			2		12		12		4		3		3
+			3		13		13		4		3		3
+			4		14		14		4		3		3
+			5		15		15		4		3		3
+			6		16		16		5		4		4
+			7		17		18		5		4		4
+			8		19		19		5		4		4
+			9		20		20		6		4		4
+			10		21		21		6		5		4
+			11		22		23		7		5		5
+			12		24		24		7		5		5
+			13		25		26		8		6		5
+			14		27		28		8		6		5
+			15		29		29		9		6		6
+			16		30		31		11		7		6
+			17		32		32		14		7		7
+			18		33		36		17		8		8
+			19		37		38		20		8		9
+			20		39		40		23		9		10
+			21		41		43		27		11		12
+			22		44		46		29		13		13
+			23		47		49		31		15		14
+			24		50		52		34		17		15
+			25		53		55		37		19		16
+			26		56		59		40		21		18
+			27		60		63		44		23		19
+			28		64		67		48		25		20
+			29		68		71		52		28		22
+			30		72		76		57		31		25
+			31		77		81		62		36		27
+			32		82		86		67		41		29
+			33		87		92		72		46		32
+			34		93		97		78		51		34
+			35		98		104		91		56		39
+			36		105		110		103		61		45
+			37		111		118		124		66		54
+			38		119		125		146		71		63
+			39		126		133		160		74		69
+			40		134		142		170		77		74
+			41		143		149		180		80		79
+			42		150		159		196		83		85
+			43		160		171		212		86		94
+			44		172		182		230		89		100
+			45		183		194		232		93		102
+			46		195		206		252		97		112
+			47		207		219		274		101		121
+			48		220		232		291		105		130
+			49		233		248		294		109		131
+			50		249		249		297		113		132
+			51		250		251		300		117		133
+			52		252		252		310		121		137
+			53		253		253		320		128		141
+			54		254		255		400		160		176
+			/*					max pwm:   400		282*/
+			>;
+
+		/* Lux table mapping for Smart dimming*/
+		samsung,panel-smart-dimming-lux-table = <
+			10  11  12  13  14
+			15  16  17  19  20
+			21  22  24  25  27
+			29  30  32  34  37
+			39  41  44  47  50
+			53  56  60  64  68
+			72  77  82  87  93
+			98  105 111 119 126
+			134 143 152 162 172
+			183 195 207 220 234
+			249 265 282 300>;
+	};
+};

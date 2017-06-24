@@ -170,6 +170,7 @@ static void smux_loopback_rx_worker(struct work_struct *work)
 		if (pkt->hdr.magic != SMUX_MAGIC) {
 			pr_err("%s: invalid magic %x\n", __func__,
 					pkt->hdr.magic);
+			kfree(data);
 			return;
 		}
 

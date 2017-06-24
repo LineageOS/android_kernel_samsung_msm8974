@@ -1,0 +1,71 @@
+/*
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&cci {
+
+	actuator0: qcom,actuator@18 {
+		cell-index = <0>;
+		reg = <0x18>;
+		compatible = "qcom,actuator";
+		qcom,cci-master = <0>;
+	};
+
+	actuator1: qcom,actuator@36 {
+		cell-index = <1>;
+		reg = <0x36>;
+		compatible = "qcom,actuator";
+		qcom,cci-master = <0>;
+	};
+
+	qcom,camera@5a {
+		compatible = "qcom,s5k2p2xx";
+		reg = <0x5a>;
+		qcom,slave-id = <0x5a 0x0 0x2102>;
+		qcom,csiphy-sd-index = <0>;
+		qcom,csid-sd-index = <0>;
+		qcom,mount-angle = <90>;
+		qcom,sensor-name = "s5k2p2xx";
+		cam_vdig-supply = <&pma8084_l3>;
+		cam_vio-supply = <&pma8084_lvs2>;
+		cam_vaf-supply = <&pma8084_l17>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio",
+				     "cam_vaf";
+		qcom,cam-vreg-type = <0 1 0>;
+		qcom,cam-vreg-min-voltage = <1100000 1800000 2800000>;
+		qcom,cam-vreg-max-voltage = <1100000 1800000 2800000>;
+		qcom,cam-vreg-op-mode = <200000 5000 50000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 15 0>,
+			<&pma8084_gpios 18 0x1>,
+			<&msmgpio 308 0>,
+			<&msmgpio 303 0>,
+			<&msmgpio 307 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-vana = <2>;
+		qcom,gpio-comp = <3>;
+		qcom,gpio-comprstn = <4>;
+		qcom,gpio-req-tbl-num = <0 1 2 3 4>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK", "CAM_RESET1", "CAM_VANA_GPIO", "CAM_COMP_GPIO", "CAM_COMPRSTN_GPIO";
+		qcom,gpio-set-tbl-num = <1 1>;
+		qcom,gpio-set-tbl-flags = <0 1>;
+		qcom,gpio-set-tbl-delay = <1000 30000>;
+		qcom,csi-lane-assign = <0x4320>;
+		qcom,csi-lane-mask = <0x1F>;
+		qcom,sensor-position = <0>;
+		qcom,sensor-mode = <0>;
+	        qcom,sensor-type = <0>;
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+};

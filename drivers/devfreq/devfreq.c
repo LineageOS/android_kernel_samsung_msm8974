@@ -127,14 +127,14 @@ static int devfreq_update_status(struct devfreq *devfreq, unsigned long freq)
 			 cur_time - devfreq->last_stat_updated;
 	devfreq->last_stat_updated = cur_time;
 
-	if (freq == devfreq->previous_freq)
+	if(freq == devfreq->previous_freq)
 		return 0;
 
 	prev_lev = devfreq_get_freq_level(devfreq, devfreq->previous_freq);
-	if (prev_lev < 0)
+	if(prev_lev < 0)
 		return 0;
 
-	if (lev != prev_lev) {
+	if(lev != prev_lev) {
 		devfreq->trans_table[(prev_lev *
 				devfreq->profile->max_state) + lev]++;
 		devfreq->total_trans++;
@@ -1002,6 +1002,25 @@ static ssize_t show_trans_table(struct device *dev, struct device_attribute *att
 	return len;
 }
 
+static ssize_t show_time_in_state(struct device *dev, struct device_attribute *attr,
+				char *buf)
+{
+	struct devfreq *devfreq = to_devfreq(dev);
+	ssize_t len = 0;
+	int i, err;
+
+	err = devfreq_update_status(devfreq, devfreq->previous_freq);
+	if (err)
+		return 0;
+
+	for (i = 0; i < devfreq->profile->max_state; i++) {
+		len += sprintf(buf + len, "%u %u\n",
+			devfreq->profile->freq_table[i],
+			jiffies_to_msecs(devfreq->time_in_state[i]));
+	}
+	return len;
+}
+
 static struct device_attribute devfreq_attrs[] = {
 	__ATTR(governor, S_IRUGO | S_IWUSR, show_governor, store_governor),
 	__ATTR(available_governors, S_IRUGO, show_available_governors, NULL),
@@ -1013,6 +1032,7 @@ static struct device_attribute devfreq_attrs[] = {
 	__ATTR(min_freq, S_IRUGO | S_IWUSR, show_min_freq, store_min_freq),
 	__ATTR(max_freq, S_IRUGO | S_IWUSR, show_max_freq, store_max_freq),
 	__ATTR(trans_stat, S_IRUGO, show_trans_table, NULL),
+	__ATTR(time_in_state, S_IRUGO, show_time_in_state, NULL),
 	{ },
 };
 

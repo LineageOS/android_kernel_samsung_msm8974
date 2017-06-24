@@ -56,7 +56,11 @@ struct matrix_keymap_data {
 struct matrix_keypad_platform_data {
 	const struct matrix_keymap_data *keymap_data;
 
+#ifdef CONFIG_SEC_PATEK_PROJECT
+	unsigned int *row_gpios;
+#else
 	const unsigned int *row_gpios;
+#endif
 	const unsigned int *col_gpios;
 
 	unsigned int	num_row_gpios;

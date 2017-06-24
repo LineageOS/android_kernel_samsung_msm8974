@@ -14,7 +14,10 @@ config CPU_FREQ
 	  For details, take a look at <file:Documentation/cpu-freq>.
 
 	  If in doubt, say N.
-
+config SEC_DVFS
+	bool "DVFS job"
+	default n
+	depends on CPU_FREQ
 if CPU_FREQ
 
 config CPU_FREQ_TABLE
@@ -41,6 +44,12 @@ config CPU_FREQ_STAT_DETAILS
 	  system.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_LIMIT
+	bool "CPU frequency limit API"
+	default n
+	help
+	  This driver supports API to limit CPU frequency.
 
 choice
 	prompt "Default CPUFreq governor"

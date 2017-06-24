@@ -447,4 +447,9 @@ extern bool freeze_workqueues_busy(void);
 extern void thaw_workqueues(void);
 #endif /* CONFIG_FREEZER */
 
+#ifdef CONFIG_WORKQUEUE_FRONT
+extern int queue_work_front(struct workqueue_struct *wq,
+			struct work_struct *work);
+#endif
+
 #endif

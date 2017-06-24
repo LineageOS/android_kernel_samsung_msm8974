@@ -106,6 +106,7 @@ struct wcd9xxx_clsh_cdc_data {
 	int buck_users;
 	int ncp_users[NCP_FCLK_LEVEL_MAX];
 	struct wcd9xxx_resmgr *resmgr;
+	bool hs_perf_mode_enabled;	
 };
 
 struct wcd9xxx_anc_header {

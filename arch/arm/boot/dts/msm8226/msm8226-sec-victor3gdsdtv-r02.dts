@@ -1,0 +1,51 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/* qcom,msm-id =<DT_INFO SS_BOARD_HARDWARE_REV QC_SOC_REVISION>
+ * All these three fields are unsigned 32 bit integers
+ * DT_INFO = [31:24] chip-id, [23:16] platform-id, [15:8] national code, [7:0] operator revision[ reserved]
+ * SS_BOARD_HARDWARE_REV = Samsung specific hardware Revision
+ * QC_SOC_REVISION = Qcomm SOC Version of MTP Board
+ * Please refer to .../lk/platform/msm_shared/dev_tree.c also
+ */
+ 
+/dts-v1/;
+/include/ "msm8226-v2.dtsi"
+/include/ "msm8226-sec-victor3gdsdtv-r02.dtsi"
+
+/ {
+	model = "[VICTOR-3G-LTN-OPEN] Rev-02-MTP-v2";
+	compatible = "qcom,msm8226-mtp", "qcom,msm8226", "qcom,mtp";
+	qcom,msm-id = <0x9e00ff01 2 0x20000>,
+			<0x9e08ff01 2 0x20000>,
+			<0xdd08ff01 2 0x20000>;
+};
+
+&soc {
+
+	earjack {
+
+		/*Override GPIO properties*/
+		qcom,earjack-detect-gpio = <&msmgpio 69 0>;
+		qcom,earjack-sendend-gpio = <&msmgpio 35 0>;
+		qcom,earjack-vadc = <&pm8226_vadc>;
+		/*Override det and btn zone ADC Values*/
+		det-zones-list = <&det_zones 3 10000 10 0>,
+                             <&det_zones 1670 10000 10 1>,
+                             <&det_zones 1671 10000 10 1>,
+                             <&det_zones 9999 10000 10 1>;
+		but-zones-list = <&but_zones 0 0 415>,
+                             <&but_zones 1 416 775>,
+                             <&but_zones 2 776 9999>;
+		mpp-channel-scaling = <6 1 1>;
+	};
+};

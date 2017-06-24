@@ -76,14 +76,14 @@ ssize_t dvb_ringbuffer_free(struct dvb_ringbuffer *rbuf)
 
 
 
-ssize_t dvb_ringbuffer_avail(struct dvb_ringbuffer *rbuf)
+size_t dvb_ringbuffer_avail(struct dvb_ringbuffer *rbuf)
 {
 	ssize_t avail;
 
 	avail = rbuf->pwrite - rbuf->pread;
 	if (avail < 0)
 		avail += rbuf->size;
-	return avail;
+	return (size_t)avail; //CID 24399 24400 24401 24402
 }
 
 

@@ -1,0 +1,327 @@
+/*
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+
+	led_flash0: qcom,camera-led-flash {
+		cell-index = <0>;
+		compatible = "qcom,camera-led-flash";
+		qcom,flash-type = <1>;
+		qcom,flash-source = <&pm8226_flash0 &pm8226_flash1>;
+		qcom,torch-source = <&pm8226_torch>;
+	};
+
+	spi@f9923000 {
+		eeprom0: qcom,eeprom@0 {
+			compatible = "qcom,eeprom";
+			reg = <0>;
+			cell-index = <0>;
+			spi-max-frequency = <50000000>;
+			qcom,eeprom-name = "fidelix";
+			qcom,eeprom-id0 = <0xf8 0x14>;
+			qcom,eeprom-id1 = <0xef 0x13>;
+			qcom,eeprom-id2 = <0xef 0x14>;
+
+			qcom,cal-num-blocks = <8>;
+			qcom,cal-page0 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll0 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem0 = <0x80 0x0 3 0 1 0>;
+			qcom,cal-page1 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll1 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem1 = <4 0xFFC 3 0 1 0>;
+			qcom,cal-page2 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll2 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem2 = <0x900 0x1000 3 0 1 0>;
+			qcom,cal-page3 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll3 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem3 = <4 0x1FFC 3 0 1 0>;
+			qcom,cal-page4 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll4 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem4 = <0x40 0x2000 3 0 1 0>;
+			qcom,cal-page5 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll5 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem5 = <4 0x2FFC 3 0 1 0>;
+			qcom,cal-page6 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll6 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem6 = <0x700 0x3000 3 0 1 0>;
+			qcom,cal-page7 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-poll7 = <0 0x0 0 0x0 0 0>;
+			qcom,cal-mem7 = <4 0x3FFC 3 0 1 0>;
+
+			cam_vdig-supply = <&pm8226_l26>;
+			cam_vio-supply = <&pm8226_l27>;			
+			qcom,cam-vreg-name = "cam_vdig", "cam_vio";
+			qcom,cam-vreg-type = <0 0>;
+			qcom,cam-vreg-min-voltage = <1225000 1800000>;
+			qcom,cam-vreg-max-voltage = <1225000 1800000>;
+			qcom,cam-vreg-op-mode = <200000 1800000>;
+			qcom,cam-power-seq-type = "sensor_vreg",
+						  "sensor_gpio";
+			qcom,cam-power-seq-val = "cam_vdig", "sensor_gpio_ext_camio_en";
+			qcom,cam-power-seq-cfg-val = <1 1>;
+			qcom,cam-power-seq-delay = <2 2>;
+			gpios = <&msmgpio 114 0>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V , VREG_L27_2P05 is not used */
+			qcom,gpio-ext-camio-en = <0>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V */
+			qcom,gpio-req-tbl-num = <0>;
+			qcom,gpio-req-tbl-flags = <0>;
+			qcom,gpio-req-tbl-label = "CAM_IO_EN";  /* rev 0.3 device uses VDD_LDO_IO_1.8V */
+			qcom,spiop-read = <0x03 3 0 0 0>;
+			qcom,spiop-readseq = <0x03 3 0 0 0>;
+			qcom,spiop-queryid = <0x90 3 0 0 0>;
+			qcom,spiop-pprog = <0x02 3 0 3 3>;
+			qcom,spiop-wenable = <0x06 0 0 0 0>;
+			qcom,spiop-readst = <0x05 0 0 0 0>;
+			qcom,spiop-erase = <0x20 3 0 10 30>;
+			qcom,spi-busy-mask = <0x01>;
+			qcom,spi-page-size = <256>;
+			qcom,spi-erase-size = <4096>;
+		};
+	};
+
+};
+
+&cci {
+
+	qcom,camera@5a {
+		compatible = "qcom,s5k3h5xa";
+		reg = <0x5a>;
+		qcom,slave-id = <0x5a 0x0 0x3085>; /*Slave addr for s5k3h5xa = 0x5A s5k3h5xa_id_info addr =0x0 and sensor_id= 0x3085*/
+		qcom,csiphy-sd-index = <0>;
+		qcom,csid-sd-index = <0>;
+		qcom,actuator-src = <&actuator0>;
+		qcom,led-flash-src = <&led_flash0>;
+		qcom,mount-angle = <90>;
+		qcom,sensor-name = "s5k3h5xa";
+		cam_vdig-supply = <&pm8226_l26>;
+		cam_vio-supply = <&pm8226_l27>;
+		cam_vana-supply = <&pm8226_l19>;
+		cam_vaf-supply = <&pm8226_l28>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana",
+							 "cam_vaf";
+		qcom,cam-vreg-type = <0 0 0 0>;
+		qcom,cam-vreg-min-voltage = <1225000 1800000 2850000 2850000>;
+		qcom,cam-vreg-max-voltage = <1225000 1800000 2850000 2850000>;
+		qcom,cam-vreg-op-mode = <200000 1800000 80000 100000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+			<&msmgpio 37 0>,
+			<&pm8226_gpios 2 0>,
+			<&pm8226_gpios 6 0>,
+			<&msmgpio 112 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-ext-core-en = <2>;
+		qcom,gpio-ext-camio-en = <3>;
+		qcom,gpio-ext-vana-power = <4>;
+		qcom,gpio-req-tbl-num = <0 1 2 3 4>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",
+			"CAM_RESET1",
+			"CAM_CORE_EN",
+			"CAM_IO_EN",
+			"CAM_ANALOG_EN";
+		qcom,gpio-set-tbl-num = <1 1>;
+		qcom,gpio-set-tbl-flags = <0 2>;
+		qcom,gpio-set-tbl-delay = <1000 4000>;
+		qcom,csi-lane-assign = <0x4320>;
+		qcom,csi-lane-mask = <0x1F>;
+		qcom,sensor-position = <0>;
+		qcom,sensor-mode = <0>;
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+
+	qcom,camera@20 {
+		compatible = "qcom,s5k6a3yx";
+		reg = <0x20>;
+		qcom,slave-id = <0x20 0x0 0x0000>; /*Slave addr for s5k6a3yx = 0x20 s5k6a3yx_id_info addr =0x0 and sensor_id= 0x0000*/
+		qcom,csiphy-sd-index = <1>;
+		qcom,csid-sd-index = <0>;
+		qcom,mount-angle = <270>;
+		qcom,sensor-name = "s5k6a3yx";
+		cam_vio-supply = <&pm8226_l27>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana";
+		qcom,cam-vreg-type = <0 0 0>;
+		qcom,cam-vreg-min-voltage = <0 1800000 0>;
+		qcom,cam-vreg-max-voltage = <0 1800000 0>;
+		qcom,cam-vreg-op-mode = <0 1800000 0>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+				<&msmgpio 28 0>,
+				<&msmgpio 112 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-ext-vana-power = <2>;
+		qcom,gpio-req-tbl-num = <0 1 2>;
+		qcom,gpio-req-tbl-flags = <1 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",
+				"CAM_RESET",
+				"CAM_ANALOG_EN";
+		qcom,gpio-set-tbl-num = <1 1>;
+		qcom,gpio-set-tbl-flags = <0 2>;
+		qcom,gpio-set-tbl-delay = <1000 4000>;
+		qcom,csi-lane-assign = <0x4320>;
+		qcom,csi-lane-mask = <0x3>;
+		qcom,sensor-position = <1>;
+		qcom,sensor-mode = <1>;
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+
+	qcom,camera@21 {	/* NOTE: id and reg values changed for s5k4h5yb to 21 as s5k6a3yx uses the value 20 */
+		compatible = "qcom,s5k4h5yb";
+		reg = <0x21>;
+		qcom,slave-id = <0x20 0x01 0x5B02>; /*Slave addr for s5k4h5yb = 0x20 s5k3h5xa_id_info addr =0x0 and sensor_id= 0x485B*/
+		qcom,csiphy-sd-index = <0>;
+		qcom,csid-sd-index = <0>;
+		/*qcom,eeprom-src = <&eeprom0>;
+		qcom,actuator-src = <&actuator1>;
+		qcom,led-flash-src = <&led_flash0>;*/
+		qcom,mount-angle = <90>;
+		qcom,sensor-name = "s5k4h5yb";
+		cam_vdig-supply = <&pm8226_l26>;
+		cam_vio-supply = <&pm8226_l27>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V , VREG_L27_2P05 is not used */
+		cam_vaf-supply = <&pm8226_l28>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana", "cam_vaf";
+		qcom,cam-vreg-type = <0 0 0 0>;
+		qcom,cam-vreg-min-voltage = <1225000 1800000 0 2850000>;
+		qcom,cam-vreg-max-voltage = <1225000 1800000 0 2850000>;
+		qcom,cam-vreg-op-mode = <200000 1800000 0 100000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+			<&msmgpio 37 0>,
+			<&msmgpio 112 0>,
+			<&msmgpio 114 0>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V , VREG_L27_2P05 is not used */
+		qcom,gpio-reset = <1>;
+		qcom,gpio-ext-vana-power = <2>;
+		qcom,gpio-ext-camio-en = <3>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V */
+		qcom,gpio-req-tbl-num = <0 1 2 3>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",
+			"CAM_RESET1",
+			"CAM_ANALOG_EN",
+			"CAM_IO_EN";  /* rev 0.3 device uses VDD_LDO_IO_1.8V */
+		qcom,gpio-set-tbl-num = <1 1>;
+		qcom,gpio-set-tbl-flags = <0 2>;
+		qcom,gpio-set-tbl-delay = <1000 4000>;
+		qcom,csi-lane-assign = <0x4320>;
+		qcom,csi-lane-mask = <0x1F>;
+		qcom,sensor-position = <0>;
+		qcom,sensor-mode = <0>;
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+
+	qcom,camera@22 {	/* NOTE: id and reg values changed for s5k4h5ya to 21 as s5k6a3yx uses the value 20 */
+		compatible = "qcom,s5k4h5ya";
+		reg = <0x22>;
+		qcom,slave-id = <0x20 0x01 0x5B01>; /*Slave addr for s5k4h5ya = 0x20 s5k3h5xa_id_info addr =0x0 and sensor_id= 0x485B*/
+		qcom,csiphy-sd-index = <0>;
+		qcom,csid-sd-index = <0>;
+		qcom,eeprom-src = <&eeprom0>;
+		qcom,actuator-src = <&actuator1>;
+		qcom,led-flash-src = <&led_flash0>;
+		qcom,mount-angle = <90>;
+		qcom,sensor-name = "s5k4h5ya";
+		cam_vdig-supply = <&pm8226_l26>;
+		cam_vio-supply = <&pm8226_l27>;
+		cam_vaf-supply = <&pm8226_l28>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana", "cam_vaf";
+		qcom,cam-vreg-type = <0 0 0 0>;
+		qcom,cam-vreg-min-voltage = <1225000 1800000 0 2850000>;
+		qcom,cam-vreg-max-voltage = <1225000 1800000 0 2850000>;
+		qcom,cam-vreg-op-mode = <200000 1800000 0 100000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+			<&msmgpio 37 0>,
+			<&msmgpio 112 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-ext-vana-power = <2>;
+		qcom,gpio-req-tbl-num = <0 1 2>;
+		qcom,gpio-req-tbl-flags = <1 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",
+			"CAM_RESET1",
+			"CAM_ANALOG_EN";
+		qcom,gpio-set-tbl-num = <1 1>;
+		qcom,gpio-set-tbl-flags = <0 2>;
+		qcom,gpio-set-tbl-delay = <1000 4000>;
+		qcom,csi-lane-assign = <0x4320>;
+		qcom,csi-lane-mask = <0x1F>;
+		qcom,sensor-position = <0>;
+		qcom,sensor-mode = <0>;
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+
+	qcom,camera@0 {
+		cell-index = <0>;
+		compatible = "qcom,camera";
+		reg = <0x0>;
+		qcom,csiphy-sd-index = <0>;
+		qcom,csid-sd-index = <0>;
+		qcom,actuator-src = <&actuator1>;
+		qcom,eeprom-src = <&eeprom0>;
+		qcom,led-flash-src = <&led_flash0>;
+		cam_vdig-supply = <&pm8226_l26>;
+		cam_vio-supply = <&pm8226_l27>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V , VREG_L27_2P05 is not used */
+		cam_vaf-supply = <&pm8226_l28>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio",
+				     "cam_vaf";
+		qcom,cam-vreg-type = <0 0 0>;
+		qcom,cam-vreg-op-mode = <1225000 1800000 2800000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+				<&msmgpio 37 0>,
+				<&msmgpio 112 0>,
+				<&msmgpio 114 0>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V , VREG_L27_2P05 is not used */
+		qcom,gpio-reset = <1>;
+		qcom,gpio-ext-vana-power = <2>;
+		qcom,gpio-ext-camio-en = <3>;  /* rev 0.3 device uses VDD_LDO_IO_1.8V */
+		qcom,gpio-req-tbl-num = <0 1 2 3>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK", "CAM_RESET1", "CAM_VANA_GPIO" , "CAM_IO_EN";  /* rev 0.3 device uses VDD_LDO_IO_1.8V */
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+ 
+	qcom,camera@2 {
+		cell-index = <2>;
+		compatible = "qcom,camera";
+		reg = <0x2>;
+		qcom,csiphy-sd-index = <1>;
+		qcom,csid-sd-index = <1>;
+		qcom,sensor-name = "sr200pc20";
+		qcom,cam-vreg-name = "cam_vana", "cam_vio";
+		qcom,cam-vreg-type = < 0 0>;
+		qcom,cam-vreg-min-voltage = <0 0>;
+		qcom,cam-vreg-max-voltage = <0 0>;
+		qcom,cam-vreg-op-mode = <0 0>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+				<&msmgpio 28 0>,
+				<&msmgpio 74 0>,
+				<&msmgpio 114 0>,
+				<&msmgpio 112 0>,
+				<&msmgpio 67 0>;	
+		qcom,gpio-vt-reset = <1>;
+		qcom,gpio-standby = <2>;
+		qcom,gpio-ext-camio-en = <3>;
+		qcom,gpio-ext-vana-power = <4>;
+		qcom,gpio-ext-vio-power = <5>;
+		qcom,gpio-req-tbl-num = <0 1 2 3 4 5>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK","CAM_RESET","CAM_STBY","CAM_IO_EN","CAM_ANALOG_EN","VTCAM_EN";
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+};
+
+ 

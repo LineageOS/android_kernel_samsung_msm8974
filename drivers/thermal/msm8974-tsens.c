@@ -1608,6 +1608,8 @@ static int __devinit _tsens_register_thermal(void)
 		}
 	}
 
+	INIT_WORK(&tmdev->tsens_work, tsens_scheduler_fn);
+
 	rc = request_irq(tmdev->tsens_irq, tsens_isr,
 		IRQF_TRIGGER_RISING, "tsens_interrupt", tmdev);
 	if (rc < 0) {
@@ -1619,8 +1621,6 @@ static int __devinit _tsens_register_thermal(void)
 		enable_irq_wake(tmdev->tsens_irq);
 	}
 	platform_set_drvdata(pdev, tmdev);
-
-	INIT_WORK(&tmdev->tsens_work, tsens_scheduler_fn);
 
 	return 0;
 fail:

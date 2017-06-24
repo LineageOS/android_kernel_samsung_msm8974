@@ -99,6 +99,16 @@ max8925-objs			:= max8925-core.o max8925-i2c.o
 obj-$(CONFIG_MFD_MAX8925)	+= max8925.o
 obj-$(CONFIG_MFD_MAX8997)	+= max8997.o max8997-irq.o
 obj-$(CONFIG_MFD_MAX8998)	+= max8998.o max8998-irq.o
+obj-$(CONFIG_MFD_MAX77888)      += max77888.o max77888-irq.o
+obj-$(CONFIG_MFD_MAX77823)      += max77823.o
+obj-$(CONFIG_MFD_MAX77828)      += max77828.o max77828-irq.o
+
+ifeq ($(CONFIG_EXTCON_MAX77803),y)
+obj-$(CONFIG_MFD_MAX77803)      += max77803.o extcon-max77803-irq.o
+else
+obj-$(CONFIG_MFD_MAX77803)      += max77803.o max77803-irq.o
+endif
+obj-$(CONFIG_MFD_MAX77804K)      += max77804k.o max77804k-irq.o
 
 pcf50633-objs			:= pcf50633-core.o pcf50633-irq.o
 obj-$(CONFIG_MFD_PCF50633)	+= pcf50633.o

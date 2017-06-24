@@ -91,7 +91,7 @@ static int crypto_cbc_encrypt(struct blkcipher_desc *desc,
 			      struct scatterlist *dst, struct scatterlist *src,
 			      unsigned int nbytes)
 {
-	struct blkcipher_walk walk;
+	struct blkcipher_walk walk = {};
 	struct crypto_blkcipher *tfm = desc->tfm;
 	struct crypto_cbc_ctx *ctx = crypto_blkcipher_ctx(tfm);
 	struct crypto_cipher *child = ctx->child;
@@ -170,7 +170,7 @@ static int crypto_cbc_decrypt(struct blkcipher_desc *desc,
 			      struct scatterlist *dst, struct scatterlist *src,
 			      unsigned int nbytes)
 {
-	struct blkcipher_walk walk;
+	struct blkcipher_walk walk = {};
 	struct crypto_blkcipher *tfm = desc->tfm;
 	struct crypto_cbc_ctx *ctx = crypto_blkcipher_ctx(tfm);
 	struct crypto_cipher *child = ctx->child;

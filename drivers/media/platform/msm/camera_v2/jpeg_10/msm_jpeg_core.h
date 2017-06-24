@@ -25,14 +25,14 @@ void msm_jpeg_core_irq_install(int (*irq_handler) (int, void *, void *));
 void msm_jpeg_core_irq_remove(void);
 
 int msm_jpeg_core_fe_buf_update(struct msm_jpeg_device *pgmn_dev,
-	struct msm_jpeg_core_buf *buf);
+				struct msm_jpeg_core_buf *buf);
 int msm_jpeg_core_we_buf_update(struct msm_jpeg_device *pgmn_dev,
-	struct msm_jpeg_core_buf *buf);
+				struct msm_jpeg_core_buf *buf);
 int msm_jpeg_core_we_buf_reset(struct msm_jpeg_device *pgmn_dev,
-	struct msm_jpeg_hw_buf *buf);
+			       struct msm_jpeg_hw_buf *buf);
 
 int msm_jpeg_core_reset(struct msm_jpeg_device *pgmn_dev, uint8_t op_mode,
-	void *base, int size);
+			void *base, int size);
 int msm_jpeg_core_fe_start(struct msm_jpeg_device *);
 
 void msm_jpeg_core_release(struct msm_jpeg_device *, int);

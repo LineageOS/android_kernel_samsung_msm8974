@@ -1,0 +1,63 @@
+
+if SND_SOC_ES705
+menu "eS705 Bus Interface"
+
+config SND_SOC_ES705_SLIM
+	tristate "SLIMbus" if SLIMBUS
+
+config SND_SOC_ES705_I2C
+	tristate "I2C command bus"
+
+config SND_SOC_ES705_SPI
+	tristate "SPI command bus"
+
+config SND_SOC_ES705_UART
+	tristate "UART command transport"
+
+config SND_SOC_ES705_I2S
+	tristate "I2S audio data bus"
+
+endmenu
+endif
+
+config SND_SOC_ES704_TEMP
+	tristate "ES704 Slimbus interface temporally"
+
+config SND_SOC_ES515
+        tristate "eS515"
+        ---help---
+        Valid configurations:
+         * SLIMbus
+         * I2C and I2S
+         * SPI and I2S
+         * UART and I2S
+
+        NOTE: Only one configuration should be enabled.
+
+if SND_SOC_ES515
+menu "eS515 Bus Interface"
+
+config SND_SOC_ES_SLIM
+	tristate "SLIMbus" if SLIMBUS
+
+config SND_SOC_ES_I2C
+	tristate "I2C command bus"
+
+config SND_SOC_ES_SPI
+	tristate "SPI command bus"
+
+config SND_SOC_ES_UART
+	tristate "UART command transport"
+
+config SND_SOC_ES_I2S
+	tristate "I2S audio data bus"
+
+endmenu
+endif
+
+config SND_SOC_ES_CDEV
+        tristate "Character device interface for eS515"
+        ---help---
+	The character device interface allows the streaming out the audio
+	data through selected Bus interface.
+

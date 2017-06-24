@@ -410,6 +410,8 @@ int rds_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg,
 
 	rdsdebug("size %zu flags 0x%x timeo %ld\n", size, msg_flags, timeo);
 
+	msg->msg_namelen = 0;
+
 	if (msg_flags & MSG_OOB)
 		goto out;
 
@@ -485,6 +487,7 @@ int rds_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg,
 			sin->sin_port = inc->i_hdr.h_sport;
 			sin->sin_addr.s_addr = inc->i_saddr;
 			memset(sin->sin_zero, 0, sizeof(sin->sin_zero));
+			msg->msg_namelen = sizeof(*sin);
 		}
 		break;
 	}
@@ -542,6 +545,8 @@ void rds_inc_info_copy(struct rds_incoming *inc,
 		minfo.lport = inc->i_hdr.h_sport;
 		minfo.fport = inc->i_hdr.h_dport;
 	}
+
+	minfo.flags = 0;
 
 	rds_info_copy(iter, &minfo, sizeof(minfo));
 }

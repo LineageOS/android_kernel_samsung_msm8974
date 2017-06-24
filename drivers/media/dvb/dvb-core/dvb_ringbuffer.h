@@ -85,7 +85,7 @@ extern int dvb_ringbuffer_empty(struct dvb_ringbuffer *rbuf);
 extern ssize_t dvb_ringbuffer_free(struct dvb_ringbuffer *rbuf);
 
 /* return the number of bytes waiting in the buffer */
-extern ssize_t dvb_ringbuffer_avail(struct dvb_ringbuffer *rbuf);
+extern size_t dvb_ringbuffer_avail(struct dvb_ringbuffer *rbuf);
 
 
 /*

@@ -1,0 +1,61 @@
+/* Copyright (c) 2012, Samsung Electronics Corporation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+	i2c@f9965000 {
+		gpios = <&msmgpio 51 0>, /* sda */
+			<&msmgpio 52 0>; /* scl */
+		sec_mhl: sii8240tmds@39 {
+			compatible = "sii8240,tmds";
+			reg = <0x39>; /* 0x72 >> 1 */
+			sii8240,client_id = <0x00>;
+
+			interrupt-parent = <&msmgpio>;
+			interrupts = <31 0x1>;
+			sii8240,gpio_mhl_reset = <&pm8941_mpps 6 0>;/*&msmgpio 60 0x00*/
+			sii8240,gpio_mhl_reset_type = "pm_mpps";
+			sii8240,gpio_mhl_en = <&pm8941_gpios 32 0x1>;
+			sii8240,gpio_mhl_en_type = "pm_gpios";
+			sii8240,swing_level = <0x25>;
+
+			sii8240,gpio_mhl_irq = <&msmgpio 31 0x00>;
+			sii8240,gpio_mhl_wakeup = <0>; /* <&msmgpio 96 0x00>; */
+			sii8240,gpio_mhl_scl = <&msmgpio 52 0x00>;
+			sii8240,gpio_mhl_sda = <&msmgpio 51 0x00>;
+/*			sii8240,barcode_emul;*/
+/*			vcc_1p2v-supply  = <&pm8941_l11>;*/ /*<&pm8941_l11> */
+/*			vcc_1p8v-supply  = <&pm8941_l10>;*/ /*<&pm8941_l10> */
+/*			vcc_3p3v-supply  = <&pm8941_l19>;*/ /*<&pm8941_l19> */
+			qcom,hdmi-tx-map = <&mdss_hdmi_tx>;
+		};
+		sii8240hdmi@49 {
+			compatible = "sii8240,hdmi";
+			reg = <0x49>; /* 0x92 >> 1 */
+			sii8240,client_id = <0x01>;
+		};
+		sii8240disc@4D {
+			compatible = "sii8240,disc";
+			reg = <0x4D>;  /* 0x9A >> 1 */
+			sii8240,client_id = <0x02>;
+		};
+		sii8240tpi@59 {
+			compatible = "sii8240,tpi";
+			reg = <0x59>;   /* 0xB2 >> 1 */
+			sii8240,client_id = <0x03>;
+		};
+		sii8240cbus@64 {
+			compatible = "sii8240,cbus";
+			reg = <0x64>;  /* 0xC8 >> 1 */
+			sii8240,client_id = <0x04>;
+		};
+	};
+};

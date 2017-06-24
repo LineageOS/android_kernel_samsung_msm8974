@@ -1627,6 +1627,7 @@ static int wfd_dev_setup(struct wfd_device *wfd_dev, int dev_num,
 	wfd_dev->pvdev = video_device_alloc();
 	if (!wfd_dev->pvdev) {
 		WFD_MSG_ERR("Failed to allocate video device\n");
+		rc =  -ENOMEM;
 		goto err_video_device_alloc;
 	}
 

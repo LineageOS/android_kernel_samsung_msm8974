@@ -1,0 +1,154 @@
+#
+# sensor drivers configuration
+#
+config SENSORS_SSP_LSM330
+	tristate "Sensors ssp lsm330"
+	default n
+	depends on SPI
+	help
+	  lsm330 file for factory test in ssp driver.
+          If you say yes here you get lsm330 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_CM36651
+	tristate "Sensors ssp cm36651"
+	default n
+	depends on SPI
+	help
+	  cm36651 file for factory test in ssp driver.
+          If you say yes here you get cm36651 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_CM3320
+	tristate "Sensors ssp cm3320"
+	default n
+	depends on SPI
+	help
+	  cm3320 file for factory test in ssp driver.
+          If you say yes here you get cm3320 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_MAX88920
+	tristate "Sensors ssp max88920"
+	default n
+	depends on SPI
+	help
+	  max88005 file for factory test in ssp driver.
+          If you say yes here you get max88005 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_MAX88921
+	tristate "Sensors ssp max88921"
+	default n
+	depends on SPI
+	help
+	  max88005 file for factory test in ssp driver.
+          If you say yes here you get max88005 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_TMG399X
+	tristate "Sensors ssp tmg399x"
+	default n
+	depends on SPI
+	help
+	  tmg399x file for factory test in ssp driver.
+          If you say yes here you get tmg399x support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_TMD37823
+	tristate "Sensors ssp tmd37823"
+	default n
+	depends on SPI
+	help
+	  tmd37823 file for factory test in ssp driver.
+          If you say yes here you get tmd37823 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_MPU6500
+	tristate "Sensors ssp mpu6500"
+	default n
+	depends on SPI
+	help
+	  mpu6500 file for factory test in ssp driver.
+          If you say yes here you get mpu6500 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_BMP182
+	tristate "Sensors ssp bmp182"
+	default n
+	depends on SPI
+	help
+	  bmp182 file for factory test in ssp driver.
+          If you say yes here you get bmp182 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_AT32UC3L0128
+	tristate "Sensors ssp at32uc3l0128"
+	default n
+	depends on SPI
+	help
+	  at32uc3l0128 file for factory test in ssp driver.
+          If you say yes here you get at32uc3l0128 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_ATUC128L5HAR
+	tristate "Sensors ssp atuc128l5har"
+	default n
+	depends on SPI
+	help
+	  atuc128l5har file for factory test in ssp driver.
+          If you say yes here you get atuc128l5har support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_SHTC1
+	tristate "Sensors ssp shtc1"
+	default n
+	depends on SPI
+	help
+	  shtc1 file for factory test in ssp driver.
+          If you say yes here you get shtc1 support for
+	  factory test.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_MOBEAM
+	tristate "Sensors ssp mobeam"
+	default n
+	depends on SPI
+	help
+	  mobeam file for ssp driver.
+          If you say yes here you get mobeam support using TMG399x.
+	  To compile this driver as a module, choose M here: the
+	  module will be called ssp.
+
+config SENSORS_SSP_UVIS25
+	tristate "Sensors ssp UV"
+	default n
+	depends on SENSORS_SSP
+	help
+	  This is for UV Sensor device driver.
+          If you say yes here you get uv sensor support.
+	  If you say no here uv sensor will not be supported.
+

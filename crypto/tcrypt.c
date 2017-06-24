@@ -47,6 +47,11 @@
 #define ENCRYPT 1
 #define DECRYPT 0
 
+#ifdef CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
+extern long integrity_mem_reservoir;
+extern void free_bootmem_late(unsigned long addr, unsigned long size);
+#endif
+
 /*
  * Used by test_cipher_speed()
  */
@@ -66,6 +71,29 @@ static char *check[] = {
 	"camellia", "seed", "salsa20", "rmd128", "rmd160", "rmd256", "rmd320",
 	"lzo", "cts", "zlib", NULL
 };
+
+#ifdef CONFIG_CRYPTO_DRBG
+static char *drbg_cores[] = {
+#ifdef CONFIG_CRYPTO_DRBG_CTR
+	"ctr_aes128",
+	"ctr_aes192",
+	"ctr_aes256",
+#endif /* CONFIG_CRYPTO_DRBG_CTR */
+#ifdef CONFIG_CRYPTO_DRBG_HASH
+	"sha1",
+	"sha384",
+	"sha512",
+	"sha256",
+#endif /* CONFIG_CRYPTO_DRBG_HASH */
+#ifdef CONFIG_CRYPTO_DRBG_HMAC
+	"hmac_sha1",
+	"hmac_sha384",
+	"hmac_sha512",
+	"hmac_sha256",
+#endif /* CONFIG_CRYPTO_DRBG_HMAC */
+};
+
+#endif /* CONFIG_CRYPTO_DRBG */
 
 static int test_cipher_jiffies(struct blkcipher_desc *desc, int enc,
 			       struct scatterlist *sg, int blen, int sec)
@@ -920,6 +948,27 @@ out:
 	crypto_free_ablkcipher(tfm);
 }
 
+#ifdef CONFIG_CRYPTO_DRBG
+static inline int test_drbg(const char *drbg_core, int pr)
+{
+	int pos = 0;
+	char cra_driver_name[CRYPTO_MAX_ALG_NAME] = "";
+
+	if(!drbg_core)
+		return -EINVAL;
+
+	if (pr) { /* with prediction resistance */
+		memcpy(cra_driver_name, "drbg_pr_", 8);
+		pos = 8;
+	} else {
+		memcpy(cra_driver_name, "drbg_nopr_", 10);
+		pos = 10;
+	}
+	memcpy(cra_driver_name + pos, drbg_core, strlen(drbg_core));
+	return alg_test(cra_driver_name, "stdrng", 0, 0);
+}
+#endif /* CONFIG_CRYPTO_DRBG */
+
 static void test_available(void)
 {
 	char **name = check;
@@ -1006,9 +1055,13 @@ static int do_test(int m)
 		ret += tcrypt_test("ecb(aes)");
 		ret += tcrypt_test("cbc(aes)");
 		ret += tcrypt_test("lrw(aes)");
+#ifdef CONFIG_CRYPTO_XTS
 		ret += tcrypt_test("xts(aes)");
+#endif
+#ifdef CONFIG_CRYPTO_CTR		
 		ret += tcrypt_test("ctr(aes)");
 		ret += tcrypt_test("rfc3686(ctr(aes))");
+#endif
 		break;
 
 	case 11:
@@ -1110,7 +1163,9 @@ static int do_test(int m)
 		break;
 
 	case 35:
+#ifdef CONFIG_CRYPTO_GCM
 		ret += tcrypt_test("gcm(aes)");
+#endif
 		break;
 
 	case 36:
@@ -1118,8 +1173,10 @@ static int do_test(int m)
 		break;
 
 	case 37:
+#ifdef CONFIG_CRYPTO_CCM
 		ret += tcrypt_test("ccm(aes)");
 		break;
+#endif
 
 	case 38:
 		ret += tcrypt_test("cts(cbc(aes))");
@@ -1150,8 +1207,10 @@ static int do_test(int m)
 		break;
 
 	case 45:
+#ifdef CONFIG_CRYPTO_CCM
 		ret += tcrypt_test("rfc4309(ccm(aes))");
 		break;
+#endif
 
 	case 100:
 		ret += tcrypt_test("hmac(md5)");
@@ -1198,7 +1257,9 @@ static int do_test(int m)
 		break;
 
 	case 151:
+#ifdef CONFIG_CRYPTO_GCM
 		ret += tcrypt_test("rfc4106(gcm(aes))");
+#endif
 		break;
 
 	case 200:
@@ -1566,6 +1627,61 @@ static int do_test(int m)
 	case 1000:
 		test_available();
 		break;
+
+#ifdef CONFIG_CRYPTO_FIPS
+	case 1402 : //For FIPS 140-2
+		printk(KERN_ERR "FIPS : Tcrypt Tests Start\n");
+
+		/* AES */
+		ret += alg_test("ecb(aes-generic)", "ecb(aes)", 0, 0);
+		ret += alg_test("cbc(aes-generic)", "cbc(aes)", 0, 0);
+		
+#ifdef CONFIG_CRYPTO_AES_ARM
+		ret += alg_test("ecb(aes-asm)", "ecb(aes)", 0, 0);
+		ret += alg_test("cbc(aes-asm)", "cbc(aes)", 0, 0);
+#endif
+
+		/* 3DES */
+		ret += alg_test("ecb(des3_ede-generic)", "ecb(des3_ede)", 0, 0);
+		ret += alg_test("cbc(des3_ede-generic)", "cbc(des3_ede)", 0, 0);
+
+		/* SHA */
+		ret += alg_test("sha1-generic", "sha1", 0, 0);
+		ret += alg_test("sha224-generic", "sha224", 0, 0);
+		ret += alg_test("sha256-generic", "sha256", 0, 0);
+		ret += alg_test("sha384-generic", "sha384", 0, 0);
+		ret += alg_test("sha512-generic", "sha512", 0, 0);
+
+#ifdef CONFIG_CRYPTO_SHA1_ARM
+		ret += alg_test("sha1-asm", "sha1", 0, 0);
+		ret += alg_test("hmac(sha1-asm)", "hmac(sha1)", 0, 0);
+#endif
+
+		/* HMAC */
+		ret += alg_test("hmac(sha1-generic)", "hmac(sha1)", 0, 0);
+		ret += alg_test("hmac(sha224-generic)", "hmac(sha224)", 0, 0);
+		ret += alg_test("hmac(sha256-generic)", "hmac(sha256)", 0, 0);
+		ret += alg_test("hmac(sha384-generic)", "hmac(sha384)", 0, 0);
+		ret += alg_test("hmac(sha512-generic)", "hmac(sha512)", 0, 0);
+
+#ifdef CONFIG_CRYPTO_ANSI_CPRNG
+		/* RNG */
+		ret += alg_test("fips_ansi_cprng", "ansi_cprng", 0, 0);
+#endif
+
+#ifdef CONFIG_CRYPTO_DRBG
+		/* DRBG */
+		for (i = 0; ARRAY_SIZE(drbg_cores) > i; i++)
+			ret += test_drbg(drbg_cores[i], 0);	/* no prediction resistance */
+		for (i = 0; ARRAY_SIZE(drbg_cores) > i; i++)
+			ret += test_drbg(drbg_cores[i], 1);	/* with prediction resistance */
+#endif
+
+		printk(KERN_ERR "FIPS : Tcrypt Tests End\n");
+
+		break;
+#endif //CONFIG_CRYPTO_FIPS
+
 	}
 
 	return ret;
@@ -1588,16 +1704,44 @@ static int __init tcrypt_mod_init(void)
 			goto err_free_tv;
 	}
 
+#ifdef CONFIG_CRYPTO_FIPS
+	testmgr_crypto_proc_init();
+	mode = 1402; //For FIPS 140-2
+#endif
+
 	if (alg)
 		err = do_alg_test(alg, type, mask);
 	else
 		err = do_test(mode);
 
+#if FIPS_FUNC_TEST == 1
+    printk(KERN_ERR "FIPS FUNC TEST: Do test again\n");
+    do_test(mode);
+#else
 	if (err) {
 		printk(KERN_ERR "tcrypt: one or more tests failed!\n");
 		goto err_free_tv;
+#ifndef CONFIG_CRYPTO_FIPS
 	}
+#else
+	} else {
+		do_integrity_check();
+		if(in_fips_err()) {
+			printk(KERN_ERR "tcrypt: CRYPTO API in FIPS Error!!!\n");
+		} else {
+			printk(KERN_ERR "tcrypt: CRYPTO API started in FIPS mode!!!\n");
+		}
 
+#ifdef CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
+		if (integrity_mem_reservoir != 0) {
+		  	printk(KERN_NOTICE "FIPS free integrity_mem_reservoir = %ld\n", integrity_mem_reservoir);
+		 	free_bootmem_late((unsigned long)CONFIG_CRYPTO_FIPS_INTEG_COPY_ADDRESS, integrity_mem_reservoir);
+		 	integrity_mem_reservoir = 0;
+		}
+#endif
+	}
+#endif
+#endif /* FIPS_FUNC_TEST */
 	/* We intentionaly return -EAGAIN to prevent keeping the module,
 	 * unless we're running in fips mode. It does all its work from
 	 * init() and doesn't offer any runtime functionality, but in

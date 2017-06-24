@@ -1,11 +1,3 @@
-CFLAGS_rmi_bus.o := -DDEBUG
-CFLAGS_rmi_sensor.o := -DDEBUG
-CFLAGS_rmi_function.o := -DDEBUG
-CFLAGS_rmi_f01.o := -DDEBUG
-CFLAGS_rmi_f05.o := -DDEBUG
-CFLAGS_rmi_f11.o := -DDEBUG
-CFLAGS_rmi_f19.o := -DDEBUG
-CFLAGS_rmi_f34.o := -DDEBUG
-CFLAGS_rmi_i2c.o := -DDEBUG
-CFLAGS_rmi_spi.o := -DDEBUG
-obj-y +=  rmi_bus.o rmi_sensor.o rmi_function.o rmi_f01.o rmi_f05.o rmi_f11.o rmi_f19.o rmi_f34.o rmi_i2c.o
+obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)	+= synaptics_i2c_rmi.o rmi_dev.o rmi_f54.o rmi_fw_update.o rmi_db.o
+obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)	+= synaptics_i2c_rmi.o rmi_dev.o rmi_f54.o rmi_fw_update.o rmi_db.o rmi_guest.o
+obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)     += Multiverse/

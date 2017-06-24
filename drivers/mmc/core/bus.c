@@ -417,7 +417,7 @@ int mmc_add_card(struct mmc_card *card)
 	ret = pm_runtime_set_active(&card->dev);
 	if (ret)
 		pr_err("%s: %s: failed setting runtime active: ret: %d\n",
-		       mmc_hostname(card->host), __func__, ret);
+				mmc_hostname(card->host), __func__, ret);
 	else if (!mmc_card_sdio(card) && mmc_use_core_runtime_pm(card->host))
 		pm_runtime_enable(&card->dev);
 

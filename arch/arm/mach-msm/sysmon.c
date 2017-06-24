@@ -285,6 +285,7 @@ static int sysmon_probe(struct platform_device *pdev)
 					     sysmon_smd_notify);
 		if (ret) {
 			pr_err("SMD open failed\n");
+			mutex_destroy(&ss->lock);
 			return ret;
 		}
 
@@ -297,6 +298,7 @@ static int sysmon_probe(struct platform_device *pdev)
 		ret = hsic_sysmon_open(HSIC_SYSMON_DEV_EXT_MODEM);
 		if (ret) {
 			pr_err("HSIC open failed\n");
+			mutex_destroy(&ss->lock);
 			return ret;
 		}
 		break;

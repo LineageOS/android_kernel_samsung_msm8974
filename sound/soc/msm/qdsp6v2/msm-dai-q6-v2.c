@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -817,6 +817,12 @@ static int msm_dai_q6_set_channel_map(struct snd_soc_dai *dai,
 		 */
 		if (!rx_slot)
 			return -EINVAL;
+
+		if (rx_num > AFE_PORT_MAX_AUDIO_CHAN_CNT) {
+			pr_err("%s: invalid rx num %d\n", __func__, rx_num);
+			return -EINVAL;
+		}
+		
 		for (i = 0; i < rx_num; i++) {
 			dai_data->port_config.slim_sch.shared_ch_mapping[i] =
 			    rx_slot[i];
@@ -844,6 +850,11 @@ static int msm_dai_q6_set_channel_map(struct snd_soc_dai *dai,
 		 */
 		if (!tx_slot)
 			return -EINVAL;
+
+		if (tx_num > AFE_PORT_MAX_AUDIO_CHAN_CNT) {
+			pr_err("%s: invalid tx num %d\n", __func__, tx_num);
+			return -EINVAL;
+		}
 		for (i = 0; i < tx_num; i++) {
 			dai_data->port_config.slim_sch.shared_ch_mapping[i] =
 			    tx_slot[i];
@@ -1206,6 +1217,7 @@ static int __devinit msm_auxpcm_dev_probe(struct platform_device *pdev)
 	return rc;
 
 fail_reg_dai:
+	mutex_destroy(&dai_data->rlock);
 fail_invalid_intf:
 fail_nodev_intf:
 fail_invalid_dt:

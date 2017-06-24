@@ -1,0 +1,11 @@
+#
+# ATMEL MXT1188S TOUCH driver configuration
+#
+config TOUCHSCREEN_ATMEL_MXT1188S
+	tristate "Atmel MXT1188S Touchscreen Interface"
+	depends on I2C
+	default n
+	help
+	  Say Y here if tou want support for atmel_MXT1188S touchscreen controllers.
+	  To compile this driver as a module, choose M here: the
+	  module will be called mxt1188s

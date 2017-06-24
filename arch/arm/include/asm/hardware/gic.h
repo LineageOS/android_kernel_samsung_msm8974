@@ -37,6 +37,9 @@
 #include <linux/irqdomain.h>
 struct device_node;
 
+#if defined (CONFIG_MACH_AFYONLTE_TMO) || defined(CONFIG_MACH_ATLANTICLTE_ATT) || defined(CONFIG_MACH_ATLANTIC3GEUR_OPEN)
+void gic_dump_register_set(void);
+#endif
 extern struct irq_chip gic_arch_extn;
 
 void gic_init_bases(unsigned int, int, void __iomem *, void __iomem *,

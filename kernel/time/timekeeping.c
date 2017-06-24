@@ -296,7 +296,7 @@ void ktime_get_ts(struct timespec *ts)
 	} while (read_seqretry(&timekeeper.lock, seq));
 
 	set_normalized_timespec(ts, ts->tv_sec + tomono.tv_sec,
-				ts->tv_nsec + tomono.tv_nsec + nsecs);
+				(s64)ts->tv_nsec + tomono.tv_nsec + nsecs);
 }
 EXPORT_SYMBOL_GPL(ktime_get_ts);
 
@@ -1147,14 +1147,12 @@ out:
  */
 void getboottime(struct timespec *ts)
 {
-	struct timespec boottime = {
-		.tv_sec = timekeeper.wall_to_monotonic.tv_sec +
-				timekeeper.total_sleep_time.tv_sec,
-		.tv_nsec = timekeeper.wall_to_monotonic.tv_nsec +
-				timekeeper.total_sleep_time.tv_nsec
-	};
+	time_t tv_sec = timekeeper.wall_to_monotonic.tv_sec +
+				timekeeper.total_sleep_time.tv_sec;
+	s64 tv_nsec = (s64)timekeeper.wall_to_monotonic.tv_nsec +
+				timekeeper.total_sleep_time.tv_nsec;
 
-	set_normalized_timespec(ts, -boottime.tv_sec, -boottime.tv_nsec);
+	set_normalized_timespec(ts, -tv_sec, -tv_nsec);
 }
 EXPORT_SYMBOL_GPL(getboottime);
 
@@ -1256,7 +1254,7 @@ struct timespec get_monotonic_coarse(void)
 	} while (read_seqretry(&timekeeper.lock, seq));
 
 	set_normalized_timespec(&now, now.tv_sec + mono.tv_sec,
-				now.tv_nsec + mono.tv_nsec);
+				(s64)now.tv_nsec + mono.tv_nsec);
 	return now;
 }
 

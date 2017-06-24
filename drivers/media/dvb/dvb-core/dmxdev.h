@@ -138,6 +138,11 @@ struct ts_insertion_buffer {
 
 	/* indication whether insertion should be aborted */
 	int abort;
+
+#if defined(CONFIG_JPN_DEMUX_MOD)
+	unsigned char continuity;
+	unsigned long long int tts;
+#endif
 };
 
 struct dmxdev_filter {

@@ -37,7 +37,8 @@ static int msm_jpeg_open(struct inode *inode, struct file *filp)
 	int rc = 0;
 
 	struct msm_jpeg_device *pgmn_dev = container_of(inode->i_cdev,
-		struct msm_jpeg_device, cdev);
+							struct msm_jpeg_device, cdev);
+
 	filp->private_data = pgmn_dev;
 
 	JPEG_DBG("%s:%d]\n", __func__, __LINE__);
@@ -45,7 +46,7 @@ static int msm_jpeg_open(struct inode *inode, struct file *filp)
 	rc = __msm_jpeg_open(pgmn_dev);
 
 	JPEG_DBG(KERN_INFO "%s:%d] %s open_count = %d\n", __func__, __LINE__,
-		filp->f_path.dentry->d_name.name, pgmn_dev->open_count);
+		 filp->f_path.dentry->d_name.name, pgmn_dev->open_count);
 
 	return rc;
 }
@@ -61,18 +62,18 @@ static int msm_jpeg_release(struct inode *inode, struct file *filp)
 	rc = __msm_jpeg_release(pgmn_dev);
 
 	JPEG_DBG(KERN_INFO "%s:%d] %s open_count = %d\n", __func__, __LINE__,
-		filp->f_path.dentry->d_name.name, pgmn_dev->open_count);
+		 filp->f_path.dentry->d_name.name, pgmn_dev->open_count);
 	return rc;
 }
 
 static long msm_jpeg_ioctl(struct file *filp, unsigned int cmd,
-	unsigned long arg)
+			   unsigned long arg)
 {
 	int rc;
 	struct msm_jpeg_device *pgmn_dev = filp->private_data;
 
 	JPEG_DBG("%s:%d] cmd=%d pgmn_dev=0x%x arg=0x%x\n", __func__,
-		__LINE__, _IOC_NR(cmd), (uint32_t)pgmn_dev, (uint32_t)arg);
+		 __LINE__, _IOC_NR(cmd), (uint32_t)pgmn_dev, (uint32_t)arg);
 
 	rc = __msm_jpeg_ioctl(pgmn_dev, cmd, arg);
 
@@ -81,10 +82,10 @@ static long msm_jpeg_ioctl(struct file *filp, unsigned int cmd,
 }
 
 static const struct file_operations msm_jpeg_fops = {
-	.owner		= THIS_MODULE,
-	.open		 = msm_jpeg_open,
-	.release	= msm_jpeg_release,
-	.unlocked_ioctl = msm_jpeg_ioctl,
+	.owner			= THIS_MODULE,
+	.open			= msm_jpeg_open,
+	.release		= msm_jpeg_release,
+	.unlocked_ioctl		= msm_jpeg_ioctl,
 };
 
 
@@ -95,15 +96,15 @@ int msm_jpeg_subdev_init(struct v4l2_subdev *jpeg_sd)
 		(struct msm_jpeg_device *)jpeg_sd->host_priv;
 
 	JPEG_DBG("%s:%d: jpeg_sd=0x%x pgmn_dev=0x%x\n",
-		__func__, __LINE__, (uint32_t)jpeg_sd, (uint32_t)pgmn_dev);
+		 __func__, __LINE__, (uint32_t)jpeg_sd, (uint32_t)pgmn_dev);
 	rc = __msm_jpeg_open(pgmn_dev);
 	JPEG_DBG("%s:%d: rc=%d\n",
-		__func__, __LINE__, rc);
+		 __func__, __LINE__, rc);
 	return rc;
 }
 
 static long msm_jpeg_subdev_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, void *arg)
+				  unsigned int cmd, void *arg)
 {
 	long rc;
 	struct msm_jpeg_device *pgmn_dev =
@@ -125,17 +126,18 @@ void msm_jpeg_subdev_release(struct v4l2_subdev *jpeg_sd)
 	int rc;
 	struct msm_jpeg_device *pgmn_dev =
 		(struct msm_jpeg_device *)jpeg_sd->host_priv;
+
 	JPEG_DBG("%s:pgmn_dev=0x%x", __func__, (uint32_t)pgmn_dev);
 	rc = __msm_jpeg_release(pgmn_dev);
 	JPEG_DBG("%s:rc=%d", __func__, rc);
 }
 
 static const struct v4l2_subdev_core_ops msm_jpeg_subdev_core_ops = {
-	.ioctl = msm_jpeg_subdev_ioctl,
+	.ioctl	= msm_jpeg_subdev_ioctl,
 };
 
 static const struct v4l2_subdev_ops msm_jpeg_subdev_ops = {
-	.core = &msm_jpeg_subdev_core_ops,
+	.core	= &msm_jpeg_subdev_core_ops,
 };
 
 static int msm_jpeg_init_dev(struct platform_device *pdev)
@@ -155,7 +157,7 @@ static int msm_jpeg_init_dev(struct platform_device *pdev)
 
 	if (pdev->dev.of_node)
 		of_property_read_u32((&pdev->dev)->of_node, "cell-index",
-			&pdev->id);
+				     &pdev->id);
 
 	snprintf(devname, sizeof(devname), "%s%d", MSM_JPEG_NAME, pdev->id);
 
@@ -168,10 +170,10 @@ static int msm_jpeg_init_dev(struct platform_device *pdev)
 	v4l2_subdev_init(&msm_jpeg_device_p->subdev, &msm_jpeg_subdev_ops);
 	v4l2_set_subdev_hostdata(&msm_jpeg_device_p->subdev, msm_jpeg_device_p);
 	JPEG_DBG("%s: msm_jpeg_device_p 0x%x", __func__,
-			(uint32_t)msm_jpeg_device_p);
+		 (uint32_t)msm_jpeg_device_p);
 
 	rc = alloc_chrdev_region(&msm_jpeg_device_p->msm_jpeg_devno, 0, 1,
-				devname);
+				 devname);
 	if (rc < 0) {
 		JPEG_PR_ERR("%s: failed to allocate chrdev\n", __func__);
 		goto fail_1;
@@ -179,19 +181,19 @@ static int msm_jpeg_init_dev(struct platform_device *pdev)
 
 	if (!msm_jpeg_device_p->msm_jpeg_class) {
 		msm_jpeg_device_p->msm_jpeg_class =
-				class_create(THIS_MODULE, devname);
+			class_create(THIS_MODULE, devname);
 		if (IS_ERR(msm_jpeg_device_p->msm_jpeg_class)) {
 			rc = PTR_ERR(msm_jpeg_device_p->msm_jpeg_class);
 			JPEG_PR_ERR("%s: create device class failed\n",
-				__func__);
+				    __func__);
 			goto fail_2;
 		}
 	}
 
 	dev = device_create(msm_jpeg_device_p->msm_jpeg_class, NULL,
-		MKDEV(MAJOR(msm_jpeg_device_p->msm_jpeg_devno),
-		MINOR(msm_jpeg_device_p->msm_jpeg_devno)), NULL,
-		"%s%d", MSM_JPEG_NAME, pdev->id);
+			    MKDEV(MAJOR(msm_jpeg_device_p->msm_jpeg_devno),
+				  MINOR(msm_jpeg_device_p->msm_jpeg_devno)), NULL,
+			    "%s%d", MSM_JPEG_NAME, pdev->id);
 	if (IS_ERR(dev)) {
 		JPEG_PR_ERR("%s: error creating device\n", __func__);
 		rc = -ENODEV;
@@ -200,10 +202,10 @@ static int msm_jpeg_init_dev(struct platform_device *pdev)
 
 	cdev_init(&msm_jpeg_device_p->cdev, &msm_jpeg_fops);
 	msm_jpeg_device_p->cdev.owner = THIS_MODULE;
-	msm_jpeg_device_p->cdev.ops	 =
-		(const struct file_operations *) &msm_jpeg_fops;
+	msm_jpeg_device_p->cdev.ops      =
+		(const struct file_operations *)&msm_jpeg_fops;
 	rc = cdev_add(&msm_jpeg_device_p->cdev,
-			msm_jpeg_device_p->msm_jpeg_devno, 1);
+		      msm_jpeg_device_p->msm_jpeg_devno, 1);
 	if (rc < 0) {
 		JPEG_PR_ERR("%s: error adding cdev\n", __func__);
 		rc = -ENODEV;
@@ -216,22 +218,22 @@ static int msm_jpeg_init_dev(struct platform_device *pdev)
 
 	return rc;
 
-fail_4:
+ fail_4:
 	device_destroy(msm_jpeg_device_p->msm_jpeg_class,
-			msm_jpeg_device_p->msm_jpeg_devno);
+		       msm_jpeg_device_p->msm_jpeg_devno);
 
-fail_3:
+ fail_3:
 	class_destroy(msm_jpeg_device_p->msm_jpeg_class);
 
-fail_2:
+ fail_2:
 	unregister_chrdev_region(msm_jpeg_device_p->msm_jpeg_devno, 1);
 
-fail_1:
+ fail_1:
 	__msm_jpeg_exit(msm_jpeg_device_p);
-	return rc;
 
-fail:
-	kfree(msm_jpeg_device_p);
+ fail:
+	if (msm_jpeg_device_p)
+		kfree(msm_jpeg_device_p);
 	return rc;
 
 }
@@ -240,7 +242,7 @@ static void msm_jpeg_exit(struct msm_jpeg_device *msm_jpeg_device_p)
 {
 	cdev_del(&msm_jpeg_device_p->cdev);
 	device_destroy(msm_jpeg_device_p->msm_jpeg_class,
-			msm_jpeg_device_p->msm_jpeg_devno);
+		       msm_jpeg_device_p->msm_jpeg_devno);
 	class_destroy(msm_jpeg_device_p->msm_jpeg_class);
 	unregister_chrdev_region(msm_jpeg_device_p->msm_jpeg_devno, 1);
 
@@ -264,18 +266,18 @@ static int __msm_jpeg_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id msm_jpeg_dt_match[] = {
-			{.compatible = "qcom,jpeg"},
-			{},
+	{ .compatible = "qcom,jpeg" },
+	{},
 };
 
 MODULE_DEVICE_TABLE(of, msm_jpeg_dt_match);
 
 static struct platform_driver msm_jpeg_driver = {
-	.probe	= __msm_jpeg_probe,
-	.remove = __msm_jpeg_remove,
-	.driver = {
-		.name = "msm_jpeg",
-		.owner = THIS_MODULE,
+	.probe			= __msm_jpeg_probe,
+	.remove			= __msm_jpeg_remove,
+	.driver			= {
+		.name		= "msm_jpeg",
+		.owner		= THIS_MODULE,
 		.of_match_table = msm_jpeg_dt_match,
 	},
 };
@@ -283,6 +285,7 @@ static struct platform_driver msm_jpeg_driver = {
 static int __init msm_jpeg_driver_init(void)
 {
 	int rc;
+
 	rc = platform_driver_register(&msm_jpeg_driver);
 	return rc;
 }

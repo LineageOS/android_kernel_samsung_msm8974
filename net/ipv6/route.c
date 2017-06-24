@@ -927,6 +927,8 @@ struct dst_entry * ip6_route_output(struct net *net, const struct sock *sk,
 				    struct flowi6 *fl6)
 {
 	int flags = 0;
+	
+	fl6->flowi6_iif = LOOPBACK_IFINDEX;
 
 	if ((sk && sk->sk_bound_dev_if) || rt6_need_strict(&fl6->daddr))
 		flags |= RT6_LOOKUP_F_IFACE;
@@ -1289,7 +1291,7 @@ int ip6_route_add(struct fib6_config *cfg)
 	if (!table)
 		goto out;
 
-	rt = ip6_dst_alloc(&net->ipv6.ip6_dst_ops, NULL, DST_NOCOUNT);
+	rt = ip6_dst_alloc(&net->ipv6.ip6_dst_ops, NULL, (cfg->fc_flags & RTF_ADDRCONF) ? 0 : DST_NOCOUNT);
 
 	if (!rt) {
 		err = -ENOMEM;

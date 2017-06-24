@@ -21,6 +21,20 @@
 #include <linux/delay.h>
 #include <mach/msm_bus.h>
 #include <mach/msm_bus_board.h>
+#ifdef CONFIG_FB_MSM_CAMERA_CSC
+struct mdp_csc_cfg mdp_csc_convert_wideband = {
+	0,
+	{
+		0x0200, 0x0000, 0x02CD,
+		0x0200, 0xFF4F, 0xFE91,
+		0x0200, 0x038B, 0x0000,
+	},
+	{ 0x0, 0xFF80, 0xFF80,},
+	{ 0x0, 0x0, 0x0,},
+	{ 0x0, 0xFF, 0x0, 0xFF, 0x0, 0xFF,},
+	{ 0x0, 0xFF, 0x0, 0xFF, 0x0, 0xFF,},
+};
+#endif
 
 struct mdp_csc_cfg mdp_csc_convert[MDSS_MDP_MAX_CSC] = {
 	[MDSS_MDP_CSC_RGB2RGB] = {
@@ -90,6 +104,30 @@ static struct mdp_ar_gc_lut_data lin_gc_data[GC_LUT_SEGMENTS] = {
 	{4095,   0, 0}, {4095, 0,     0},
 	{4095,   0, 0}, {4095, 0, 32640}
 };
+
+#if defined(CONFIG_MDNIE_TFT_MSM8X26) || defined (CONFIG_FB_MSM_MDSS_S6E8AA0A_HD_PANEL) || defined(CONFIG_MDNIE_VIDEO_ENHANCED)
+struct mdp_pcc_cfg_data pcc_reverse = {
+	.block = MDP_LOGICAL_BLOCK_DISP_0,
+	.ops = MDP_PP_OPS_WRITE | MDP_PP_OPS_ENABLE,
+	.r = { 0x00007ff8, 0xffff8000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+			0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+	.g = { 0x00007ff8, 0x00000000, 0xffff8000, 0x00000000, 0x00000000, 0x00000000,
+			0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+	.b = { 0x00007ff8, 0x00000000, 0x00000000, 0xffff8000, 0x00000000, 0x00000000,
+			0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+};
+
+struct mdp_pcc_cfg_data pcc_normal = {
+	.block = MDP_LOGICAL_BLOCK_DISP_0,
+	.ops = MDP_PP_OPS_WRITE | MDP_PP_OPS_DISABLE,
+	.r = { 0x00000000, 0x00008000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+			0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+	.g = { 0x00000000, 0x00000000, 0x00008000, 0x00000000, 0x00000000, 0x00000000,
+			0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+	.b = { 0x00000000, 0x00000000, 0x00000000, 0x00008000, 0x00000000, 0x00000000,
+			0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+};
+#endif
 
 #define CSC_MV_OFF	0x0
 #define CSC_BV_OFF	0x2C
@@ -536,7 +574,20 @@ int mdss_mdp_csc_setup(u32 block, u32 blk_idx, u32 tbl_idx, u32 csc_type)
 	pr_debug("csc type=%d blk=%d idx=%d tbl=%d\n", csc_type,
 		 block, blk_idx, tbl_idx);
 
+#ifdef CONFIG_FB_MSM_CAMERA_CSC
+	if (csc_type == MDSS_MDP_CSC_YUV2RGB && !csc_update) 
+	{
+		data = &mdp_csc_convert_wideband;
+		pr_debug("will do mdp_csc_convert (wide band)\n");
+	}
+	else
+	{
+		data = &mdp_csc_convert[csc_type];
+		pr_debug("will do mdp_csc_convert (narrow band)\n");
+	}
+#else
 	data = &mdp_csc_convert[csc_type];
+#endif	
 	return mdss_mdp_csc_setup_data(block, blk_idx, tbl_idx, data);
 }
 
@@ -866,7 +917,7 @@ static int pp_vig_pipe_setup(struct mdss_mdp_pipe *pipe, u32 *op)
 			 * CSC matrix
 			 */
 			mdss_mdp_csc_setup(MDSS_MDP_BLOCK_SSPP, pipe->num, 1,
-					   MDSS_MDP_CSC_YUV2RGB);
+								MDSS_MDP_CSC_YUV2RGB);
 		}
 	}
 
@@ -1043,11 +1094,11 @@ static int mdss_mdp_scale_setup(struct mdss_mdp_pipe *pipe)
 			    (chroma_sample == MDSS_MDP_CHROMA_H1V2)))
 				chroma_shift_y = 1; /* 2x upsample chroma */
 
-			if (src_h <= pipe->dst.h)
+			if (src_h <= pipe->dst.h) {
 				scale_config |= /* G/Y, A */
 					(filter_mode << 10) |
 					(MDSS_MDP_SCALE_FILTER_BIL << 18);
-			else
+			} else
 				scale_config |= /* G/Y, A */
 					(MDSS_MDP_SCALE_FILTER_PCMN << 10) |
 					(MDSS_MDP_SCALE_FILTER_PCMN << 18);
@@ -1623,6 +1674,11 @@ static int pp_dspp_setup(u32 disp_num, struct mdss_mdp_mixer *mixer)
 
 	pp_sts = &mdss_pp_res->pp_disp_sts[disp_num];
 
+	if (!flags) {
+		pr_debug("skip configuring dspp features\n");
+		goto opmode_config;
+	}
+
 	if (disp_num < MDSS_BLOCK_DISP_NUM) {
 		if (mdata->mdp_rev >= MDSS_MDP_HW_REV_103) {
 			pp_pa_v2_config(flags, base + MDSS_MDP_REG_DSPP_PA_BASE, pp_sts,
@@ -1675,6 +1731,7 @@ static int pp_dspp_setup(u32 disp_num, struct mdss_mdp_mixer *mixer)
 		}
 	}
 
+opmode_config:
 	pp_dspp_opmode_config(ctl, dspp_num, pp_sts, mdata->mdp_rev, &opmode);
 
 flush_exit:
@@ -2030,7 +2087,7 @@ static int pp_ad_calc_bl(struct msm_fb_data_type *mfd, int bl_in, int *bl_out,
 		pr_debug("AD not supported on device.\n");
 		return ret;
 	} else if (ret || !ad) {
-		pr_err("Failed to get ad info: ret = %d, ad = 0x%p.\n",
+		pr_err("Failed to get ad info: ret = %d, ad = 0x%pK.\n",
 				ret, ad);
 		return ret;
 	}
@@ -2046,7 +2103,7 @@ static int pp_ad_calc_bl(struct msm_fb_data_type *mfd, int bl_in, int *bl_out,
 
 	if (!ad->bl_mfd || !ad->bl_mfd->panel_info ||
 			!ad->bl_att_lut) {
-		pr_err("Invalid ad info: bl_mfd = 0x%p, ad->bl_mfd->panel_info = 0x%p, bl_att_lut = 0x%p\n",
+		pr_err("Invalid ad info: bl_mfd = 0x%pK, ad->bl_mfd->panel_info = 0x%pK, bl_att_lut = 0x%pK\n",
 				ad->bl_mfd,
 				(!ad->bl_mfd) ? NULL : ad->bl_mfd->panel_info,
 				ad->bl_att_lut);
@@ -3541,7 +3598,7 @@ int mdss_mdp_hist_intr_req(struct mdss_intr *intr, u32 bits, bool en)
 	unsigned long flag;
 	int ret = 0;
 	if (!intr) {
-		pr_err("NULL addr passed, %p", intr);
+		pr_err("NULL addr passed, %pK", intr);
 		return -EINVAL;
 	}
 
@@ -3607,6 +3664,7 @@ int mdss_mdp_hist_intr_setup(struct mdss_intr *intr, int type)
 		return -EINVAL;
 	}
 
+	return ret; // not used.
 	mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_ON, false);
 	spin_lock_irqsave(&intr->lock, flag);
 
@@ -4208,7 +4266,7 @@ static int pp_ad_invalidate_input(struct msm_fb_data_type *mfd)
 
 	ret = mdss_mdp_get_ad(mfd, &ad);
 	if (ret || !ad) {
-		pr_err("Fail to get ad: ret = %d, ad = 0x%p\n", ret, ad);
+		pr_err("Fail to get ad: ret = %d, ad = 0x%pK\n", ret, ad);
 		return -EINVAL;
 	}
 	pr_debug("AD backlight level changed (%d), trigger update to AD\n",
@@ -5380,6 +5438,34 @@ int mdss_mdp_calib_mode(struct msm_fb_data_type *mfd,
 	mutex_unlock(&mdss_pp_mutex);
 	return 0;
 }
+
+#if defined(CONFIG_MDNIE_TFT_MSM8X26) || defined (CONFIG_FB_MSM_MDSS_S6E8AA0A_HD_PANEL) || defined(CONFIG_MDNIE_VIDEO_ENHANCED)
+void mdss_negative_color(int is_negative_on)
+{
+	u32 copyback;
+	int i;
+	struct mdss_mdp_ctl *ctl;
+	struct mdss_mdp_ctl *ctl_d = NULL;
+	struct mdss_data_type *mdata;
+
+	mdata = mdss_mdp_get_mdata();
+	for (i = 0; i < mdata->nctl; i++) {
+		ctl = mdata->ctl_off + i;
+		if ((ctl->power_on) && (ctl->mfd) && (ctl->mfd->index == 0)) {
+			ctl_d = ctl;
+			break;
+		}
+	}
+	if (ctl_d) {
+		if(is_negative_on)
+			mdss_mdp_pcc_config(&pcc_reverse, &copyback);
+		else
+			mdss_mdp_pcc_config(&pcc_normal, &copyback);
+	} else {
+		pr_info("%s:ctl_d is NULL ", __func__);
+	}
+}
+#endif
 
 int mdss_mdp_calib_config_buffer(struct mdp_calib_config_buffer *cfg,
 						u32 *copyback)

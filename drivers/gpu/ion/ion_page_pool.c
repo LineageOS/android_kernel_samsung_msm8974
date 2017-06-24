@@ -22,6 +22,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/vmalloc.h>
+#include <linux/swap.h>
 #include "ion_priv.h"
 
 struct ion_page_pool_item {
@@ -147,6 +148,9 @@ int ion_page_pool_shrink(struct ion_page_pool *pool, gfp_t gfp_mask,
 	bool high;
 
 	high = gfp_mask & __GFP_HIGHMEM;
+
+	if (current_is_kswapd())
+		high = 1;
 
 	if (nr_to_scan == 0)
 		return ion_page_pool_total(pool, high);

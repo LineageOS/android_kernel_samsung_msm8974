@@ -1,0 +1,17 @@
+#
+# Light sensors
+#
+menu "Grip sensors"
+
+config SENSORS_ASP01_IIO
+	depends on I2C && GPIOLIB
+	tristate "ASP01 Grip Sensor Support"
+	default n
+	help
+	  Say Y here if you use ASP01.
+	  This option enables Grip sensors using
+	  AD SEMICON ASP01 device driver.
+
+	  Say N here if you do not use ASP01.
+
+endmenu

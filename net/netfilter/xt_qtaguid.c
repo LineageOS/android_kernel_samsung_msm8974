@@ -1424,15 +1424,12 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
 		 ifname, uid, sk, direction, proto, bytes);
 
 
-	spin_lock_bh(&iface_stat_list_lock);
 	iface_entry = get_iface_entry(ifname);
 	if (!iface_entry) {
-		spin_unlock_bh(&iface_stat_list_lock);
 		pr_err_ratelimited("qtaguid: tag_stat: stat_update() "
 				   "%s not found\n", ifname);
 		return;
 	}
-	spin_unlock_bh(&iface_stat_list_lock);
 	/* It is ok to process data when an iface_entry is inactive */
 
 	MT_DEBUG("qtaguid: tag_stat: stat_update() dev=%s entry=%p\n",
@@ -2599,8 +2596,7 @@ static int pp_stats_line(struct proc_print_info *ppi, int cnt_set)
 		tag_t tag = ppi->ts_entry->tn.tag;
 		uid_t stat_uid = get_uid_from_tag(tag);
 		/* Detailed tags are not available to everybody */
-		if (get_atag_from_tag(tag)
-		    && !can_read_other_uid_stats(stat_uid)) {
+		if (!can_read_other_uid_stats(stat_uid)) {
 			CT_DEBUG("qtaguid: stats line: "
 				 "%s 0x%llx %u: insufficient priv "
 				 "from pid=%u tgid=%u uid=%u stats.gid=%u\n",

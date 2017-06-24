@@ -134,6 +134,8 @@ int __must_check sysfs_create_files(struct kobject *kobj,
 				   const struct attribute **attr);
 int __must_check sysfs_chmod_file(struct kobject *kobj,
 				  const struct attribute *attr, umode_t mode);
+int __must_check sysfs_chown_file(struct kobject *kobj, 
+				  const struct attribute *attr, uid_t uid, gid_t gid);
 void sysfs_remove_file(struct kobject *kobj, const struct attribute *attr);
 void sysfs_remove_files(struct kobject *kobj, const struct attribute **attr);
 

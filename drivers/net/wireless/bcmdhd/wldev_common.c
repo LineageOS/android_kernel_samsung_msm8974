@@ -1,7 +1,7 @@
 /*
  * Common function shared by Linux WEXT, cfg80211 and p2p drivers
  *
- * Copyright (C) 1999-2012, Broadcom Corporation
+ * Copyright (C) 1999-2015, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: wldev_common.c,v 1.1.4.1.2.14 2011-02-09 01:40:07 $
+ * $Id: wldev_common.c 585464 2015-09-10 12:47:43Z $
  */
 
 #include <osl.h>
@@ -32,16 +32,22 @@
 #include <wldev_common.h>
 #include <bcmutils.h>
 
-#define htod32(i) i
-#define htod16(i) i
-#define dtoh32(i) i
-#define dtoh16(i) i
-#define htodchanspec(i) i
-#define dtohchanspec(i) i
+#define htod32(i) (i)
+#define htod16(i) (i)
+#define dtoh32(i) (i)
+#define dtoh16(i) (i)
+#define htodchanspec(i) (i)
+#define dtohchanspec(i) (i)
 
 #define	WLDEV_ERROR(args)						\
 	do {										\
-		printk(KERN_ERR "WLDEV-ERROR) %s : ", __func__);	\
+		printk(KERN_ERR "WLDEV-ERROR) ");	\
+		printk args;							\
+	} while (0)
+
+#define	WLDEV_INFO(args)						\
+	do {										\
+		printk(KERN_INFO "WLDEV-INFO) ");	\
 		printk args;							\
 	} while (0)
 
@@ -105,7 +111,11 @@ s32 wldev_iovar_setbuf(
 		mutex_lock(buf_sync);
 	}
 	iovar_len = wldev_mkiovar(iovar_name, param, paramlen, buf, buflen);
-	ret = wldev_ioctl(dev, WLC_SET_VAR, buf, iovar_len, TRUE);
+	if (iovar_len > 0)
+		ret = wldev_ioctl(dev, WLC_SET_VAR, buf, iovar_len, TRUE);
+	else
+		ret = BCME_BUFTOOSHORT;
+
 	if (buf_sync)
 		mutex_unlock(buf_sync);
 	return ret;
@@ -220,7 +230,12 @@ s32 wldev_iovar_setbuf_bsscfg(
 		mutex_lock(buf_sync);
 	}
 	iovar_len = wldev_mkiovar_bsscfg(iovar_name, param, paramlen, buf, buflen, bsscfg_idx);
-	ret = wldev_ioctl(dev, WLC_SET_VAR, buf, iovar_len, TRUE);
+	if (iovar_len > 0)
+		ret = wldev_ioctl(dev, WLC_SET_VAR, buf, iovar_len, TRUE);
+	else {
+		ret = BCME_BUFTOOSHORT;
+	}
+
 	if (buf_sync) {
 		mutex_unlock(buf_sync);
 	}
@@ -319,50 +334,69 @@ int wldev_set_band(
 	int error = -1;
 
 	if ((band == WLC_BAND_AUTO) || (band == WLC_BAND_5G) || (band == WLC_BAND_2G)) {
-		error = wldev_ioctl(dev, WLC_SET_BAND, &band, sizeof(band), 1);
+		error = wldev_ioctl(dev, WLC_SET_BAND, &band, sizeof(band), true);
+		if (!error)
+			dhd_bus_band_set(dev, band);
 	}
 	return error;
 }
 
 int wldev_set_country(
-	struct net_device *dev, char *country_code)
+	struct net_device *dev, char *country_code, bool notify, bool user_enforced)
 {
 	int error = -1;
-	wl_country_t cspec = {{0}, 0, {0}};
+	wl_country_t cspec_orig = {{0}, 0, {0}};
+	wl_country_t cspec_desired = {{0}, 0, {0}};
 	scb_val_t scbval;
 	char smbuf[WLC_IOCTL_SMLEN];
 
 	if (!country_code)
 		return error;
 
-	error = wldev_iovar_getbuf(dev, "country", &cspec, sizeof(cspec),
-		smbuf, sizeof(smbuf), NULL);
-	if (error < 0)
-		WLDEV_ERROR(("%s: get country failed = %d\n", __FUNCTION__, error));
-
-	if ((error < 0) ||
-	    (strncmp(country_code, smbuf, WLC_CNTRY_BUF_SZ) != 0)) {
-		bzero(&scbval, sizeof(scb_val_t));
-		error = wldev_ioctl(dev, WLC_DISASSOC, &scbval, sizeof(scb_val_t), 1);
-		if (error < 0) {
-			WLDEV_ERROR(("%s: set country failed due to Disassoc error %d\n",
-				__FUNCTION__, error));
-			return error;
-		}
-	}
-	cspec.rev = -1;
-	memcpy(cspec.country_abbrev, country_code, WLC_CNTRY_BUF_SZ);
-	memcpy(cspec.ccode, country_code, WLC_CNTRY_BUF_SZ);
-	get_customized_country_code((char *)&cspec.country_abbrev, &cspec);
-	error = wldev_iovar_setbuf(dev, "country", &cspec, sizeof(cspec),
-		smbuf, sizeof(smbuf), NULL);
+	bzero(&scbval, sizeof(scb_val_t));
+	error = wldev_iovar_getbuf(dev, "country", NULL, 0, &cspec_orig, sizeof(cspec_orig), NULL);
 	if (error < 0) {
-		WLDEV_ERROR(("%s: set country for %s as %s rev %d failed\n",
-			__FUNCTION__, country_code, cspec.ccode, cspec.rev));
+		WLDEV_ERROR(("%s: get country failed = %d\n", __FUNCTION__, error));
 		return error;
 	}
-	dhd_bus_country_set(dev, &cspec);
-	WLDEV_ERROR(("%s: set country for %s as %s rev %d\n",
-		__FUNCTION__, country_code, cspec.ccode, cspec.rev));
+
+	memcpy(cspec_desired.country_abbrev, country_code, WLC_CNTRY_BUF_SZ);
+	memcpy(cspec_desired.ccode, country_code, WLC_CNTRY_BUF_SZ);
+	cspec_desired.rev = -1;
+	dhd_get_customized_country_code(dev, (char *)&cspec_desired.country_abbrev, &cspec_desired);
+
+	/* even if the ccode iso code is identical,
+	 * need to set the info when both revs are differ
+	 */
+	if ((strncmp(cspec_desired.ccode, cspec_orig.ccode, WLC_CNTRY_BUF_SZ) != 0) ||
+	    (cspec_desired.rev != cspec_orig.rev)) {
+
+		if (user_enforced) {
+			bzero(&scbval, sizeof(scb_val_t));
+			error = wldev_ioctl(dev, WLC_DISASSOC, &scbval, sizeof(scb_val_t), true);
+			if (error < 0) {
+				WLDEV_ERROR(("%s: set country failed due to Disassoc error %d\n",
+					__FUNCTION__, error));
+				return error;
+			}
+		}
+
+		/* No match in the custom lookup table
+		 * host request get higher priority. set with default rev '0'
+		 */
+		if (cspec_desired.rev == -1)
+			cspec_desired.rev = 0;
+
+		error = wldev_iovar_setbuf(dev, "country", &cspec_desired, sizeof(cspec_desired),
+			smbuf, sizeof(smbuf), NULL);
+		if (error < 0) {
+			WLDEV_ERROR(("%s: set country for %s as %s rev %d failed\n",
+				__FUNCTION__, country_code, cspec_desired.ccode, cspec_desired.rev));
+			return error;
+		}
+		dhd_bus_country_set(dev, &cspec_desired, notify);
+		WLDEV_INFO(("%s: set country for %s as %s rev %d\n",
+			__FUNCTION__, country_code, cspec_desired.ccode, cspec_desired.rev));
+	}
 	return 0;
 }

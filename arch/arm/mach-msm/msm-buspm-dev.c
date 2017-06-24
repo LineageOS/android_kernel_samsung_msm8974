@@ -24,6 +24,7 @@
 #include <linux/memory_alloc.h>
 #include <mach/rpm-smd.h>
 #include "msm-buspm-dev.h"
+#include <linux/clk.h>
 
 #define MSM_BUSPM_DRV_NAME "msm-buspm-dev"
 
@@ -126,7 +127,7 @@ static int msm_bus_rpm_req(u32 rsc_type, u32 key, u32 hwid,
 	struct msm_rpm_request *rpm_req;
 	int ret, msg_id;
 
-	rpm_req = msm_rpm_create_request(ctx, rsc_type, SPDM_RES_ID, 1);
+	rpm_req = msm_rpm_create_request(ctx, rsc_type, hwid, 1);
 	if (rpm_req == NULL) {
 		pr_err("RPM: Couldn't create RPM Request\n");
 		return -ENXIO;
@@ -160,20 +161,106 @@ err:
 	return ret;
 }
 
+static int msm_buspm_bus_set(uint32_t arg)
+{
+	unsigned int type = 0x0;
+	unsigned int id = 0x0;
+	unsigned int key = 0x0;
+	int ret = 0;
+	struct msm_buspm_bus_set bs;
+	char *clockmap[] = {
+		[0x0] = "pnoc_a_clk",
+		[0x1] = "snoc_a_clk",
+		[0x2] = "cnoc_a_clk",
+		[0x10] = "bimc_a_clk",
+
+		[0x20] = "pnoc_clk",
+		[0x21] = "snoc_clk",
+		[0x22] = "cnoc_clk",
+		[0x30] = "bimc_clk",
+	};
+
+	if (copy_from_user(&bs, (void __user *)arg, sizeof(bs)))
+		return -EFAULT;
+
+	switch (bs.nocid) {
+		case 0x0: //PNOC
+		case 0x1: //SNOC
+		case 0x2: //CNOC
+		case 0x3: //MMSSNOC_AHB
+			type = 0x316b6c63;
+			id = bs.nocid;
+			key = 0x0078616D;
+			break;
+		case 0x10: //BIMC
+		case 0x11: //OXILI
+		case 0x12: //OCMEM
+			type = 0x326b6c63;
+			id = bs.nocid;
+			id &= ~0xF0;
+			key = 0x0078616D;
+			break;
+		default:
+			break;
+	}
+
+	switch (bs.op) {
+		case MSM_BUSPM_BUS_MAX_SET:
+			{
+				ret = msm_bus_rpm_req(type, key, id, bs.set, bs.max);
+				pr_err("MAXSET: %d NOC %u Khz MAX ret=%d\n", bs.nocid, bs.max, ret);
+			}
+			break;
+		case MSM_BUSPM_BUS_MAX_CLR:
+			{
+				ret = msm_bus_rpm_req(type, key, id, bs.set, 0xFFFFFFFF);
+				pr_err("MAXCLR: %d NOC %u Khz CLEAR MAX ret=%d\n", bs.nocid, 0xFFFFFFFF, ret);
+			}
+			break;
+		case MSM_BUSPM_BUS_MIN_SET:
+		case MSM_BUSPM_BUS_MIN_CLR:
+			{
+				struct clk * clk;
+				clk = clk_get_sys("msm-buspm", clockmap[bs.set*0x10+bs.nocid]);
+				if (IS_ERR(clk)) {
+					pr_err("MINCLR: no such clock\n");
+					return -EINVAL;
+				}
+
+				if (bs.op == MSM_BUSPM_BUS_MIN_SET) {
+					clk_set_rate(clk, bs.min*1000);
+					clk_prepare_enable(clk);
+					pr_err("MINSET: %d NOC %u Khz MIN\n", bs.nocid, bs.min);
+				}
+				else {
+					clk_disable_unprepare(clk);
+					pr_err("MINCLR: %d NOC MIN CLR\n", bs.nocid);
+				}
+			}
+			break;
+		default:
+			break;
+	}
+	return ret;
+}
+
 static int msm_buspm_ioc_cmds(uint32_t arg)
 {
+	int ret = 0;
 	switch (arg) {
 	case MSM_BUSPM_SPDM_CLK_DIS:
 	case MSM_BUSPM_SPDM_CLK_EN:
-		return msm_bus_rpm_req(SPDM_RES_TYPE, SPDM_KEY, 0,
+		return msm_bus_rpm_req(SPDM_RES_TYPE, SPDM_KEY, SPDM_RES_ID,
 				MSM_RPM_CTX_ACTIVE_SET, arg);
 	default:
-		pr_warn("Unsupported ioctl command: %d\n", arg);
-		return -EINVAL;
+		ret = msm_buspm_bus_set(arg);
+		if (ret) {
+			pr_warn("Unsupported ioctl command: %d\n", arg);
+			return -EINVAL;
+		}
+		return ret;
 	}
 }
-
-
 
 static long
 msm_buspm_dev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)

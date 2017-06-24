@@ -30,7 +30,7 @@
 #include "mdss_panel.h"
 #include "mdss_io_util.h"
 #include "mhl_msc.h"
-#include "mdss_hdmi_mhl.h"
+#include <linux/mdss_hdmi_mhl.h>
 
 #define MHL_DRIVER_NAME "sii8334"
 #define COMPATIBLE_NAME "qcom,mhl-sii8334"

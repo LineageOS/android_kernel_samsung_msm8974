@@ -1,0 +1,24 @@
+#
+# SEC_FPGA
+#
+menu "SEC_FPGA and IRDA FPGA"
+
+config SEC_FPGA
+	tristate "this feature allows Barcode emulator"
+	default n
+	help
+	  This is a driver for barcode emulator driver based on Lattice chip.
+	  Lattice FPGA can support Barcode emulator.
+	  To compile this driver as a module, choose M here.
+	  If unsure, say N.
+
+config IR_REMOCON_FPGA
+	tristate "this feature allows IR LED"
+	depends on SEC_FPGA
+	default n
+	help
+	  This is a driver for IR LED driver based on Lattice chip.
+	  Lattice FPGA can support IR LED.
+	  To compile this driver as a module, choose M here.
+	  If unsure, say N.
+endmenu

@@ -1,0 +1,49 @@
+#
+# inv-mpu-iio driver for Invensense MPU devices and combos
+#
+
+config INV_SENSORS_IIO
+	tristate "Invensense MPU devices"
+	depends on I2C && SYSFS && IIO && IIO_KFIFO_BUF && IIO_TRIGGER && !INV_MPU
+	default n
+	help
+	  This driver supports the Invensense MPU devices.
+	  This includes MPU6050/MPU3050/MPU9150/ITG3500/MPU6500/MPU9250.
+	  This driver can be built as a module. The module will be called
+	  inv-mpu-iio.
+
+config INV_SENSORS_MPU65XX	  
+	tristate "Invensense MPU 65XX driver"
+	depends on I2C && SYSFS && IIO && IIO_KFIFO_BUF && IIO_TRIGGER && !INV_MPU
+	default n
+	help
+	  This driver supports the Invensense MPU-65XX .
+
+config INV_SENSORS_DMP
+	tristate "Invensense MPU DMP driver"
+	depends on I2C && SYSFS && IIO && IIO_KFIFO_BUF && IIO_TRIGGER && !INV_MPU
+	default n
+	help
+	  This driver supports the Invensense DMP .
+
+config INV_SENSORS_DMP_K520S
+	tristate "Invensense MPU DMP K520S driver"
+	depends on I2C && SYSFS && IIO && IIO_KFIFO_BUF && IIO_TRIGGER && !INV_MPU
+	default n
+	help
+	  This driver supports the Invensense DMP .
+
+
+config INV_SENSORS_DBG
+	tristate "Invensense MPU Debug"
+	depends on I2C && SYSFS && IIO && IIO_KFIFO_BUF && IIO_TRIGGER && !INV_MPU
+	default n
+	help
+	  This driver supports debug information.
+	  
+config INV_SENSORS_DTS_SUPPORT
+	tristate "Invensense DTS support"
+	depends on I2C && SYSFS && IIO && IIO_KFIFO_BUF && IIO_TRIGGER && !INV_MPU
+	default n
+	help
+	  This driver supports debug information.

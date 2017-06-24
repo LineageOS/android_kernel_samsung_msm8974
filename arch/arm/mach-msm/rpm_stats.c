@@ -329,8 +329,10 @@ static  int __devinit msm_rpmstats_probe(struct platform_device *pdev)
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
-	if (!res)
+	if (!res) {
+		kfree(pdata);
 		return -EINVAL;
+	}
 
 	pdata->phys_addr_base  = res->start;
 

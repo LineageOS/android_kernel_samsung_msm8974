@@ -1,0 +1,4 @@
+config MACH_BAFFIN2_SGLTE
+ 	bool "MSM8226 BAFFINE2 CHN CMCC"
+ 	help
+    Support for the Samsung MS01 device

@@ -159,6 +159,11 @@ struct input_keymap_entry {
 
 #define EVIOCSCLOCKID		_IOW('E', 0xa0, int)			/* Set clockid to be used for timestamps */
 
+#ifdef CONFIG_INPUT_EXPANDED_ABS
+#define EVIOCGABS_LIMIT		(0x40)
+#define EVIOCGABS_CHG_LIMIT(nr)	(nr + EVIOCGABS_LIMIT)
+#endif
+
 /*
  * Device properties and quirks
  */
@@ -412,6 +417,8 @@ struct input_keymap_entry {
 #define KEY_F23			193
 #define KEY_F24			194
 
+#define KEY_VOICE_WAKEUP_LPSD	198	/* Samsung Voice Wakeup LPSD - Baby cry */
+#define KEY_VOICE_WAKEUP	199	/* Samsung Voice Wakeup */
 #define KEY_PLAYCD		200
 #define KEY_PAUSECD		201
 #define KEY_PROG3		202
@@ -471,6 +478,13 @@ struct input_keymap_entry {
 
 #define KEY_MICMUTE		248	/* Mute / unmute the microphone */
 
+#define KEY_DUMMY_HOME1		249	/* Dummy Touchkey : HOME1*/
+#define KEY_DUMMY_HOME2		250	/* Dummy Touchkey : HOME2*/
+#define KEY_DUMMY_MENU		251	/* Dummy Touchkey : MENU*/
+#define KEY_ACTIVITY_MENU	252	/* Activity menu key*/
+#define KEY_DUMMY_BACK		253	/* Dummy Touchkey : BACK*/
+#define KEY_RECENT		254	/* Key recent */
+
 /* Code 255 is reserved for special needs of AT keyboard driver */
 
 #define BTN_MISC		0x100
@@ -526,6 +540,7 @@ struct input_keymap_entry {
 #define BTN_MODE		0x13c
 #define BTN_THUMBL		0x13d
 #define BTN_THUMBR		0x13e
+#define BTN_GAME		0x13f	/* Add game button for samsung bluetooth keypad */
 
 #define BTN_DIGI		0x140
 #define BTN_TOOL_PEN		0x140
@@ -707,13 +722,27 @@ struct input_keymap_entry {
 #define KEY_CAMERA_LEFT		0x219
 #define KEY_CAMERA_RIGHT	0x21a
 
+#define KEY_DMB_ANT_DET_UP		0x21b
+#define KEY_DMB_ANT_DET_DOWN		0x21c
+
+
+#define KEY_NET_SEL			0x220
+#define KEY_NET_3G			0x221
+#define KEY_TKEY_WAKEUP		0x222
+
+#define KEY_PEN_PDCT		0x230 /* E-PEN PDCT flag*/
+#define KEY_FAKE_PWR		0x240 /* Fake Power off flag*/
+#if defined(CONFIG_SAMSUNG_JACK_VOICE_BTN)
+#define KEY_VOICECOMMAND		0x246 /* voice command*/
+#endif
+
 #define BTN_TRIGGER_HAPPY		0x2c0
 #define BTN_TRIGGER_HAPPY1		0x2c0
 #define BTN_TRIGGER_HAPPY2		0x2c1
 #define BTN_TRIGGER_HAPPY3		0x2c2
 #define BTN_TRIGGER_HAPPY4		0x2c3
 #define BTN_TRIGGER_HAPPY5		0x2c4
-#define BTN_TRIGGER_HAPPY6		0x2c5
+#define BTN_TRIGGER_HAPPY6		0x2c5 /* For Samsung S Action Mouse button */
 #define BTN_TRIGGER_HAPPY7		0x2c6
 #define BTN_TRIGGER_HAPPY8		0x2c7
 #define BTN_TRIGGER_HAPPY9		0x2c8
@@ -748,6 +777,21 @@ struct input_keymap_entry {
 #define BTN_TRIGGER_HAPPY38		0x2e5
 #define BTN_TRIGGER_HAPPY39		0x2e6
 #define BTN_TRIGGER_HAPPY40		0x2e7
+
+/* SAMSUNG
+ * 0	 3
+ * 1	 4
+ * 2	 5
+ */
+#define KEY_SIDE_TOUCH_0		0x2e8
+#define KEY_SIDE_TOUCH_1		0x2e9
+#define KEY_SIDE_TOUCH_2		0x2ea
+#define KEY_SIDE_TOUCH_3		0x2eb
+#define KEY_SIDE_TOUCH_4		0x2ec
+#define KEY_SIDE_TOUCH_5		0x2ed
+#define KEY_SIDE_TOUCH_6		0x2ee
+#define KEY_SIDE_TOUCH_7		0x2ef
+#define KEY_SIDE_CAMERA_DETECTED	0x2f0
 
 /* We avoid low common keys in module aliases so they don't get huge. */
 #define KEY_MIN_INTERESTING	KEY_MUTE
@@ -818,13 +862,25 @@ struct input_keymap_entry {
 #define ABS_MT_PRESSURE		0x3a	/* Pressure on contact area */
 #define ABS_MT_DISTANCE		0x3b	/* Contact hover distance */
 
+#ifdef CONFIG_INPUT_EXPANDED_ABS
+#define ABS_MT_PALM		0x40	/* palm touch */
+#define ABS_MT_GRIP		0x41	/* grip touch */
+#else
+#define ABS_MT_PALM		0x3e	/* palm touch */
+#define ABS_MT_GRIP		0x3f	/* grip touch */
+#endif
+
 #ifdef __KERNEL__
 /* Implementation details, userspace should not care about these */
 #define ABS_MT_FIRST		ABS_MT_TOUCH_MAJOR
-#define ABS_MT_LAST		ABS_MT_DISTANCE
+#define ABS_MT_LAST		ABS_MT_GRIP
 #endif
 
+#ifdef CONFIG_INPUT_EXPANDED_ABS
+#define ABS_MAX			0x4f
+#else
 #define ABS_MAX			0x3f
+#endif
 #define ABS_CNT			(ABS_MAX+1)
 
 /*
@@ -851,6 +907,16 @@ struct input_keymap_entry {
 #define SW_HPHR_OVERCURRENT    0x0f  /* set = over current on right hph */
 #define SW_UNSUPPORT_INSERT	0x10  /* set = unsupported device inserted */
 #define SW_MICROPHONE2_INSERT   0x11  /* set = inserted */
+#define SW_FLIP			0x15  /* set = flip cover */
+#define SW_PEN_INSERT		0x13
+#define SW_STROBE_INSERT	0x14
+#define SW_FLIP			0x15  /* set = flip cover... */
+#define SW_GLOVE		0x16	/* set = glove mode */
+#define SW_LEFT_HAND	0x17	/* set = left hand*/
+#define SW_RIGHT_HAND	0x18	/* set = right hand*/
+#define SW_BOTH_HAND	0x19	/* set = both hand*/
+#define SW_W1			0x1A  /* set = w1_slave */
+
 #define SW_MAX			0x20
 #define SW_CNT			(SW_MAX+1)
 
@@ -1315,7 +1381,9 @@ struct input_dev {
 	struct mutex mutex;
 
 	unsigned int users;
+	unsigned int users_private;
 	bool going_away;
+	bool disabled;
 
 	bool sync;
 

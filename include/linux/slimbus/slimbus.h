@@ -610,7 +610,6 @@ struct slim_driver {
 						(struct slim_device *sldev);
 	int				(*reset_device)
 						(struct slim_device *sldev);
-
 	struct device_driver		driver;
 	const struct slim_device_id	*id_table;
 };

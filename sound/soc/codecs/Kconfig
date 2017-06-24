@@ -39,6 +39,10 @@ config SND_SOC_ALL_CODECS
 	select SND_SOC_LM4857 if I2C
 	select SND_SOC_MAX98088 if I2C
 	select SND_SOC_MAX98095 if I2C
+	select SND_SOC_MAX98504 if I2C
+	select SND_SOC_MAX98504A if I2C
+	select SND_SOC_MAX98505 if I2C
+	select SND_SOC_MAX98506 if I2C
 	select SND_SOC_MAX9850 if I2C
 	select SND_SOC_MAX9877 if I2C
 	select SND_SOC_PCM3008
@@ -222,6 +226,43 @@ config SND_SOC_MAX98088
 config SND_SOC_MAX98095
        tristate
 
+config SND_SOC_MAX98504
+	bool "Support MAX98504"
+	depends on I2C
+	help
+	MAX98504 driver
+
+config SND_SOC_MAX98504A
+	bool "Support MAX98504"
+	depends on I2C
+	help
+	MAX98504 driver
+
+config SND_SOC_MAX98505
+	bool "Support MAX98505"
+	depends on I2C
+	help
+	MAX98505 driver
+
+config SND_SOC_MAX98506
+	bool "Support MAX98506"
+	depends on I2C
+	help
+	MAX98505 driver
+
+config SND_SOC_MAXIM_DSM
+	bool "Support MAXIM DSM"
+	depends on SND_SOC_MAX98504 || SND_SOC_MAX98505 || SND_SOC_MAX98506
+	help
+	MAXIM DSM driver
+
+config SND_SOC_MAXIM_DSM_CAL
+	tristate "Support MAXIM DSM Calibration"
+	default y if SND_SOC_MAX98506=y
+	default m if SND_SOC_MAX98506=m
+	help
+	MAX9850x Calibration Driver
+
 config SND_SOC_MAX9850
 	tristate
 
@@ -300,6 +341,48 @@ config SND_SOC_WCD9306
 
 config SND_SOC_MSM8X10_WCD
 	tristate
+
+config SND_SOC_ES325
+	tristate "Audience Driver"
+	default n
+	help
+		Select driver for Audience Driver.
+
+config SND_SOC_ES325_ATLANTIC
+	tristate "Audience MSM8x26 chipset Driver"
+	default n
+	help
+		Select driver for Audience Driver.
+
+config SND_SOC_ES325_SLIM
+	tristate "Audience Slimbus Driver"
+	default n
+	help
+		Select driver for Audience Slimbus Driver.
+
+config ES325_UART_WORKAROUND
+	tristate "Audience Slimbus Driver"
+	default n
+	help
+		Select driver for Audience Slimbus Driver.
+
+config ES325_UART_WORKAROUND_ENG_ONLY
+	tristate "Audience Slimbus Driver"
+	default n
+	help
+		Select driver for Audience Slimbus Driver.
+
+config SND_SOC_ES705
+	tristate "eS705"
+	default n		
+        ---help---
+        Valid configurations:
+         * SLIMbus
+         * I2C and I2S
+         * SPI and I2S
+         * UART and I2S
+
+        NOTE: Only one configuration should be enabled.
 
 config SND_SOC_WL1273
 	tristate

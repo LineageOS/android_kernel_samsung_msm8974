@@ -68,7 +68,9 @@
 #include <linux/shmem_fs.h>
 #include <linux/slab.h>
 #include <linux/perf_event.h>
-
+#ifdef CONFIG_TIMA_RKP_COHERENT_TT
+#include <linux/memblock.h>
+#endif
 #include <asm/io.h>
 #include <asm/bugs.h>
 #include <asm/setup.h>
@@ -77,6 +79,10 @@
 
 #ifdef CONFIG_X86_LOCAL_APIC
 #include <asm/smp.h>
+#endif
+
+#ifdef CONFIG_SEC_GPIO_DVS
+#include <linux/secgpio_dvs.h>
 #endif
 
 static int kernel_init(void *);
@@ -95,6 +101,11 @@ static inline void mark_rodata_ro(void) { }
 extern void tc_init(void);
 #endif
 
+#ifdef CONFIG_TIMA_RKP_30
+#define PGT_BIT_ARRAY_LENGTH 0x40000
+unsigned long pgt_bit_array[PGT_BIT_ARRAY_LENGTH];
+EXPORT_SYMBOL(pgt_bit_array);
+#endif
 /*
  * Debug helper: via this flag we know that we are in 'early bootup code'
  * where only the boot processor is running with IRQ disabled.  This means
@@ -127,6 +138,10 @@ static char *static_command_line;
 
 static char *execute_command;
 static char *ramdisk_execute_command;
+
+int boot_mode_lpm;
+int boot_mode_recovery;
+EXPORT_SYMBOL(boot_mode_recovery);
 
 /*
  * If set, this is an indication to the drivers that reset the underlying
@@ -224,6 +239,40 @@ static int __init loglevel(char *str)
 }
 
 early_param("loglevel", loglevel);
+
+/*androidboot.uart_debug */
+int jig_boot_clk_limit;
+
+int console_jig_stat;
+static int __init jigStatus_phone(char *str)
+{
+	int jig_val;
+
+	if (get_option(&str, &jig_val)) {
+		jig_boot_clk_limit |= jig_val;
+		console_jig_stat |= jig_val;
+		return 0;
+	}
+
+	return -EINVAL;
+}
+early_param("uart_dbg", jigStatus_phone);
+
+static int __init jigStatus_tablet(char *str)
+{
+	int jig_val;
+
+	if (get_option(&str, &jig_val)) {
+		jig_boot_clk_limit |= jig_val;
+		console_jig_stat |= jig_val;
+		return 0;
+	}
+
+	return -EINVAL;
+}
+early_param("androidboot.uart_debug", jigStatus_tablet);
+
+
 
 /* Change NUL term back to "=", to make "param" the whole string. */
 static int __init repair_env_string(char *param, char *val)
@@ -345,6 +394,43 @@ static void __init setup_command_line(char *command_line)
 	strcpy (static_command_line, command_line);
 }
 
+#ifdef CONFIG_TIMA_RKP
+/* Block of Code for RKP initialization */
+static noinline void rkp_init(void)
+{
+#ifdef CONFIG_TIMA_RKP_COHERENT_TT
+	struct memblock_type *type = (struct memblock_type*)(&memblock.memory);
+#endif /*CONFIG_TIMA_RKP_COHERENT_TT*/
+
+#ifdef CONFIG_TIMA_RKP_RO_CRED
+/* Code for initializing Credential Protection */
+	tima_send_cmd5((unsigned long)__rkp_ro_start, (unsigned long)__rkp_ro_end,
+					sizeof(struct cred), offsetof(struct task_struct, cred),
+					offsetof(struct task_struct, active_mm), 0x40);		
+	tima_send_cmd5(offsetof(struct cred, uid), offsetof(struct cred, euid), 
+					offsetof(struct cred, bp_pgd), offsetof(struct cred, bp_task), 
+					offsetof(struct cred, exec_depth), 0x41);
+	tima_send_cmd4(offsetof(struct cred,security),offsetof(struct task_struct,pid),
+					offsetof(struct task_struct,real_parent),offsetof(struct task_struct,comm),0x42);
+	printk(KERN_ERR"RKP CRED INIT %x\n", sizeof(struct cred));
+#endif /*CONFIG_TIMA_RKP_RO_CRED*/
+
+#ifdef CONFIG_TIMA_RKP
+#ifdef CONFIG_TIMA_RKP_30
+#ifdef CONFIG_TIMA_RKP_COHERENT_TT
+	tima_send_cmd2(type->cnt, __pa(type->regions), 0x04);
+#endif /*CONFIG_TIMA_RKP_COHERENT_TT*/
+	tima_send_cmd5((unsigned long)_stext, (unsigned long)init_mm.pgd, (unsigned long)__init_begin, (unsigned long)__init_end,(unsigned long)__pa(pgt_bit_array),0x0c);
+	tima_send_cmd3((unsigned long)__pa((unsigned long)_sdata), ((unsigned long)__pa((unsigned long)_edata)-(unsigned long)__pa((unsigned long)_sdata)), 1, 0x26);
+	tima_send_cmd((unsigned long)__pa((unsigned long)_text),0x28);
+#else
+	tima_send_cmd4((unsigned long)_stext, (unsigned long)init_mm.pgd, (unsigned long)__init_begin, (unsigned long)__init_end, 0x0c);
+#endif /* CONFIG_TIMA_RKP_30 */
+#endif /*CONFIG_TIMA_RKP*/
+
+}
+#endif /*CONFIG_TIMA_RKP*/
+
 /*
  * We need to finalize in a non-__init function or else race conditions
  * between the root thread and the init thread may cause start_kernel to
@@ -361,6 +447,9 @@ static noinline void __init_refok rest_init(void)
 	int pid;
 	const struct sched_param param = { .sched_priority = 1 };
 
+#ifdef CONFIG_TIMA_RKP
+	rkp_init();
+#endif
 	rcu_scheduler_starting();
 	/*
 	 * We need to spawn init first so that it obtains pid 1, however
@@ -402,6 +491,22 @@ static int __init do_early_param(char *param, char *val)
 		}
 	}
 	/* We accept everything at this stage. */
+
+	/* Check LPM(Power Off Charging) Mode */
+	if ((strncmp(param, "androidboot.mode", 17) == 0)) {
+		if (strncmp(val, "charger", 7) == 0) {
+			pr_info("LPM Boot Mode \n");
+			boot_mode_lpm = 1;
+		}
+	}
+	/* Check Recovery Mode , 1: recovery mode, 2: factory reset mode(recovery)
+	                         otherwise normal mode*/
+	if ((strncmp(param, "androidboot.boot_recovery", 26) == 0)) {
+	        if ((strncmp(val, "1", 1) == 0)||(strncmp(val, "2", 1) == 0)) {
+				pr_info("Recovery Boot Mode \n");
+				boot_mode_recovery = 1;
+			}
+	}
 	return 0;
 }
 
@@ -464,6 +569,48 @@ static void __init mm_init(void)
 	vmalloc_init();
 }
 
+#ifdef CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
+/* change@ksingh.sra-dallas - in kernel 3.4 and + 
+ * the mmu clears the unused/unreserved memory with default RAM initial sticky 
+ * bit data.
+ * Hence to preseve the copy of zImage in the unmarked area, the Copied zImage
+ * memory range has to be marked reserved.
+*/
+#define SHA256_DIGEST_SIZE 32
+
+// this is the size of memory area that is marked as reserved
+long integrity_mem_reservoir = 0;
+
+// internal API to mark zImage copy memory area as reserved
+static void __init integrity_mem_reserve(void) {
+	int result = 0;
+	long len = 0;
+	u8* zBuffer = 0;
+	
+	zBuffer = (u8*)phys_to_virt((unsigned long)CONFIG_CRYPTO_FIPS_INTEG_COPY_ADDRESS);
+	if (*((u32 *) &zBuffer[36]) != 0x016F2818) {
+		printk(KERN_ERR "FIPS main.c: invalid zImage magic number.");
+		return;
+	}
+
+	if (*(u32 *) &zBuffer[44] <= *(u32 *) &zBuffer[40]) {
+		printk(KERN_ERR "FIPS main.c: invalid zImage calculated len");
+		return;
+	}
+	
+	len = *(u32 *) &zBuffer[44] - *(u32 *) &zBuffer[40];
+	printk(KERN_NOTICE "FIPS Actual zImage len = %ld\n", len);
+	
+	integrity_mem_reservoir = len + SHA256_DIGEST_SIZE;
+	result = reserve_bootmem((unsigned long)CONFIG_CRYPTO_FIPS_INTEG_COPY_ADDRESS, integrity_mem_reservoir, 1);
+	if(result != 0) {
+		integrity_mem_reservoir = 0;
+	} 
+	printk(KERN_NOTICE "FIPS integrity_mem_reservoir = %ld\n", integrity_mem_reservoir);
+}
+// change@ksingh.sra-dallas - end
+#endif // CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
+
 asmlinkage void __init start_kernel(void)
 {
 	char * command_line;
@@ -513,6 +660,12 @@ asmlinkage void __init start_kernel(void)
 
 	jump_label_init();
 
+#ifdef CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
+	/* change@ksingh.sra-dallas
+	 * marks the zImage copy area as reserve before mmu can clear it
+	 */
+ 	integrity_mem_reserve();
+#endif // CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
 	/*
 	 * These use large bootmem allocations and must precede
 	 * kmem_cache_init()
@@ -796,21 +949,59 @@ static void run_init_process(const char *init_filename)
 	kernel_execve(init_filename, argv_init, envp_init);
 }
 
+#ifdef CONFIG_DEFERRED_INITCALLS
+extern initcall_t __deferred_initcall_start[], __deferred_initcall_end[];
+
+/* call deferred init routines */
+void __ref do_deferred_initcalls(void)
+{
+	initcall_t *call;
+	static int already_run=0;
+
+	if (already_run) {
+		printk("do_deferred_initcalls() has already run\n");
+		return;
+	}
+
+	already_run=1;
+
+	printk("Running do_deferred_initcalls()\n");
+
+	for(call = __deferred_initcall_start;
+	    call < __deferred_initcall_end; call++)
+		do_one_initcall(*call);
+
+	flush_scheduled_work();
+
+	free_initmem();
+}
+#endif
+
 /* This is a non __init function. Force it to be noinline otherwise gcc
  * makes it inline to init() and it becomes part of init.text section
  */
 static noinline int init_post(void)
 {
+#ifdef CONFIG_SEC_GPIO_DVS
+	/************************ Caution !!! ****************************/
+	/* This function must be located in appropriate INIT position
+	 * in accordance with the specification of each BB vendor.
+	 */
+	/************************ Caution !!! ****************************/
+	gpio_dvs_check_initgpio();
+#endif
+
 	/* need to finish all async __init code before freeing the memory */
 	async_synchronize_full();
+#ifndef CONFIG_DEFERRED_INITCALLS
 	free_initmem();
+#endif
 	mark_rodata_ro();
 	system_state = SYSTEM_RUNNING;
 	numa_default_policy();
 
 
 	current->signal->flags |= SIGNAL_UNKILLABLE;
-
 	if (ramdisk_execute_command) {
 		run_init_process(ramdisk_execute_command);
 		printk(KERN_WARNING "Failed to execute %s\n",

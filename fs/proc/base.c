@@ -211,39 +211,7 @@ struct mm_struct *mm_for_maps(struct task_struct *task)
 
 static int proc_pid_cmdline(struct task_struct *task, char * buffer)
 {
-	int res = 0;
-	unsigned int len;
-	struct mm_struct *mm = get_task_mm(task);
-	if (!mm)
-		goto out;
-	if (!mm->arg_end)
-		goto out_mm;	/* Shh! No looking before we're done */
-
- 	len = mm->arg_end - mm->arg_start;
- 
-	if (len > PAGE_SIZE)
-		len = PAGE_SIZE;
- 
-	res = access_process_vm(task, mm->arg_start, buffer, len, 0);
-
-	// If the nul at the end of args has been overwritten, then
-	// assume application is using setproctitle(3).
-	if (res > 0 && buffer[res-1] != '\0' && len < PAGE_SIZE) {
-		len = strnlen(buffer, res);
-		if (len < res) {
-		    res = len;
-		} else {
-			len = mm->env_end - mm->env_start;
-			if (len > PAGE_SIZE - res)
-				len = PAGE_SIZE - res;
-			res += access_process_vm(task, mm->env_start, buffer+res, len, 0);
-			res = strnlen(buffer, res);
-		}
-	}
-out_mm:
-	mmput(mm);
-out:
-	return res;
+	return get_cmdline(task, buffer, PAGE_SIZE);
 }
 
 static int proc_pid_auxv(struct task_struct *task, char *buffer)
@@ -975,6 +943,67 @@ out:
 	return err < 0 ? err : count;
 }
 
+#ifdef CONFIG_SAMP_HOTNESS
+static ssize_t hotness_adjust_write(struct file *file, const char __user *buf,
+				size_t count, loff_t *ppos)
+{
+	struct task_struct *task;
+	char buffer[PROC_NUMBUF];
+	int hotness_adjust;
+	unsigned long flags;
+	int err;
+
+	memset(buffer, 0, sizeof(buffer));
+	if (count > sizeof(buffer) - 1)
+		count = sizeof(buffer) - 1;
+	if (copy_from_user(buffer, buf, count)) {
+		err = -EFAULT;
+		goto out;
+	}
+
+	err = kstrtoint(strstrip(buffer), 0, &hotness_adjust);
+	if (err)
+		goto out;
+
+	task = get_proc_task(file->f_path.dentry->d_inode);
+	if (!task) {
+		err = -ESRCH;
+		goto out;
+	}
+
+	task_lock(task);
+	if (!task->mm) {
+		err = -EINVAL;
+		goto err_task_lock;
+	}
+
+        if ((task->pid & 0xF) != (hotness_adjust & 0xF)) {
+		err = -EINVAL;
+		goto out;
+        }
+
+	if (!lock_task_sighand(task, &flags)) {
+		err = -ESRCH;
+		goto err_task_lock;
+	}
+
+	if (!capable(CAP_SYS_RESOURCE)) {
+		err = -EACCES;
+		goto err_sighand;
+	}
+
+	task->signal->hotness_adj = hotness_adjust >> 4;
+
+err_sighand:
+	unlock_task_sighand(task, &flags);
+err_task_lock:
+	task_unlock(task);
+	put_task_struct(task);
+out:
+	return err < 0 ? err : count;
+}
+#endif
+
 static int oom_adjust_permission(struct inode *inode, int mask)
 {
 	uid_t uid;
@@ -1009,6 +1038,13 @@ static const struct file_operations proc_oom_adjust_operations = {
 	.write		= oom_adjust_write,
 	.llseek		= generic_file_llseek,
 };
+
+#ifdef CONFIG_SAMP_HOTNESS
+static const struct file_operations proc_hotness_adjust_operations = {
+	.write		= hotness_adjust_write,
+	.llseek		= generic_file_llseek,
+};
+#endif
 
 static ssize_t oom_score_adj_read(struct file *file, char __user *buf,
 					size_t count, loff_t *ppos)
@@ -3019,6 +3055,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 #ifdef CONFIG_PROC_PAGE_MONITOR
 	REG("clear_refs", S_IWUSR, proc_clear_refs_operations),
 	REG("smaps",      S_IRUGO, proc_pid_smaps_operations),
+	REG("smaps_simple", S_IRUGO, proc_pid_smaps_simple_operations),
 	REG("pagemap",    S_IRUGO, proc_pagemap_operations),
 #endif
 #ifdef CONFIG_SECURITY
@@ -3045,6 +3082,9 @@ static const struct pid_entry tgid_base_stuff[] = {
 	INF("oom_score",  S_IRUGO, proc_oom_score),
 	ANDROID("oom_adj",S_IRUGO|S_IWUSR, oom_adjust),
 	REG("oom_score_adj", S_IRUGO|S_IWUSR, proc_oom_score_adj_operations),
+#ifdef CONFIG_SAMP_HOTNESS
+	REG("hotness_adj", S_IWUGO, proc_hotness_adjust_operations),
+#endif
 #ifdef CONFIG_AUDITSYSCALL
 	REG("loginuid",   S_IWUSR|S_IRUGO, proc_loginuid_operations),
 	REG("sessionid",  S_IRUGO, proc_sessionid_operations),

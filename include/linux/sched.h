@@ -141,6 +141,9 @@ extern unsigned long nr_uninterruptible(void);
 extern unsigned long nr_iowait(void);
 extern unsigned long nr_iowait_cpu(int cpu);
 extern unsigned long this_cpu_load(void);
+#ifdef CONFIG_RUNTIME_COMPCACHE
+extern unsigned long this_cpu_loadx(int i);
+#endif /* CONFIG_RUNTIME_COMPCACHE */
 
 extern void sched_update_nr_prod(int cpu, unsigned long nr, bool inc);
 extern void sched_get_nr_running_avg(int *avg, int *iowait_avg);
@@ -670,6 +673,9 @@ struct signal_struct {
 	struct mutex cred_guard_mutex;	/* guard against foreign influences on
 					 * credential calculations
 					 * (notably. ptrace) */
+#ifdef CONFIG_SAMP_HOTNESS
+	int hotness_adj;
+#endif
 };
 
 /* Context switch must be unlocked if interrupts are to be enabled */
@@ -722,6 +728,8 @@ struct user_struct {
 	unsigned long mq_bytes;	/* How many bytes can be allocated to mqueue? */
 #endif
 	unsigned long locked_shm; /* How many pages of mlocked shm ? */
+	unsigned long unix_inflight;	/* How many files in flight in unix sockets */
+	atomic_long_t pipe_bufs;  /* how many pages are allocated in pipe buffers */
 
 #ifdef CONFIG_KEYS
 	struct key *uid_keyring;	/* UID specific keyring */
@@ -1393,6 +1401,8 @@ struct task_struct {
 
 	cputime_t utime, stime, utimescaled, stimescaled;
 	cputime_t gtime;
+	unsigned long long cpu_power;
+
 #ifndef CONFIG_VIRT_CPU_ACCOUNTING
 	cputime_t prev_utime, prev_stime;
 #endif
@@ -1618,6 +1628,9 @@ struct task_struct {
 #endif
 #ifdef CONFIG_HAVE_HW_BREAKPOINT
 	atomic_t ptrace_bp_refcnt;
+#endif
+#ifdef CONFIG_SDP
+	unsigned int sensitive;
 #endif
 };
 
@@ -2699,7 +2712,16 @@ static inline void thread_group_cputime_init(struct signal_struct *sig)
 extern void recalc_sigpending_and_wake(struct task_struct *t);
 extern void recalc_sigpending(void);
 
-extern void signal_wake_up(struct task_struct *t, int resume_stopped);
+extern void signal_wake_up_state(struct task_struct *t, unsigned int state);
+
+static inline void signal_wake_up(struct task_struct *t, bool resume)
+{
+	signal_wake_up_state(t, resume ? TASK_WAKEKILL : 0);
+}
+static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
+{
+	signal_wake_up_state(t, resume ? __TASK_TRACED : 0);
+}
 
 /*
  * Wrappers for p->thread_info->cpu access. No-op on UP.

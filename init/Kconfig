@@ -474,7 +474,7 @@ config RCU_FANOUT_EXACT
 
 config RCU_FAST_NO_HZ
 	bool "Accelerate last non-dyntick-idle CPU's grace periods"
-	depends on NO_HZ && SMP
+	depends on NO_HZ && SMP && !SEC_FACTORY
 	default n
 	help
 	  This option causes RCU to attempt to accelerate grace periods
@@ -487,6 +487,11 @@ config RCU_FAST_NO_HZ
 	  	if you have relatively few CPUs.
 
 	  Say N if you are unsure.
+
+config RCU_FAST_NO_HZ_OFF_AT_BOOT
+	bool "turn off rcu_fast_no_hz concept at boot time"
+	depends on RCU_FAST_NO_HZ
+	default n
 
 config TREE_RCU_TRACE
 	def_bool RCU_TRACE && ( TREE_RCU || TREE_PREEMPT_RCU )
@@ -1312,6 +1317,12 @@ config MMAP_ALLOW_UNINITIALIZED
 
 	  See Documentation/nommu-mmap.txt for more information.
 
+config DEFERRED_INITCALLS
+	bool "Deferred initcalls support"
+	default n
+	help
+	  Say 'y' here to include support for deferred initcalls
+
 config PROFILING
 	bool "Profiling support"
 	help
@@ -1349,6 +1360,7 @@ config BASE_SMALL
 
 menuconfig MODULES
 	bool "Enable loadable module support"
+	select TIMA_LKMAUTH
 	help
 	  Kernel modules are small pieces of compiled code which can
 	  be inserted in the running kernel, rather than being

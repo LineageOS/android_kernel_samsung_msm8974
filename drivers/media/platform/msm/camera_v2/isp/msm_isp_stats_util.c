@@ -16,8 +16,8 @@
 #include "msm_isp_stats_util.h"
 
 static int msm_isp_stats_cfg_ping_pong_address(struct vfe_device *vfe_dev,
-	struct msm_vfe_stats_stream *stream_info, uint32_t pingpong_status,
-	struct msm_isp_buffer **done_buf)
+					       struct msm_vfe_stats_stream *stream_info, uint32_t pingpong_status,
+					       struct msm_isp_buffer **done_buf)
 {
 	int rc = -1;
 	struct msm_isp_buffer *buf;
@@ -37,11 +37,10 @@ static int msm_isp_stats_cfg_ping_pong_address(struct vfe_device *vfe_dev,
 
 	pingpong_bit = (~(pingpong_status >> stats_pingpong_offset) & 0x1);
 	rc = vfe_dev->buf_mgr->ops->get_buf(vfe_dev->buf_mgr,
-			vfe_dev->pdev->id, bufq_handle, &buf);
+					    vfe_dev->pdev->id, bufq_handle, &buf);
 	if (rc < 0) {
-		uint8_t idx = STATS_IDX(stream_info->stream_handle);
-		if (idx < MSM_ISP_STATS_MAX)
-			vfe_dev->error_info.stats_framedrop_count[idx]++;
+		vfe_dev->error_info.stats_framedrop_count[
+			STATS_IDX(stream_info->stream_handle)]++;
 		return rc;
 	}
 
@@ -61,15 +60,15 @@ static int msm_isp_stats_cfg_ping_pong_address(struct vfe_device *vfe_dev,
 
 	stream_info->buf[pingpong_bit] = buf;
 	return 0;
-buf_error:
+ buf_error:
 	vfe_dev->buf_mgr->ops->put_buf(vfe_dev->buf_mgr,
-		buf->bufq_handle, buf->buf_idx);
+				       buf->bufq_handle, buf->buf_idx);
 	return rc;
 }
 
 void msm_isp_process_stats_irq(struct vfe_device *vfe_dev,
-	uint32_t irq_status0, uint32_t irq_status1,
-	struct msm_isp_timestamp *ts)
+			       uint32_t irq_status0, uint32_t irq_status1,
+			       struct msm_isp_timestamp *ts)
 {
 	int i, rc;
 	struct msm_isp_event_data buf_event;
@@ -79,10 +78,11 @@ void msm_isp_process_stats_irq(struct vfe_device *vfe_dev,
 	uint32_t pingpong_status;
 	uint32_t comp_stats_type_mask = 0;
 	uint32_t stats_comp_mask = 0, stats_irq_mask = 0;
+
 	stats_comp_mask = vfe_dev->hw_info->vfe_ops.stats_ops.
-		get_comp_mask(irq_status0, irq_status1);
+			  get_comp_mask(irq_status0, irq_status1);
 	stats_irq_mask = vfe_dev->hw_info->vfe_ops.stats_ops.
-		get_wm_mask(irq_status0, irq_status1);
+			 get_wm_mask(irq_status0, irq_status1);
 	if (!(stats_comp_mask || stats_irq_mask))
 		return;
 	ISP_DBG("%s: status: 0x%x\n", __func__, irq_status0);
@@ -98,22 +98,25 @@ void msm_isp_process_stats_irq(struct vfe_device *vfe_dev,
 	buf_event.timestamp = ts->event_time;
 	buf_event.frame_id =
 		vfe_dev->axi_data.src_info[VFE_PIX_0].frame_id;
-	buf_event.input_intf = VFE_PIX_0;
 	pingpong_status = vfe_dev->hw_info->
-		vfe_ops.stats_ops.get_pingpong_status(vfe_dev);
+			  vfe_ops.stats_ops.get_pingpong_status(vfe_dev);
 
 	for (i = 0; i < vfe_dev->hw_info->stats_hw_info->num_stats_type; i++) {
 		if (!(stats_irq_mask & (1 << i)))
 			continue;
 		stream_info = &vfe_dev->stats_data.stream_info[i];
 		done_buf = NULL;
+		if (stream_info->state == STATS_INACTIVE) {
+			pr_err("%s: Error stream_info type %d state %d", __func__, stream_info->stats_type, stream_info->state);
+			return;
+		}
 		msm_isp_stats_cfg_ping_pong_address(vfe_dev,
-			stream_info, pingpong_status, &done_buf);
+						    stream_info, pingpong_status, &done_buf);
 		if (done_buf) {
 			rc = vfe_dev->buf_mgr->ops->buf_divert(vfe_dev->buf_mgr,
-				done_buf->bufq_handle, done_buf->buf_idx,
-				&ts->buf_time, vfe_dev->axi_data.
-				src_info[VFE_PIX_0].frame_id);
+							       done_buf->bufq_handle, done_buf->buf_idx,
+							       &ts->buf_time, vfe_dev->axi_data.
+							       src_info[VFE_PIX_0].frame_id);
 			if (rc != 0)
 				continue;
 
@@ -125,8 +128,8 @@ void msm_isp_process_stats_irq(struct vfe_device *vfe_dev,
 				ISP_DBG("%s: stats event frame id: 0x%x\n",
 					__func__, buf_event.frame_id);
 				msm_isp_send_event(vfe_dev,
-					ISP_EVENT_STATS_NOTIFY +
-					stream_info->stats_type, &buf_event);
+						   ISP_EVENT_STATS_NOTIFY +
+						   stream_info->stats_type, &buf_event);
 			} else {
 				comp_stats_type_mask |=
 					1 << stream_info->stats_type;
@@ -139,12 +142,12 @@ void msm_isp_process_stats_irq(struct vfe_device *vfe_dev,
 			__func__, buf_event.frame_id, comp_stats_type_mask);
 		stats_event->stats_mask = comp_stats_type_mask;
 		msm_isp_send_event(vfe_dev,
-			ISP_EVENT_COMP_STATS_NOTIFY, &buf_event);
+				   ISP_EVENT_COMP_STATS_NOTIFY, &buf_event);
 	}
 }
 
 int msm_isp_stats_create_stream(struct vfe_device *vfe_dev,
-	struct msm_vfe_stats_stream_request_cmd *stream_req_cmd)
+				struct msm_vfe_stats_stream_request_cmd *stream_req_cmd)
 {
 	int rc = -1;
 	struct msm_vfe_stats_stream *stream_info = NULL;
@@ -152,18 +155,18 @@ int msm_isp_stats_create_stream(struct vfe_device *vfe_dev,
 	uint32_t stats_idx;
 
 	if (!(vfe_dev->hw_info->stats_hw_info->stats_capability_mask &
-		(1 << stream_req_cmd->stats_type))) {
+	      (1 << stream_req_cmd->stats_type))) {
 		pr_err("%s: Stats type not supported\n", __func__);
 		return rc;
 	}
 
 	stats_idx = vfe_dev->hw_info->vfe_ops.stats_ops.
-		get_stats_idx(stream_req_cmd->stats_type);
-
+		    get_stats_idx(stream_req_cmd->stats_type);
+			
 	if (stats_idx >= vfe_dev->hw_info->stats_hw_info->num_stats_type) {
 		pr_err("%s Invalid stats index %d", __func__, stats_idx);
 		return -EINVAL;
-	}
+	}			
 
 	stream_info = &stats_data->stream_info[stats_idx];
 	if (stream_info->state != STATS_AVALIABLE) {
@@ -217,16 +220,17 @@ int msm_isp_request_stats_stream(struct vfe_device *vfe_dev, void *arg)
 	}
 
 	stats_idx = STATS_IDX(stream_req_cmd->stream_handle);
+	
 
 	if (stats_idx >= vfe_dev->hw_info->stats_hw_info->num_stats_type) {
 		pr_err("%s Invalid stats index %d", __func__, stats_idx);
 		return -EINVAL;
 	}
-
+	
 	stream_info = &stats_data->stream_info[stats_idx];
 
 	framedrop_period = msm_isp_get_framedrop_period(
-	   stream_req_cmd->framedrop_pattern);
+		stream_req_cmd->framedrop_pattern);
 
 	if (stream_req_cmd->framedrop_pattern == SKIP_ALL)
 		stream_info->framedrop_pattern = 0x0;
@@ -236,7 +240,7 @@ int msm_isp_request_stats_stream(struct vfe_device *vfe_dev, void *arg)
 
 	if (!stream_info->composite_flag)
 		vfe_dev->hw_info->vfe_ops.stats_ops.
-			cfg_wm_irq_mask(vfe_dev, stream_info);
+		cfg_wm_irq_mask(vfe_dev, stream_info);
 
 	vfe_dev->hw_info->vfe_ops.stats_ops.cfg_wm_reg(vfe_dev, stream_info);
 	return rc;
@@ -257,6 +261,7 @@ int msm_isp_release_stats_stream(struct vfe_device *vfe_dev, void *arg)
 	}
 
 	stream_info = &stats_data->stream_info[stats_idx];
+
 	if (stream_info->state == STATS_AVALIABLE) {
 		pr_err("%s: stream already release\n", __func__);
 		return rc;
@@ -270,7 +275,7 @@ int msm_isp_release_stats_stream(struct vfe_device *vfe_dev, void *arg)
 
 	if (!stream_info->composite_flag)
 		vfe_dev->hw_info->vfe_ops.stats_ops.
-			clear_wm_irq_mask(vfe_dev, stream_info);
+		clear_wm_irq_mask(vfe_dev, stream_info);
 
 	vfe_dev->hw_info->vfe_ops.stats_ops.clear_wm_reg(vfe_dev, stream_info);
 	memset(stream_info, 0, sizeof(struct msm_vfe_stats_stream));
@@ -282,24 +287,25 @@ static int msm_isp_init_stats_ping_pong_reg(
 	struct msm_vfe_stats_stream *stream_info)
 {
 	int rc = 0;
+
 	stream_info->bufq_handle =
 		vfe_dev->buf_mgr->ops->get_bufq_handle(
-		vfe_dev->buf_mgr, stream_info->session_id,
-		stream_info->stream_id);
+			vfe_dev->buf_mgr, stream_info->session_id,
+			stream_info->stream_id);
 	if (stream_info->bufq_handle == 0) {
 		pr_err("%s: no buf configured for stream: 0x%x\n",
-			__func__, stream_info->stream_handle);
+		       __func__, stream_info->stream_handle);
 		return -EINVAL;
 	}
 
 	rc = msm_isp_stats_cfg_ping_pong_address(vfe_dev,
-		stream_info, VFE_PING_FLAG, NULL);
+						 stream_info, VFE_PING_FLAG, NULL);
 	if (rc < 0) {
 		pr_err("%s: No free buffer for ping\n", __func__);
 		return rc;
 	}
 	rc = msm_isp_stats_cfg_ping_pong_address(vfe_dev,
-		stream_info, VFE_PONG_FLAG, NULL);
+						 stream_info, VFE_PONG_FLAG, NULL);
 	if (rc < 0) {
 		pr_err("%s: No free buffer for pong\n", __func__);
 		return rc;
@@ -313,11 +319,12 @@ static void msm_isp_deinit_stats_ping_pong_reg(
 {
 	int i;
 	struct msm_isp_buffer *buf;
+
 	for (i = 0; i < 2; i++) {
 		buf = stream_info->buf[i];
 		if (buf)
 			vfe_dev->buf_mgr->ops->put_buf(vfe_dev->buf_mgr,
-				buf->bufq_handle, buf->buf_idx);
+						       buf->bufq_handle, buf->buf_idx);
 	}
 }
 
@@ -327,13 +334,14 @@ void msm_isp_stats_stream_update(struct vfe_device *vfe_dev)
 	uint32_t stats_mask = 0, comp_stats_mask = 0;
 	uint32_t enable = 0;
 	struct msm_vfe_stats_shared_data *stats_data = &vfe_dev->stats_data;
+
 	for (i = 0; i < vfe_dev->hw_info->stats_hw_info->num_stats_type; i++) {
 		if (stats_data->stream_info[i].state == STATS_START_PENDING ||
-				stats_data->stream_info[i].state ==
-					STATS_STOP_PENDING) {
+		    stats_data->stream_info[i].state ==
+		    STATS_STOP_PENDING) {
 			stats_mask |= i;
 			enable = stats_data->stream_info[i].state ==
-				STATS_START_PENDING ? 1 : 0;
+				 STATS_START_PENDING ? 1 : 0;
 			stats_data->stream_info[i].state =
 				stats_data->stream_info[i].state ==
 				STATS_START_PENDING ?
@@ -341,17 +349,17 @@ void msm_isp_stats_stream_update(struct vfe_device *vfe_dev)
 			vfe_dev->hw_info->vfe_ops.stats_ops.enable_module(
 				vfe_dev, BIT(i), enable);
 			vfe_dev->hw_info->vfe_ops.stats_ops.cfg_comp_mask(
-			   vfe_dev, BIT(i), enable);
+				vfe_dev, BIT(i), enable);
 		} else if (stats_data->stream_info[i].state == STATS_STARTING ||
-			stats_data->stream_info[i].state == STATS_STOPPING) {
+			   stats_data->stream_info[i].state == STATS_STOPPING) {
 			if (stats_data->stream_info[i].composite_flag)
 				comp_stats_mask |= i;
 			if (stats_data->stream_info[i].state == STATS_STARTING)
 				atomic_add(BIT(i),
-					&stats_data->stats_comp_mask);
+					   &stats_data->stats_comp_mask);
 			else
 				atomic_sub(BIT(i),
-					&stats_data->stats_comp_mask);
+					   &stats_data->stats_comp_mask);
 			stats_data->stream_info[i].state =
 				stats_data->stream_info[i].state ==
 				STATS_STARTING ? STATS_ACTIVE : STATS_INACTIVE;
@@ -365,9 +373,10 @@ void msm_isp_stats_stream_update(struct vfe_device *vfe_dev)
 static int msm_isp_stats_wait_for_cfg_done(struct vfe_device *vfe_dev)
 {
 	int rc;
+
 	init_completion(&vfe_dev->stats_config_complete);
 	atomic_set(&vfe_dev->stats_data.stats_update, 2);
-	rc = wait_for_completion_timeout(
+	rc = wait_for_completion_interruptible_timeout(
 		&vfe_dev->stats_config_complete,
 		msecs_to_jiffies(VFE_MAX_CFG_TIMEOUT));
 	if (rc == 0) {
@@ -380,25 +389,26 @@ static int msm_isp_stats_wait_for_cfg_done(struct vfe_device *vfe_dev)
 }
 
 static int msm_isp_start_stats_stream(struct vfe_device *vfe_dev,
-	struct msm_vfe_stats_stream_cfg_cmd *stream_cfg_cmd)
+				      struct msm_vfe_stats_stream_cfg_cmd *stream_cfg_cmd)
 {
 	int i, rc = 0;
 	uint32_t stats_mask = 0, comp_stats_mask = 0, idx;
 	struct msm_vfe_stats_stream *stream_info;
 	struct msm_vfe_stats_shared_data *stats_data = &vfe_dev->stats_data;
+
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
 		idx = STATS_IDX(stream_cfg_cmd->stream_handle[i]);
 
 		if (idx >= vfe_dev->hw_info->stats_hw_info->num_stats_type) {
 			pr_err("%s Invalid stats index %d", __func__, idx);
 			return -EINVAL;
-		}
-
+		}		
+		
 		stream_info = &stats_data->stream_info[idx];
 		if (stream_info->stream_handle !=
-				stream_cfg_cmd->stream_handle[i]) {
+		    stream_cfg_cmd->stream_handle[i]) {
 			pr_err("%s: Invalid stream handle: 0x%x received\n",
-				__func__, stream_cfg_cmd->stream_handle[i]);
+			       __func__, stream_cfg_cmd->stream_handle[i]);
 			continue;
 		}
 		rc = msm_isp_init_stats_ping_pong_reg(vfe_dev, stream_info);
@@ -424,31 +434,32 @@ static int msm_isp_start_stats_stream(struct vfe_device *vfe_dev,
 			vfe_dev, stats_mask, stream_cfg_cmd->enable);
 		atomic_add(comp_stats_mask, &stats_data->stats_comp_mask);
 		vfe_dev->hw_info->vfe_ops.stats_ops.cfg_comp_mask(
-		   vfe_dev, comp_stats_mask, 1);
+			vfe_dev, comp_stats_mask, 1);
 	}
 	return rc;
 }
 
 static int msm_isp_stop_stats_stream(struct vfe_device *vfe_dev,
-	struct msm_vfe_stats_stream_cfg_cmd *stream_cfg_cmd)
+				     struct msm_vfe_stats_stream_cfg_cmd *stream_cfg_cmd)
 {
 	int i, rc = 0;
 	uint32_t stats_mask = 0, comp_stats_mask = 0, idx;
 	struct msm_vfe_stats_stream *stream_info;
 	struct msm_vfe_stats_shared_data *stats_data = &vfe_dev->stats_data;
+
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
 		idx = STATS_IDX(stream_cfg_cmd->stream_handle[i]);
 
 		if (idx >= vfe_dev->hw_info->stats_hw_info->num_stats_type) {
 			pr_err("%s Invalid stats index %d", __func__, idx);
 			return -EINVAL;
-		}
-
+		}	
+		
 		stream_info = &stats_data->stream_info[idx];
 		if (stream_info->stream_handle !=
-				stream_cfg_cmd->stream_handle[i]) {
+		    stream_cfg_cmd->stream_handle[i]) {
 			pr_err("%s: Invalid stream handle: 0x%x received\n",
-				__func__, stream_cfg_cmd->stream_handle[i]);
+			       __func__, stream_cfg_cmd->stream_handle[i]);
 			continue;
 		}
 
@@ -469,7 +480,7 @@ static int msm_isp_stop_stats_stream(struct vfe_device *vfe_dev,
 			vfe_dev, stats_mask, stream_cfg_cmd->enable);
 		atomic_sub(comp_stats_mask, &stats_data->stats_comp_mask);
 		vfe_dev->hw_info->vfe_ops.stats_ops.cfg_comp_mask(
-		   vfe_dev, comp_stats_mask, 0);
+			vfe_dev, comp_stats_mask, 0);
 	}
 
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
@@ -479,7 +490,7 @@ static int msm_isp_stop_stats_stream(struct vfe_device *vfe_dev,
 			pr_err("%s Invalid stats index %d", __func__, idx);
 			return -EINVAL;
 		}
-
+		
 		stream_info = &stats_data->stream_info[idx];
 		msm_isp_deinit_stats_ping_pong_reg(vfe_dev, stream_info);
 	}
@@ -490,8 +501,6 @@ int msm_isp_cfg_stats_stream(struct vfe_device *vfe_dev, void *arg)
 {
 	int rc = 0;
 	struct msm_vfe_stats_stream_cfg_cmd *stream_cfg_cmd = arg;
-	struct msm_vfe_stats_shared_data *stats_data = &vfe_dev->stats_data;
-	stats_data->stats_burst_len =  stream_cfg_cmd->stats_burst_len;
 
 	if (vfe_dev->stats_data.num_active_stream == 0)
 		vfe_dev->hw_info->vfe_ops.stats_ops.cfg_ub(vfe_dev);

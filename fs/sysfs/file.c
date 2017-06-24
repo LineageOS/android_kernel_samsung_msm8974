@@ -617,6 +617,45 @@ int sysfs_add_file_to_group(struct kobject *kobj,
 EXPORT_SYMBOL_GPL(sysfs_add_file_to_group);
 
 /**
+ * sysfs_chown_file - modify the ownership of the object
+ * @kobj: object we're acting for.
+ * @attr: attribute descriptor.
+ * @uid: new uid.
+ * @gid: new gid.
+ *
+ */
+int sysfs_chown_file(struct kobject *kobj, const struct attribute *attr,
+		     uid_t uid, gid_t gid)
+{
+	struct sysfs_dirent *sd;
+	struct iattr newattrs;
+	const void *ns;
+	int rc;
+
+	rc = sysfs_attr_ns(kobj, attr, &ns);
+	if (rc)
+		return rc;
+
+	mutex_lock(&sysfs_mutex);
+
+	rc = -ENOENT;
+	sd = sysfs_find_dirent(kobj->sd, ns, attr->name);
+	if (!sd)
+		goto out;
+
+	memset(&newattrs, 0, sizeof(newattrs));
+	newattrs.ia_valid = ATTR_UID | ATTR_GID;
+	newattrs.ia_uid = uid;
+	newattrs.ia_gid = gid;
+
+	rc = sysfs_sd_setattr(sd, &newattrs);
+out:
+	mutex_unlock(&sysfs_mutex);
+	return rc;
+}
+EXPORT_SYMBOL_GPL(sysfs_chown_file);
+
+/**
  * sysfs_chmod_file - update the modified mode value on an object attribute.
  * @kobj: object we're acting for.
  * @attr: attribute descriptor.

@@ -85,7 +85,12 @@ enum mem_buffer_allocation_mode {
 /* module parameters for load time configuration */
 static int clock_inv;
 static int tsif_mode = 2;
+#if defined(CONFIG_MACH_KLTE_DCM) || defined(CONFIG_SECURE_DEMUX_ENABLE)
+/* changing the default value to enable SDMX always. static int allocation_mode = MPQ_DMX_TSPP_INTERNAL_ALLOC; */
+static int allocation_mode =  MPQ_DMX_TSPP_CONTIGUOUS_PHYS_ALLOC;
+#else
 static int allocation_mode = MPQ_DMX_TSPP_INTERNAL_ALLOC;
+#endif /* defined(CONFIG_MACH_KLTE_DCM) */
 static int tspp_out_buffer_size = TSPP_BUFFER_SIZE;
 static int tspp_notification_size =
 	TSPP_NOTIFICATION_SIZE(TSPP_DESCRIPTOR_SIZE);

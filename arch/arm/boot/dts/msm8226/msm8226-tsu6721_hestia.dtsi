@@ -1,0 +1,34 @@
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/{
+	i2c@15{
+		cell-index = <15>;
+		compatible = "i2c-gpio";
+		gpios = <&msmgpio 0 0  /*SDA*/
+			&msmgpio 1 0  /*SCL*/
+			>;
+		i2c-gpio,delay-us = <2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		tsu6721@25{
+			compatible = "tsu6721,i2c";
+			reg = <0x25>;
+			interrupt-parent = <&msmgpio>;
+			interrupts= <52 0>;
+			tsu6721,irq-gpio = <&msmgpio 52 0x00>;
+			tsu6721,gpio-sda = <&msmgpio 0 0x00>;
+			tsu6721,gpio-scl = <&msmgpio 1 0x00>;
+			tsu6721,uarton-gpio = <&msmgpio 109 0x00>;
+		};
+	};
+};

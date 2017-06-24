@@ -1,0 +1,170 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&mdss_mdp {
+	dsi_cpt_qhd_vid:qcom,mdss_dsi_cpt_qhd_video {
+		qcom,mdss-dsi-panel-name = "CPT qHD video mode dsi DIC_HX8389 panel";
+		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
+		qcom,mdss-dsi-panel-type = "dsi_video_mode";
+		qcom,mdss-dsi-panel-destination = "display_1";
+		qcom,rst-gpio = <&msmgpio 25 0>;
+		qcom,lcd-on-gpio = <&msmgpio 63 0>;
+		qcom,lcd-en-gpio = <&msmgpio 22 0>;
+		qcom,esd-det-gpio = <&msmgpio 16 0>;
+		qcom,lcd-io-1.8v-en-gpio = <&msmgpio 116 0>;
+		qcom,mdss-dsi-panel-framerate = <60>;
+		qcom,mdss-dsi-virtual-channel-id = <0>;
+		qcom,mdss-dsi-bpp = <24>;
+		qcom,mdss-dsi-panel-width = <540>;
+		qcom,mdss-dsi-panel-height = <960>;
+		qcom,mdss-pan-physical-width-dimension = <60>; /* <Width> real size of panel in mm */
+		qcom,mdss-pan-physical-height-dimension = <108>; /*<Height> real size of panel in mm */
+		qcom,mdss-dsi-lp11-init;
+		qcom,mdss-dsi-init-delay-us = <100>;
+		qcom,mdss-dsi-h-front-porch = <175>;
+		qcom,mdss-dsi-h-back-porch = <80>;
+		qcom,mdss-dsi-h-pulse-width = <10>;
+		qcom,mdss-dsi-h-sync-skew = <0>;
+		qcom,mdss-dsi-v-back-porch = <6>;
+		qcom,mdss-dsi-v-front-porch = <18>;
+		qcom,mdss-dsi-v-pulse-width = <1>;
+		qcom,mdss-dsi-h-left-border = <0>;
+		qcom,mdss-dsi-h-right-border = <0>;
+		qcom,mdss-dsi-v-top-border = <0>;
+		qcom,mdss-dsi-v-bottom-border = <0>;
+		qcom,mdss-dsi-underflow-color = <0xff>;
+		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
+		qcom,mdss-dsi-border-color = <0>;
+		qcom,mdss-dsi-bl-min-level = <1>;
+		qcom,mdss-dsi-bl-max-level = <255>;
+		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-pan-dsi-t-clk-pre = <0x26>;
+		qcom,mdss-pan-dsi-t-clk-post = <0x04>;
+		qcom,mdss-dsi-lane-0-state;
+		qcom,mdss-dsi-lane-1-state;
+		qcom,mdss-dsi-lane-2-state;
+		qcom,mdss-dsi-bllp-eof-power-mode;
+		qcom,mdss-dsi-bllp-power-mode;
+		qcom,mdss-dsi-traffic-mode = <0>;
+		qcom,mdss-pan-dsi-dst-format = <3>;
+		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-h-sync-pulse = <0>;
+		qcom,mdss-force-clk-lane-hs = <1>;
+		qcom,mdss-dsi-stream = <0>;
+		qcom,mdss-pan-dsi-mdp-tr = <0x0>;
+		qcom,mdss-pan-dsi-dma-tr = <0x04>;
+		qcom,mdss-dsi-panel-timings =[77 18 16 00 3A 3E
+						14 21 13 03 04 00];
+		qcom,platform-strength-ctrl = [ff 06];
+		qcom,platform-regulator-settings = [03 01 01 00 20 00 01];
+		qcom,mdss-dsi-on-command = [39 01 00 00 01 00 04 B9 FF 83 89
+
+	                    39 01 00 00 01 00 03 BA 41 93
+
+	                    /*Power setting sequence (1)            */
+
+	                    39 01 00 00 01 00 03 DE 05 58
+
+	                    39 01 00 00 01 00 14 B1 00 00 07 EF 50 05 11 74 F1 2A 34 26 26 42 01 3A F5 20 80
+
+	                    39 01 00 00 01 00 08 B2 00 00 78 04 07 3F 40
+
+	                    39 01 00 00 0A 00 20 B4 80 08 00 32 10 00 32 13 C7 00 00 00 35 00 40 05 27 0A 32 1E 56 56 0A 0A 40 0A 40 14 46 50 0A
+
+	                    /*Initializing Sequence (2)*/
+
+	                    39 01 00 00 01 00 02 CC 02
+
+	                    39 01 00 00 01 00 31 D5 80 01 00 00 01 00 00 00 00 60 88 88 99 88 01 45 88 88 01 45 23 67 88 88 88 88 88 88 88 88 88 88 99 54 10 88 88 76 32 54 10 88 88 88 88 88 88 88
+
+	                    39 01 00 00 01 00 03 BA 41 93
+
+	                    39 01 00 00 01 00 02 35 00
+
+	                    39 01 00 00 01 00 03 C0 43 17
+
+	                    39 01 00 00 01 00 03 CB 07 07
+
+	                    39 01 00 00 01 00 23 E0 00 10 18 3A 3D 3F 26 46 07 0C 0E 12 14 12 13 11 18 00 10 18 3A 3D 3F 26 46 07 0C 0E 12 14 12 13 11 18
+
+	                    /*Display on (4)*/
+
+	                    05 01 00 00 78 00 02 11 00      /* Sleep out */
+	                    39 01 00 00 01 00 02 36 03
+	                    39 01 00 00 01 00 02 53 24
+		            39 01 00 00 05 00 02 51 FF];
+
+		  qcom,mdss-display-on-command = [05 01 00 00 0A 00 02 29 00];    /* Display On */
+
+		samsung,panel-manufacture-id-read-cmds = [06 01 00 00 00 00 01 da 01
+							06 01 00 00 00 00 01 db 01
+							06 01 00 00 00 00 01 dc 01];
+		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
+		qcom,mdss-dsi-off-command = [05 01 00 00 0A 00 02 28 00
+					05 01 00 00 78 00 02 10 00];
+		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
+	};
+};
+&soc {
+	mdss_dsi0: qcom,mdss_dsi@fd922800 {
+		compatible = "qcom,mdss-dsi-ctrl";
+		label = "MDSS DSI CTRL->0";
+		cell-index = <0>;
+		reg = 	<0xfd922800 0x1f8>,
+			<0xfd922b00 0x2b0>,
+			<0xfd828000 0x108>;
+		reg-names = "dsi_ctrl", "dsi_phy", "mmss_misc_phys";
+		qcom,mdss-fb-map = <&mdss_fb0>;
+		vddio-supply = <&pm8226_l6>;
+		vdda-supply = <&pm8226_l4>;
+		vddapll-supply = <&pm8226_l8>;
+		qcom,platform-bist-ctrl = [00 00 b1 ff 00 00];
+		qcom,platform-lane-config = [00 00 00 00 00 00 00 01 00
+			00 00 00 00 05 00 00 01 00
+			00 00 00 00 0a 00 00 01 00
+			00 00 00 00 0f 00 00 01 00
+			00 c0 00 00 00 00 00 01 97];
+		qcom,platform-supply-entry1 {
+			qcom,supply-name = "vddio";
+			qcom,supply-min-voltage = <1800000>;
+			qcom,supply-max-voltage = <1800000>;
+			qcom,supply-enable-load = <100000>;
+			qcom,supply-disable-load = <100>;
+			qcom,supply-pre-on-sleep = <0>;
+			qcom,supply-post-on-sleep = <0>;
+			qcom,supply-pre-off-sleep = <0>;
+			qcom,supply-post-off-sleep = <0>;
+		};
+		qcom,platform-supply-entry2 {
+			qcom,supply-name = "vdda";
+			qcom,supply-min-voltage = <1200000>;
+			qcom,supply-max-voltage = <1200000>;
+			qcom,supply-enable-load = <100000>;
+			qcom,supply-disable-load = <100>;
+			qcom,supply-pre-on-sleep = <0>;
+			qcom,supply-post-on-sleep = <20>;
+			qcom,supply-pre-off-sleep = <0>;
+			qcom,supply-post-off-sleep = <0>;
+		};
+		qcom,platform-supply-entry3 {
+			qcom,supply-name = "vddapll";
+			qcom,supply-min-voltage = <1800000>;
+			qcom,supply-max-voltage = <1800000>;
+			qcom,supply-enable-load = <100000>;
+			qcom,supply-disable-load = <100>;
+			qcom,supply-pre-on-sleep = <0>;
+			qcom,supply-post-on-sleep = <0>;
+			qcom,supply-pre-off-sleep = <0>;
+			qcom,supply-post-off-sleep = <0>;
+		};
+	};
+};

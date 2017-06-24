@@ -19,6 +19,15 @@ struct boot_stats {
 
 #ifdef CONFIG_MSM_BOOT_STATS
 int boot_stats_init(void);
+
+#ifdef CONFIG_SEC_BSP
+extern uint32_t bootloader_start;
+extern uint32_t bootloader_end;
+extern uint32_t bootloader_display;
+extern uint32_t bootloader_load_kernel;
+extern unsigned int get_boot_stat_time(void);
+#endif
+
 #else
 static inline int boot_stats_init(void) { return 0; }
 #endif

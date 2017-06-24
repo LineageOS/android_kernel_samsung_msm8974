@@ -2120,6 +2120,7 @@ static void msm_spi_process_message(struct msm_spi *dd)
 	}
 	if (dd->qup_ver)
 		write_force_cs(dd, 0);
+
 	return;
 
 error:
@@ -2988,6 +2989,17 @@ struct msm_spi_platform_data * __init msm_spi_dt_to_pdata(
 		}
 	}
 
+#ifdef ENABLE_SENSORS_FPRINT_SECURE
+	/* Even if you set the bam setting, */
+	/* you can't access bam when you use tzspi */
+	if ((dd->cs_gpios[0].gpio_num) == FP_SPI_CS) {
+		pdata->use_bam = false;
+		pr_info("%s: disable bam for BLSP5 tzspi\n", __func__);
+	}
+#endif
+	dev_warn(&pdev->dev,
+		"%s pdata->use_bam: %d", __func__, pdata->use_bam);
+
 	if (pdata->use_bam) {
 		if (!pdata->bam_consumer_pipe_index) {
 			dev_warn(&pdev->dev,
@@ -3048,6 +3060,85 @@ static int __init msm_spi_bam_get_resources(struct msm_spi *dd,
 	dd->dma_teardown = msm_spi_bam_teardown;
 	return 0;
 }
+
+#ifdef ENABLE_SENSORS_FPRINT_SECURE
+int fp_spi_clock_set_rate(struct spi_device *spidev)
+{
+	struct msm_spi *dd;
+
+	if (!spidev) {
+		pr_err("%s: spidev pointer is NULL\n", __func__);
+		return -EFAULT;
+	}
+
+	dd = spi_master_get_devdata(spidev->master);
+	if (!dd) {
+		pr_err("%s: spi master pointer is NULL\n", __func__);
+		return -EFAULT;
+	}
+
+	msm_spi_clock_set(dd, spidev->max_speed_hz);
+
+	pr_info("%s sucess\n", __func__);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(fp_spi_clock_set_rate);
+
+int fp_spi_clock_enable(struct spi_device *spidev)
+{
+	struct msm_spi *dd;
+	int rc;
+
+	if (!spidev) {
+		pr_err("%s: spidev pointer is NULL\n", __func__);
+		return -EFAULT;
+	}
+
+	dd = spi_master_get_devdata(spidev->master);
+	if (!dd) {
+		pr_err("%s: spi master pointer is NULL\n", __func__);
+		return -EFAULT;
+	}
+
+	rc = clk_prepare_enable(dd->clk);
+	if (rc) {
+		pr_err("%s: unable to enable core_clk\n", __func__);
+		return rc;
+	}
+
+	rc = clk_prepare_enable(dd->pclk);
+	if (rc) {
+		pr_err("%s: unable to enable iface_clk\n", __func__);
+		return rc;
+	}
+	pr_info("%s sucess\n", __func__);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(fp_spi_clock_enable);
+
+int fp_spi_clock_disable(struct spi_device *spidev)
+{
+	struct msm_spi *dd;
+
+	if (!spidev) {
+		pr_err("%s: spidev pointer is NULL\n", __func__);
+		return -EFAULT;
+	}
+
+	dd = spi_master_get_devdata(spidev->master);
+	if (!dd) {
+		pr_err("%s: spi master pointer is NULL\n", __func__);
+		return -EFAULT;
+	}
+
+	clk_disable_unprepare(dd->clk);
+	clk_disable_unprepare(dd->pclk);
+
+	pr_info("%s sucess\n", __func__);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(fp_spi_clock_disable);
+#endif
 
 static int __init msm_spi_probe(struct platform_device *pdev)
 {

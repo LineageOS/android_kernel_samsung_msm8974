@@ -381,6 +381,11 @@ int unwind_frame(struct stackframe *frame)
 			   *ctrl.insn, ctrl.insn);
 		return -URC_FAILURE;
 	}
+#ifdef CONFIG_ARCH_MSM8226
+	/* Fix for user-stack corruption for better debugging purpose */
+	if (ctrl.entries == 0 || ctrl.byte ==0)
+		return -URC_FAILURE;
+#endif
 
 	while (ctrl.entries > 0) {
 		int urc = unwind_exec_insn(&ctrl);

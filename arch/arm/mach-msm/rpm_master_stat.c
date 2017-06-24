@@ -287,6 +287,172 @@ static const struct file_operations msm_rpm_master_stats_fops = {
 	.llseek   = no_llseek,
 };
 
+#ifdef CONFIG_SEC_PM_DEBUG
+static int is_init_done  = 0;
+static int enable_master_info = 0;
+static struct msm_rpm_master_stats_private_data *prvdata_global;
+
+static int sec_rpm_master_stats_print(
+		struct msm_rpm_master_stats_private_data *prvdata, int master_cnt)
+{
+	int  j = 0;
+	struct msm_rpm_master_stats record;
+	struct msm_rpm_master_stats_platform_data *pdata;
+	static DEFINE_MUTEX(msm_rpm_master_stats_mutex);
+
+	mutex_lock(&msm_rpm_master_stats_mutex);
+
+	if (master_cnt > prvdata->num_masters - 1) {
+		master_cnt = 0;
+		mutex_unlock(&msm_rpm_master_stats_mutex);
+		return 0;
+	}
+
+	pdata = prvdata->platform_data;
+	if (prvdata->platform_data->version == 2) {
+		record.shutdown_req = readll_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			offsetof(struct msm_rpm_master_stats, shutdown_req)));
+
+		record.wakeup_ind = readll_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			offsetof(struct msm_rpm_master_stats, wakeup_ind)));
+
+		record.bringup_req = readll_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			offsetof(struct msm_rpm_master_stats, bringup_req)));
+
+		record.bringup_ack = readll_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			offsetof(struct msm_rpm_master_stats, bringup_ack)));
+
+		record.last_sleep_transition_duration = readl_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			offsetof(struct msm_rpm_master_stats, last_sleep_transition_duration)));
+
+		record.last_wake_transition_duration = readl_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			offsetof(struct msm_rpm_master_stats, last_wake_transition_duration)));
+
+		record.wakeup_reason = readl_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			offsetof(struct msm_rpm_master_stats, wakeup_reason)));
+
+		record.numshutdowns = readl_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset +
+			 offsetof(struct msm_rpm_master_stats, numshutdowns)));
+
+		record.active_cores = readl_relaxed(prvdata->reg_base +
+			(master_cnt * pdata->master_offset) +
+			offsetof(struct msm_rpm_master_stats, active_cores));
+
+		pr_info("%s:- Active_Cores(0x%x) "
+			"Numshutdowns(0x%x) "
+			"Last_Sleep_duration(0x%x) "
+			"Last_Wake_duration(0x%x) "
+			"Wakeup_reason(0x%x) "
+			"Shutdown_req(0x%llX) "
+			"Wakeup_ind(0x%llX) "
+			"Bringup_req(0x%llX) "
+			"Bringup_ack(0x%llX) ",
+			GET_MASTER_NAME(master_cnt, prvdata),
+			record.active_cores,
+			record.numshutdowns,
+			record.last_sleep_transition_duration,
+			record.last_wake_transition_duration,
+			record.wakeup_reason,
+			record.shutdown_req,
+			record.wakeup_ind,
+			record.bringup_req,
+			record.bringup_ack);
+	} else {
+		record.numshutdowns = readl_relaxed(prvdata->reg_base +
+				(master_cnt * pdata->master_offset) + 0x0);
+
+		record.active_cores = readl_relaxed(prvdata->reg_base +
+				(master_cnt * pdata->master_offset) + 0x4);
+
+		pr_info("%s Active_Cores(0x%0x) Numshutdowns(0x%0x) ",
+			GET_MASTER_NAME(master_cnt, prvdata),
+			record.active_cores, record.numshutdowns);
+	}
+
+	j = find_first_bit((unsigned long *)&record.active_cores, BITS_PER_LONG);
+	while (j < BITS_PER_LONG) {
+		printk(" Core%d Active", j);
+		j = find_next_bit((unsigned long *)&record.active_cores, BITS_PER_LONG, j + 1);
+	}
+
+	mutex_unlock(&msm_rpm_master_stats_mutex);
+
+	return 0;
+}
+
+int sec_print_masters_stats(void)
+{
+	if(enable_master_info == 1) {
+		int i = 0;
+		pr_info("---RPM_MASTERS_STATS---");
+		for (i = 0; i < prvdata_global->num_masters; i++) {
+			sec_rpm_master_stats_print(prvdata_global, i);
+		}
+		pr_info("");
+	}
+	return 0;
+}
+
+static ssize_t masters_info_enable_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	pr_info("SEC_MASTERSTATS : show called\n");
+	return snprintf(buf, 4, "%d\n", enable_master_info);
+}
+
+static ssize_t masters_info_enable_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	pr_info("SEC_MASTERSTATS : store called\n");
+	sscanf(buf, "%1d", &enable_master_info);
+
+	if (is_init_done == 0 && enable_master_info == 1) {
+		struct msm_rpm_master_stats_platform_data *pdata = dev_get_drvdata(dev);
+
+		prvdata_global = kzalloc(sizeof(struct msm_rpm_master_stats_private_data), GFP_KERNEL);
+		if (!prvdata_global) {
+			pr_err("SEC_MASTERSTATS : ERROR could not allocate memory for private data\n");
+			return -ENOMEM;
+		}
+
+		prvdata_global->reg_base = ioremap(pdata->phys_addr_base, pdata->phys_size);
+		if (!prvdata_global->reg_base) {
+			kfree(prvdata_global);
+			prvdata_global = NULL;
+			pr_err("%s: SEC_MASTERSTATS : ERROR could not ioremap start=%p, len=%u\n",
+				__func__, (void *)pdata->phys_addr_base, pdata->phys_size);
+			return -EBUSY;
+		}
+
+		prvdata_global->len = 0;
+		prvdata_global->num_masters = pdata->num_masters;
+		prvdata_global->master_names = pdata->masters;
+		prvdata_global->platform_data = pdata;
+		is_init_done = 1;
+	}
+	else if (is_init_done == 1 && enable_master_info == 0) {
+		if (prvdata_global != NULL) {
+			if (prvdata_global->reg_base)
+				iounmap(prvdata_global->reg_base);
+			kfree(prvdata_global);
+		}
+		is_init_done = 0;
+	}
+
+	return size;
+}
+
+static DEVICE_ATTR(masters_info_enable, 0664 , masters_info_enable_show, masters_info_enable_store);
+#endif
+
 static struct msm_rpm_master_stats_platform_data
 			*msm_rpm_master_populate_pdata(struct device *dev)
 {
@@ -354,6 +520,11 @@ static  int __devinit msm_rpm_master_stats_probe(struct platform_device *pdev)
 	struct dentry *dent;
 	struct msm_rpm_master_stats_platform_data *pdata;
 	struct resource *res = NULL;
+#ifdef CONFIG_SEC_PM_DEBUG
+	int ret = 0;
+	struct class *sec_rpmstats;
+	struct device *sec_masters_stats;
+#endif
 
 	if (!pdev)
 		return -EINVAL;
@@ -389,6 +560,24 @@ static  int __devinit msm_rpm_master_stats_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
+#ifdef CONFIG_SEC_PM_DEBUG
+	sec_rpmstats = class_create(THIS_MODULE, "sec_rpmstats");
+	if (IS_ERR(sec_rpmstats))
+		pr_err("SEC_MASTERSTATS : Failed to create class(sec_rpm_stats)!\n");
+
+	sec_masters_stats = device_create(sec_rpmstats, NULL, 0, NULL, "sec_masters_stats");
+	if (IS_ERR(sec_masters_stats))
+		pr_err("SEC_MASTERSTATS : Failed to create device(sec_masters_stats)!\n");
+
+	ret = device_create_file(sec_masters_stats, &dev_attr_masters_info_enable);
+	if (ret)
+		pr_err("SEC_MASTERSTATS : Failed to create device file in sysfs entries(%s)!\n",
+			dev_attr_masters_info_enable.attr.name);
+
+	dev_set_drvdata(sec_masters_stats, pdata);
+
+	pr_info("SEC_MASTERSTATS : Init done\n");
+#endif
 	platform_set_drvdata(pdev, dent);
 	return 0;
 }

@@ -8,6 +8,15 @@ menu "File systems"
 config DCACHE_WORD_ACCESS
        bool
 
+# klaatu@sec
+config LOW_ORDER_SEQ_MALLOC
+	bool "Let seq_file allocation only low order page memory"
+	default y
+	help
+	 Sometimes high-order allocation is requested via seq_file.
+	 This will cause system performance degradation.
+	 When high-order allocation is requested, change it to vmalloc.
+
 if BLOCK
 
 source "fs/ext2/Kconfig"
@@ -102,6 +111,7 @@ if BLOCK
 menu "DOS/FAT/NT Filesystems"
 
 source "fs/fat/Kconfig"
+source "fs/exfat/Kconfig"
 source "fs/ntfs/Kconfig"
 
 endmenu
@@ -198,6 +208,8 @@ if MISC_FILESYSTEMS
 source "fs/adfs/Kconfig"
 source "fs/affs/Kconfig"
 source "fs/ecryptfs/Kconfig"
+source "fs/sdcardfs/Kconfig"
+source "fs/scfs/Kconfig"
 source "fs/hfs/Kconfig"
 source "fs/hfsplus/Kconfig"
 source "fs/befs/Kconfig"

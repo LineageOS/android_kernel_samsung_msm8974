@@ -25,6 +25,10 @@
 #include <linux/input/matrix_keypad.h>
 #include <linux/slab.h>
 
+#ifdef CONFIG_SEC_PATEK_PROJECT
+	static int check_key_press;
+#endif
+
 struct matrix_keypad {
 	const struct matrix_keypad_platform_data *pdata;
 	struct input_dev *input_dev;
@@ -152,6 +156,17 @@ static void matrix_keypad_scan(struct work_struct *work)
 
 			code = MATRIX_SCAN_CODE(row, col, keypad->row_shift);
 			input_event(input_dev, EV_MSC, MSC_SCAN, code);
+#ifdef CONFIG_SEC_PATEK_PROJECT
+			pr_info("%s: [key] [%d:%d] %x, %s\n",__func__,row,col,
+				(new_state[col] & ( 1 << row )),
+				!(!(new_state[col] & (1 << row))) ? "pressed" : "released");
+
+			if(!(!(new_state[col] & (1 << row)))){
+				check_key_press++;
+			}else{
+				check_key_press--;
+			}
+#endif
 			input_report_key(input_dev,
 					 keypad->keycodes[code],
 					 new_state[col] & (1 << row));
@@ -168,6 +183,16 @@ static void matrix_keypad_scan(struct work_struct *work)
 	enable_row_irqs(keypad);
 	mutex_unlock(&keypad->lock);
 }
+
+#ifdef CONFIG_SEC_PATEK_PROJECT
+int check_short_key(void)
+{
+	int ret;
+	ret = !(!check_key_press);
+	return ret;
+}
+EXPORT_SYMBOL(check_short_key);
+#endif
 
 static irqreturn_t matrix_keypad_interrupt(int irq, void *id)
 {
@@ -296,7 +321,7 @@ static int matrix_keypad_resume(struct device *dev)
 static const SIMPLE_DEV_PM_OPS(matrix_keypad_pm_ops,
 				matrix_keypad_suspend, matrix_keypad_resume);
 #endif
-
+extern int system_rev;
 static int __devinit init_matrix_gpio(struct platform_device *pdev,
 					struct matrix_keypad *keypad)
 {
@@ -312,10 +337,21 @@ static int __devinit init_matrix_gpio(struct platform_device *pdev,
 				pdata->col_gpios[i], i);
 			goto err_free_cols;
 		}
-
+#ifdef CONFIG_SEC_PATEK_PROJECT
+		gpio_tlmm_config(GPIO_CFG((pdata->col_gpios[i]), 0,
+			GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);		
+		gpio_set_value((pdata->col_gpios[i]), 0);
+#else
 		gpio_direction_output(pdata->col_gpios[i], !pdata->active_low);
+#endif
 	}
 
+#ifdef CONFIG_SEC_PATEK_PROJECT
+	if (system_rev <= 0x01){
+		pdata->row_gpios[3] = 28;
+		pr_info("[keypad] KBC(3) : gpio 77 -> 28 (board_rev = %x)\n", system_rev);
+	}
+#endif
 	for (i = 0; i < pdata->num_row_gpios; i++) {
 		err = gpio_request(pdata->row_gpios[i], "matrix_kbd_row");
 		if (err) {
@@ -325,7 +361,12 @@ static int __devinit init_matrix_gpio(struct platform_device *pdev,
 			goto err_free_rows;
 		}
 
+#ifdef CONFIG_SEC_PATEK_PROJECT
+		gpio_tlmm_config(GPIO_CFG((pdata->row_gpios[i]), 0,
+			GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+#else
 		gpio_direction_input(pdata->row_gpios[i]);
+#endif
 	}
 
 	if (pdata->clustered_irq > 0) {
@@ -492,7 +533,11 @@ static struct platform_driver matrix_keypad_driver = {
 	.probe		= matrix_keypad_probe,
 	.remove		= __devexit_p(matrix_keypad_remove),
 	.driver		= {
+#ifdef CONFIG_SEC_PATEK_PROJECT
+		.name	= "patek_3x4_keypad",
+#else
 		.name	= "matrix-keypad",
+#endif
 		.owner	= THIS_MODULE,
 #ifdef CONFIG_PM
 		.pm	= &matrix_keypad_pm_ops,

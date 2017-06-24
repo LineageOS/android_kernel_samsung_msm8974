@@ -636,7 +636,7 @@ msm_i2c_probe(struct platform_device *pdev)
 	spin_lock_init(&dev->lock);
 	platform_set_drvdata(pdev, dev);
 
-	clk_prepare_enable(clk);
+	BUG_ON(clk_prepare_enable(clk));
 
 	if (pdata->rmutex) {
 		struct remote_mutex_id rmid;

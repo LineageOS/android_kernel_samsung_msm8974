@@ -11,6 +11,65 @@ menuconfig INPUT_TOUCHSCREEN
 
 if INPUT_TOUCHSCREEN
 
+config TOUCHSCREEN_ZINITIX_BT532
+	tristate "ZINITIX BT532 I2C Touchscreen"
+	depends on I2C
+	help
+	  Say Y here if you have Zinitix BT532 I2C touchscreen,
+	  such as BT532, connected to your system.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called BT532.
+
+config TOUCHSCREEN_MMS252
+	tristate "MELFAS MMS252 touchscreen driver"
+	depends on I2C
+	help
+	  Say Y here if you have a MELFAS MMS252 touchscreen.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called melfas-ts.
+	  
+config TOUCHSCREEN_MMS300
+	tristate "MELFAS MMS300 touchscreen driver"
+	depends on I2C
+	help
+	  Say Y here if you have a MELFAS MMS300 touchscreen.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mms_ts.
+
+
+config TOUCHSCREEN_MMS144
+	tristate "Melfas MMS144 Touchscreen"
+	depends on I2C
+	help
+	  Say Y here if you have Melfas MMS144 series I2C touchscreen,
+	   connected to your system.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mms_ts.
+
+config TOUCHSCREEN_MMS134S
+	tristate "Melfas 134S i2c touchscreen"
+	depends on I2C
+	help
+	  Say Y here if you have Melfas MMS134S series I2C touchscreen,
+	  connected to your system.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mms_ts.
+
 config TOUCHSCREEN_88PM860X
 	tristate "Marvell 88PM860x touchscreen"
 	depends on MFD_88PM860X
@@ -490,6 +549,12 @@ config TOUCHSCREEN_SYNAPTICS_I2C_RMI
 	help
 	  This enables support for Synaptics RMI over I2C based touchscreens.
 
+config SEC_TSP_FACTORY
+	tristate "Synaptics i2c touchscreen factory mode support"
+	default n
+	help
+	  This enables support for Synaptics TSP driver in factory mode.
+
 config TOUCHSCREEN_SYNAPTICS_RMI4_I2C
 	tristate "Synaptics i2c touchscreen(ClearPad 3000)"
 	depends on I2C
@@ -497,11 +562,44 @@ config TOUCHSCREEN_SYNAPTICS_RMI4_I2C
 	help
 	  This enables support for Synaptics RMI over I2C based touchscreens(ClearPad 3000).
 
+config TOUCHSCREEN_SYNAPTICS_PREVENT_HSYNC_LEAKAGE
+	bool "Synaptics prevent leakage i2c due to hsync"
+	default n
+	help
+	  There is leakage current on TSP I2C by HW defect. TSP I2C Failed.
+	  So To prevent leakage, hsync off, tsp on, hsync on.
+
 config SYNA_MULTI_TOUCH
 	tristate "Synaptics i2c touchscreen(ClearPad 3000) MutilTouch support"
 	depends on TOUCHSCREEN_SYNAPTICS_RMI4_I2C
 	default y
 
+config TOUCHSCREEN_ATMEL_MXT1664S
+	tristate "Atmel MXT1664S Touchscreen Interface"
+	depends on I2C
+	default n
+	help
+	  Say Y here if you want support for atmel_MXT1664S touchscreen controllers.
+	  To compile this driver as a module, choose M here: the
+	  module will be called mxt1664s
+
+config TOUCHSCREEN_ATMEL_MXT1188S
+	tristate "Atmel MXT1188S Touchscreen Interface"
+	depends on I2C
+	default n
+	help
+	  Say Y here if you want support for atmel_MXT1188S touchscreen controllers.
+	  To compile this driver as a module, choose M here: the
+	  module will be called mxt1188s
+
+config TOUCHSCREEN_CYPRESS_CYTTSP4
+	tristate "CYPRESS TMA445 Touchscreen Interface"
+	depends on I2C
+	default n
+	help
+	  Say Y here if you want support for cypress TMA445 touchscreen controllers.
+	  To compile this driver as a module, choose M here: the
+	  module will be called mxt1188s
 config TOUCHSCREEN_TOUCHRIGHT
 	tristate "Touchright serial touchscreen"
 	select SERIO
@@ -981,6 +1079,18 @@ config TOUCHSCREEN_SYNAPTICS_I2C_RMI4
 	  To compile this driver as a module, choose M here: the
 	  module will be called synaptics_i2c_rmi4.
 
+config TOUCHSCREEN_SYNAPTICS_DSX_I2C
+	tristate "Synaptics DSX I2C touchscreen"
+	depends on I2C
+	help
+	  Say Y here if you have a Synaptics DSX I2C touchscreen
+	  connected to your system.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called synaptics_dsx_i2c.
+
 config TOUCHSCREEN_SYNAPTICS_DSX_RMI4_DEV
 	tristate "Synaptics I2C touchscreen rmi device"
 	depends on TOUCHSCREEN_SYNAPTICS_I2C_RMI4
@@ -1030,6 +1140,29 @@ config TOUCHSCREEN_GT9XX
 
           If unsure, say N.
 
-source "drivers/input/touchscreen/gt9xx/Kconfig"
+config TOUCHSCREEN_ZINITIX_BT531
+	tristate "ZINITIX BT531 I2C Touchscreen"
+	depends on I2C
+	help
+	  Say Y here if you have Zinitix BT531 I2C touchscreen,
+	  such as BT531, connected to your system.
 
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called BT531.
+
+source "drivers/input/touchscreen/wacom/Kconfig"
+source "drivers/input/touchscreen/gt9xx/Kconfig"
+source "drivers/input/touchscreen/synaptics/Kconfig"
+source "drivers/input/touchscreen/imagis/Kconfig"
+source "drivers/input/touchscreen/synaptics_s5000/Kconfig"
+source "drivers/input/touchscreen/synaptics_patek/Kconfig"
+source "drivers/input/touchscreen/cyttsp5/Kconfig"
+source "drivers/input/touchscreen/cyttsp4/Kconfig"
+source "drivers/input/touchscreen/wacom_hl/Kconfig"
+source "drivers/input/touchscreen/melfas_mms136/Kconfig"
+source "drivers/input/touchscreen/stm_fts/Kconfig"
+source "drivers/input/touchscreen/stm_s/Kconfig"
+source "drivers/input/touchscreen/synaptics_jsglte/Kconfig"
 endif

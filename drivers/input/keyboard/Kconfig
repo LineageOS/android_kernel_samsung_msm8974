@@ -12,6 +12,22 @@ menuconfig INPUT_KEYBOARD
 
 if INPUT_KEYBOARD
 
+config KEYBOARD_ABOV_TOUCH
+	tristate "Abov FT16XX touchkey"
+	depends on I2C
+	help
+	  Say Y here if you want to use ABOV MC96FT16XX chip as touchkey.
+
+config KEYBOARD_ABOV_TOUCH_PATEK
+	tristate "Abov FT16XX touchkey"
+	depends on I2C
+	help
+	  Say Y here if you want to use ABOV MC96FT16XX chip as touchkey.
+
+config INPUT_ENABLED
+	bool "Input enabled suspend resume"
+	default n
+
 config KEYBOARD_ADP5520
 	tristate "Keypad Support for ADP5520 PMIC"
 	depends on PMIC_ADP5520
@@ -616,3 +632,43 @@ config KEYBOARD_W90P910
 	  module will be called w90p910_keypad.
 
 endif
+
+config SENSORS_HALL_DEBOUNCE
+	bool "HALL"
+	help 
+	  Say Y here to enable the HALL SENSOR DEBOUNCE TIME
+
+config SENSORS_HALL
+	bool "HALL"
+	help
+	  Say Y here to enable the HALL
+
+config SENSORS_HALL_IRQ_CTRL
+	bool "SENSORS_HALL_IRQ_CTRL"
+	depends on !SEC_FACTORY
+	default n
+	help
+	  Say Y here to enable the IRQ control function
+
+config KEYBOARD_TC360_TOUCHKEY
+	tristate "Coreriver touchkey support"
+	default n
+	help
+	  Say Y here to enable the
+	  coreriver touchkey.
+	  To compile this driver as a
+	  module, choose M here.
+	    
+
+config USE_VM_KEYBOARD_REJECT
+	bool "VM_KEYBOARD_REJECT"
+	help
+	  Say Y here to enable the KEY REJECT
+
+source "drivers/input/keyboard/cypress_touchkey/Kconfig"
+source "drivers/input/keyboard/cypress_touchkey_h/Kconfig"
+source "drivers/input/keyboard/cypress_touchkey_he/Kconfig"
+source "drivers/input/keyboard/cypress_touchkey_c/Kconfig"
+source "drivers/input/keyboard/cypress_touchkey_ks01/Kconfig"
+source "drivers/input/keyboard/cypress_touchkey_hl/Kconfig"
+source "drivers/input/keyboard/cypress_touchkey_s3/Kconfig"

@@ -302,6 +302,13 @@ struct hpf_work {
 };
 
 static struct hpf_work tx_hpf_work[NUM_DECIMATORS];
+struct mute_work {
+		struct tabla_priv *tabla;
+		u32 decimator;
+		struct delayed_work dwork;
+};
+
+static struct mute_work tx_mute_work[NUM_DECIMATORS];
 
 static const struct wcd9xxx_ch tabla_rx_chs[TABLA_RX_MAX] = {
 	WCD9XXX_CH(TABLA_RX_PORT_START_NUMBER, 0),
@@ -3140,6 +3147,27 @@ static void tx_hpf_corner_freq_callback(struct work_struct *work)
 
 	snd_soc_update_bits(codec, tx_mux_ctl_reg, 0x30, hpf_cut_of_freq << 4);
 }
+static void tx_digital_unmute_callback(struct work_struct *work)
+{
+	struct delayed_work *mute_delayed_work;
+	struct mute_work *tx_mute_work;
+	struct tabla_priv *tabla;
+	struct snd_soc_codec *codec;
+	u16 tx_vol_ctl_reg;
+
+	mute_delayed_work = to_delayed_work(work);
+	tx_mute_work = container_of(mute_delayed_work, struct mute_work, dwork);
+	tabla = tx_mute_work->tabla;
+	codec = tx_mute_work->tabla->codec;
+
+	tx_vol_ctl_reg = TABLA_A_CDC_TX1_VOL_CTL_CFG +
+		(tx_mute_work->decimator - 1) * 8;
+
+	pr_debug("%s(): tabla %p decimator %u tx digital mute 0\n",
+		__func__, tx_mute_work->tabla, tx_mute_work->decimator);
+
+	snd_soc_update_bits(codec, tx_vol_ctl_reg, 0x01, 0x00);
+}
 
 #define  TX_MUX_CTL_CUT_OFF_FREQ_MASK	0x30
 #define  CF_MIN_3DB_4HZ			0x0
@@ -3260,7 +3288,9 @@ static int tabla_codec_enable_dec(struct snd_soc_dapm_widget *w,
 	case SND_SOC_DAPM_POST_PMU:
 
 		/* Disable TX digital mute */
-		snd_soc_update_bits(codec, tx_vol_ctl_reg, 0x01, 0x00);
+		schedule_delayed_work(
+			&tx_mute_work[decimator - 1].dwork,
+			msecs_to_jiffies(100));
 
 		if (tx_hpf_work[decimator - 1].tx_hpf_cut_of_freq !=
 				CF_MIN_3DB_150HZ) {
@@ -3282,6 +3312,7 @@ static int tabla_codec_enable_dec(struct snd_soc_dapm_widget *w,
 
 		snd_soc_update_bits(codec, tx_vol_ctl_reg, 0x01, 0x01);
 		cancel_delayed_work_sync(&tx_hpf_work[decimator - 1].dwork);
+		cancel_delayed_work_sync(&tx_mute_work[decimator - 1].dwork);
 		break;
 
 	case SND_SOC_DAPM_POST_PMD:
@@ -8966,10 +8997,12 @@ static int tabla_codec_probe(struct snd_soc_codec *codec)
 		return -ENOMEM;
 	}
 	for (i = 0 ; i < NUM_DECIMATORS; i++) {
-		tx_hpf_work[i].tabla = tabla;
-		tx_hpf_work[i].decimator = i + 1;
+		tx_mute_work[i].tabla = tx_hpf_work[i].tabla = tabla;
+		tx_mute_work[i].decimator = tx_hpf_work[i].decimator = i + 1;
 		INIT_DELAYED_WORK(&tx_hpf_work[i].dwork,
 			tx_hpf_corner_freq_callback);
+		INIT_DELAYED_WORK(&tx_mute_work[i].dwork,
+			tx_digital_unmute_callback);
 	}
 
 	/* Make sure mbhc micbias register addresses are zeroed out */

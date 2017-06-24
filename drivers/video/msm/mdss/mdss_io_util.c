@@ -147,6 +147,13 @@ int msm_dss_config_vreg(struct device *dev, struct dss_vreg *in_vreg,
 				curr_vreg->vreg = NULL;
 				goto vreg_get_fail;
 			}
+
+#ifdef CONFIG_FB_MSM_MIPI_MAGNA_OCTA_VIDEO_WXGA_PT_DUAL_PANEL
+			if(!strncmp(in_vreg[i].vreg_name, "vdd", 4)) {
+				pr_err("%s : VDD(L22) config(%d) skip!!\n", __func__, config);
+				continue;
+			}
+#endif
 			type = (regulator_count_voltages(curr_vreg->vreg) > 0)
 					? DSS_REG_LDO : DSS_REG_VS;
 			if (type == DSS_REG_LDO) {
@@ -166,6 +173,14 @@ int msm_dss_config_vreg(struct device *dev, struct dss_vreg *in_vreg,
 	} else {
 		for (i = num_vreg-1; i >= 0; i--) {
 			curr_vreg = &in_vreg[i];
+
+#ifdef CONFIG_FB_MSM_MIPI_MAGNA_OCTA_VIDEO_WXGA_PT_DUAL_PANEL
+			if(!strncmp(in_vreg[i].vreg_name, "vdd", 4)) {
+				pr_err("%s : VDD(L22) config(%d) skip!!\n", __func__, config);
+				continue;
+			}
+#endif
+
 			if (curr_vreg->vreg) {
 				type = (regulator_count_voltages(
 					curr_vreg->vreg) > 0)
@@ -199,11 +214,33 @@ vreg_get_fail:
 	return rc;
 } /* msm_dss_config_vreg */
 
+#ifdef CONFIG_MACH_KSPORTSLTE_SPR
+extern unsigned int system_rev;
+#endif
+
 int msm_dss_enable_vreg(struct dss_vreg *in_vreg, int num_vreg, int enable)
 {
 	int i = 0, rc = 0;
 	if (enable) {
 		for (i = 0; i < num_vreg; i++) {
+#if defined(CONFIG_MACH_MONDRIAN) || defined(CONFIG_MACH_CHAGALL)
+			if(!strncmp(in_vreg[i].vreg_name, "vdd", 4)) {
+				pr_info("%s : VDD enable skip!!\n", __func__);
+				continue;
+			}
+#endif
+#ifdef CONFIG_MACH_KSPORTSLTE_SPR
+			if(!strncmp(in_vreg[i].vreg_name, "vdd", 4) && (system_rev == 2)) {
+				pr_info("%s : VDD enable skip!! rev(%d)\n",in_vreg[i].vreg_name, system_rev);
+				continue;
+			}
+#endif
+#ifdef CONFIG_FB_MSM_MIPI_MAGNA_OCTA_VIDEO_WXGA_PT_DUAL_PANEL
+			if(!strncmp(in_vreg[i].vreg_name, "vdd", 4)) {
+				pr_err("%s : VDD enable skip!!\n", __func__);
+				continue;
+			}
+#endif
 			rc = PTR_RET(in_vreg[i].vreg);
 			if (rc) {
 				DEV_ERR("%pS->%s: %s regulator error. rc=%d\n",
@@ -234,6 +271,37 @@ int msm_dss_enable_vreg(struct dss_vreg *in_vreg, int num_vreg, int enable)
 	} else {
 		for (i = num_vreg-1; i >= 0; i--)
 			if (regulator_is_enabled(in_vreg[i].vreg)) {
+#if defined(CONFIG_MACH_MONDRIAN) || defined(CONFIG_MACH_CHAGALL)
+				if(!strncmp(in_vreg[i].vreg_name, "vdd", 4)) {
+					pr_info("%s : VDD disable skip!!\n", __func__);
+					continue;
+				}
+#endif
+#ifdef CONFIG_MACH_KANAS3G_CTC
+				if(!strncmp(in_vreg[i].vreg_name, "vdd", 3)) {
+					continue;
+				}
+#endif
+#ifdef CONFIG_MACH_KSPORTSLTE_SPR
+				if(!strncmp(in_vreg[i].vreg_name, "vdd", 4) && (system_rev == 2)) {
+					pr_info("%s : VDD disable skip!! rev(%d)\n",in_vreg[i].vreg_name, system_rev);
+					continue;
+				}
+#endif
+#ifdef CONFIG_FB_MSM_MIPI_MAGNA_OCTA_VIDEO_WXGA_PT_DUAL_PANEL
+				if(!strncmp(in_vreg[i].vreg_name, "vdd", 4)) {
+					pr_err("%s : VDD disable skip!!\n", __func__);
+					continue;
+				}
+#endif
+#ifdef CONFIG_MACH_KLIMT_LTE_DCM
+				/* VREG_LVS1_1P8 Always On due to Audio(MP3) Play Mute Problem */
+				if(!strncmp(in_vreg[i].vreg_name, "vdd3", 4)) {	// VREG_LVS1_1P8 1.8V
+					pr_err("%s : VDD3 disable skip!!\n", __func__);
+					continue;
+				}
+#endif
+
 				if (in_vreg[i].pre_off_sleep)
 					msleep(in_vreg[i].pre_off_sleep);
 				regulator_set_optimum_mode(in_vreg[i].vreg,

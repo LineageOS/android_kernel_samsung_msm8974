@@ -111,4 +111,8 @@ int afe_convert_virtual_to_portid(u16 port_id);
 
 int afe_pseudo_port_start_nowait(u16 port_id);
 int afe_pseudo_port_stop_nowait(u16 port_id);
+
+#ifdef CONFIG_SND_SOC_MAXIM_DSM
+int32_t dsm_open(int32_t port_id, uint32_t *dsm_params, u8 *param);
+#endif
 #endif /* __Q6AFE_H__ */

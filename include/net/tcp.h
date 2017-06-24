@@ -123,7 +123,11 @@ extern void tcp_time_wait(struct sock *sk, int state, int timeo);
 #endif
 #define TCP_RTO_MAX	((unsigned)(120*HZ))
 #define TCP_RTO_MIN	((unsigned)(HZ/5))
+#if defined(CONFIG_TARGET_LOCALE_CHN)
+#define TCP_TIMEOUT_INIT ((unsigned)(3*HZ))	/* RFC2988bis initial RTO value	*/
+#else
 #define TCP_TIMEOUT_INIT ((unsigned)(1*HZ))	/* RFC2988bis initial RTO value	*/
+#endif
 #define TCP_TIMEOUT_FALLBACK ((unsigned)(3*HZ))	/* RFC 1122 initial RTO value, now
 						 * used as a fallback RTO for the
 						 * initial data transmission if no
@@ -1306,6 +1310,8 @@ static inline void tcp_check_send_head(struct sock *sk, struct sk_buff *skb_unli
 {
 	if (sk->sk_send_head == skb_unlinked)
 		sk->sk_send_head = NULL;
+	if (tcp_sk(sk)->highest_sack == skb_unlinked)
+		tcp_sk(sk)->highest_sack = NULL;
 }
 
 static inline void tcp_init_send_head(struct sock *sk)

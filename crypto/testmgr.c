@@ -27,6 +27,9 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <crypto/rng.h>
+#ifdef CONFIG_CRYPTO_DRBG
+#include <crypto/drbg.h>
+#endif
 
 #include "internal.h"
 
@@ -37,6 +40,14 @@ int alg_test(const char *driver, const char *alg, u32 type, u32 mask)
 {
 	return 0;
 }
+
+#ifdef CONFIG_CRYPTO_FIPS
+bool in_fips_err()
+{
+	return false;
+}
+EXPORT_SYMBOL_GPL(in_fips_err);
+#endif
 
 #else
 
@@ -64,6 +75,12 @@ int alg_test(const char *driver, const char *alg, u32 type, u32 mask)
 */
 #define ENCRYPT 1
 #define DECRYPT 0
+
+#ifdef CONFIG_CRYPTO_FIPS
+#define FIPS_ERR 1
+#define FIPS_NO_ERR 0
+static int IN_FIPS_ERROR = FIPS_NO_ERR;
+#endif
 
 struct tcrypt_result {
 	struct completion completion;
@@ -108,6 +125,13 @@ struct cprng_test_suite {
 	unsigned int count;
 };
 
+#ifdef CONFIG_CRYPTO_DRBG
+struct drbg_test_suite {
+	struct drbg_testvec *vecs;
+	unsigned int count;
+};
+#endif
+
 struct alg_test_desc {
 	const char *alg;
 	int (*test)(const struct alg_test_desc *desc, const char *driver,
@@ -121,12 +145,32 @@ struct alg_test_desc {
 		struct pcomp_test_suite pcomp;
 		struct hash_test_suite hash;
 		struct cprng_test_suite cprng;
+#ifdef CONFIG_CRYPTO_DRBG
+		struct drbg_test_suite drbg;
+#endif
 	} suite;
 };
 
 static unsigned int IDX[8] = { IDX1, IDX2, IDX3, IDX4, IDX5, IDX6, IDX7, IDX8 };
 
+#ifdef CONFIG_CRYPTO_FIPS
+bool in_fips_err()
+{
+	return (IN_FIPS_ERROR == FIPS_ERR);
+}
+
+void set_in_fips_err()
+{
+	IN_FIPS_ERROR = FIPS_ERR;
+}
+#endif
+
+
+#if FIPS_FUNC_TEST == 4
+void hexdump(unsigned char *buf, unsigned int len)
+#else
 static void hexdump(unsigned char *buf, unsigned int len)
+#endif
 {
 	print_hex_dump(KERN_CONT, "", DUMP_PREFIX_OFFSET,
 			16, 1,
@@ -1525,6 +1569,100 @@ static int alg_test_cprng(const struct alg_test_desc *desc, const char *driver,
 	return err;
 }
 
+#ifdef CONFIG_CRYPTO_DRBG
+static int drbg_cavs_test(struct drbg_testvec *test, int pr,
+			  const char *driver, u32 type, u32 mask)
+{
+	int ret = -EAGAIN;
+	struct crypto_rng *drng;
+	struct drbg_test_data test_data;
+	struct drbg_string addtl, pers, testentropy;
+	unsigned char *buf = kzalloc(test->expectedlen, GFP_KERNEL);
+
+	if (!buf)
+		return -ENOMEM;
+
+	drng = crypto_alloc_rng(driver, type, mask);
+	if (IS_ERR(drng)) {
+		printk(KERN_ERR "alg: drbg: could not allocate DRNG handle for "
+		       "%s\n", driver);
+		kzfree(buf);
+		return -ENOMEM;
+	}
+
+	test_data.testentropy = &testentropy;
+	drbg_string_fill(&testentropy, test->entropy, test->entropylen);
+	drbg_string_fill(&pers, test->pers, test->perslen);
+	ret = crypto_drbg_reset_test(drng, &pers, &test_data);
+	if (ret) {
+		printk(KERN_ERR "alg: drbg: Failed to reset rng\n");
+		goto outbuf;
+	}
+
+	drbg_string_fill(&addtl, test->addtla, test->addtllen);
+	if (pr) {
+		drbg_string_fill(&testentropy, test->entpra, test->entprlen);
+		ret = crypto_drbg_get_bytes_addtl_test(drng,
+			buf, test->expectedlen, &addtl,	&test_data);
+	} else {
+		ret = crypto_drbg_get_bytes_addtl(drng,
+			buf, test->expectedlen, &addtl);
+	}
+	if (ret <= 0) {
+		printk(KERN_ERR "alg: drbg: could not obtain random data for "
+		       "driver %s\n", driver);
+		goto outbuf;
+	}
+
+	drbg_string_fill(&addtl, test->addtlb, test->addtllen);
+	if (pr) {
+		drbg_string_fill(&testentropy, test->entprb, test->entprlen);
+		ret = crypto_drbg_get_bytes_addtl_test(drng,
+			buf, test->expectedlen, &addtl, &test_data);
+	} else {
+		ret = crypto_drbg_get_bytes_addtl(drng,
+			buf, test->expectedlen, &addtl);
+	}
+	if (ret <= 0) {
+		printk(KERN_ERR "alg: drbg: could not obtain random data for "
+		       "driver %s\n", driver);
+		goto outbuf;
+	}
+
+	ret = memcmp(test->expected, buf, test->expectedlen);
+
+outbuf:
+	crypto_free_rng(drng);
+	kzfree(buf);
+	return ret;
+}
+
+static int alg_test_drbg(const struct alg_test_desc *desc, const char *driver,
+			 u32 type, u32 mask)
+{
+	int err = 0;
+	int pr = 0;
+	int i = 0;
+	struct drbg_testvec *template = desc->suite.drbg.vecs;
+	unsigned int tcount = desc->suite.drbg.count;
+
+	if (0 == memcmp(driver, "drbg_pr_", 8))
+		pr = 1;
+
+	for (i = 0; i < tcount; i++) {
+		err = drbg_cavs_test(&template[i], pr, driver, type, mask);
+		if (err) {
+			printk(KERN_ERR "alg: drbg: Test %d failed for %s\n",
+			       i, driver);
+			err = -EINVAL;
+			break;
+		}
+	}
+	return err;
+
+}
+#endif
+
 static int alg_test_null(const struct alg_test_desc *desc,
 			     const char *driver, u32 type, u32 mask)
 {
@@ -1921,6 +2059,154 @@ static const struct alg_test_desc alg_test_descs[] = {
 			}
 		}
 	}, {
+#ifdef CONFIG_CRYPTO_DRBG
+		.alg = "drbg_nopr_ctr_aes128",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_nopr_ctr_aes128_tv_template,
+				.count = ARRAY_SIZE(drbg_nopr_ctr_aes128_tv_template)
+			}
+		}
+	}, {
+		.alg = "drbg_nopr_ctr_aes192",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_nopr_ctr_aes192_tv_template,
+				.count = ARRAY_SIZE(drbg_nopr_ctr_aes192_tv_template)
+			}
+		}
+	}, {
+		.alg = "drbg_nopr_ctr_aes256",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_nopr_ctr_aes256_tv_template,
+				.count = ARRAY_SIZE(drbg_nopr_ctr_aes256_tv_template)
+			}
+		}
+	}, {
+		/*
+		 * There is no need to specifically test the DRBG with every
+		 * backend cipher -- covered by drbg_nopr_hmac_sha256 test
+		 */
+		.alg = "drbg_nopr_hmac_sha1",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_nopr_hmac_sha256",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_nopr_hmac_sha256_tv_template,
+				.count =
+				ARRAY_SIZE(drbg_nopr_hmac_sha256_tv_template)
+			}
+		}
+	}, {
+		/* covered by drbg_nopr_hmac_sha256 test */
+		.alg = "drbg_nopr_hmac_sha384",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_nopr_hmac_sha512",
+		.test = alg_test_null,
+		.fips_allowed = 1,
+	}, {
+		.alg = "drbg_nopr_sha1",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_nopr_sha256",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_nopr_sha256_tv_template,
+				.count = ARRAY_SIZE(drbg_nopr_sha256_tv_template)
+			}
+		}
+	}, {
+		/* covered by drbg_nopr_sha256 test */
+		.alg = "drbg_nopr_sha384",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_nopr_sha512",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_pr_ctr_aes128",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_pr_ctr_aes128_tv_template,
+				.count = ARRAY_SIZE(drbg_pr_ctr_aes128_tv_template)
+			}
+		}
+	}, {
+		/* covered by drbg_pr_ctr_aes128 test */
+		.alg = "drbg_pr_ctr_aes192",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_pr_ctr_aes256",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_pr_hmac_sha1",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_pr_hmac_sha256",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_pr_hmac_sha256_tv_template,
+				.count = ARRAY_SIZE(drbg_pr_hmac_sha256_tv_template)
+			}
+		}
+	}, {
+		/* covered by drbg_pr_hmac_sha256 test */
+		.alg = "drbg_pr_hmac_sha384",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_pr_hmac_sha512",
+		.test = alg_test_null,
+		.fips_allowed = 1,
+	}, {
+		.alg = "drbg_pr_sha1",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_pr_sha256",
+		.test = alg_test_drbg,
+		.fips_allowed = 1,
+		.suite = {
+			.drbg = {
+				.vecs = drbg_pr_sha256_tv_template,
+				.count = ARRAY_SIZE(drbg_pr_sha256_tv_template)
+			}
+		}
+	}, {
+		/* covered by drbg_pr_sha256 test */
+		.alg = "drbg_pr_sha384",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+		.alg = "drbg_pr_sha512",
+		.fips_allowed = 1,
+		.test = alg_test_null,
+	}, {
+#endif /* CONFIG_CRYPTO_DRBG */
 		.alg = "ecb(__aes-aesni)",
 		.test = alg_test_null,
 		.suite = {
@@ -2755,7 +3041,7 @@ int alg_test(const char *driver, const char *alg, u32 type, u32 mask)
 {
 	int i;
 	int j;
-	int rc;
+	int rc = 0;
 
 	if ((type & CRYPTO_ALG_TYPE_MASK) == CRYPTO_ALG_TYPE_CIPHER) {
 		char nalg[CRYPTO_MAX_ALG_NAME];
@@ -2779,6 +3065,13 @@ int alg_test(const char *driver, const char *alg, u32 type, u32 mask)
 	j = alg_find_test(driver);
 	if (i < 0 && j < 0)
 		goto notest;
+		
+#if FIPS_FUNC_TEST == 3
+    // change@wtl.rsengott - FIPS mode self test Functional Test
+    if (fips_enabled)
+        printk(KERN_INFO "FIPS: %s: %s alg self test START in fips mode!\n",
+               driver, alg);
+#endif
 
 	if (fips_enabled && ((i >= 0 && !alg_test_descs[i].fips_allowed) ||
 			     (j >= 0 && !alg_test_descs[j].fips_allowed)))
@@ -2793,20 +3086,46 @@ int alg_test(const char *driver, const char *alg, u32 type, u32 mask)
 					     type, mask);
 
 test_done:
-	if (fips_enabled && rc)
-		panic("%s: %s alg self test failed in fips mode!\n", driver, alg);
+	if (fips_enabled && rc) {
+		printk(KERN_INFO
+			"FIPS: %s: %s alg self test failed\n",
+			driver, alg);
+#ifdef CONFIG_CRYPTO_FIPS
+		IN_FIPS_ERROR = FIPS_ERR;
+#else
+		panic("%s: %s alg self test failed in fips mode!\n", driver, alg);		
+#endif
+		return rc;
+	}
 
 	if (fips_enabled && !rc)
-		printk(KERN_INFO "alg: self-tests for %s (%s) passed\n",
-		       driver, alg);
+		printk(KERN_INFO "FIPS: self-tests for %s (%s) passed\n",
+			driver, alg);
 
 	return rc;
 
 notest:
-	printk(KERN_INFO "alg: No test for %s (%s)\n", alg, driver);
+	printk(KERN_INFO "FIPS: No test for %s (%s)\n", alg, driver);
 	return 0;
 non_fips_alg:
-	return -EINVAL;
+	if (!rc)
+		printk(KERN_INFO
+			"FIPS: self-tests for non-FIPS %s (%s) passed\n",
+			driver, alg);
+	else
+		printk(KERN_INFO
+			"FIPS: self-tests for non-FIPS %s (%s) failed\n",
+			alg, driver);
+	return rc;
+}
+int testmgr_crypto_proc_init(void)
+{
+#ifdef CONFIG_CRYPTO_FIPS
+	crypto_init_proc(&IN_FIPS_ERROR);
+#else
+	crypto_init_proc();
+#endif
+	return 0;
 }
 
 #endif /* CONFIG_CRYPTO_MANAGER_DISABLE_TESTS */

@@ -1246,7 +1246,7 @@ static struct msm_gpiomux_config msm_taiko_config[] __initdata = {
 		},
 	},
 };
-
+#if !defined(CONFIG_MACH_JSGLTE_CHN_CMCC)
 static struct gpiomux_setting sdc3_clk_actv_cfg = {
 	.func = GPIOMUX_FUNC_2,
 	.drv = GPIOMUX_DRV_8MA,
@@ -1328,6 +1328,7 @@ static void msm_gpiomux_sdc3_install(void)
 			    ARRAY_SIZE(msm8974_sdc3_configs));
 }
 
+#endif
 #ifdef CONFIG_MMC_MSM_SDC4_SUPPORT
 static struct gpiomux_setting sdc4_clk_actv_cfg = {
 	.func = GPIOMUX_FUNC_2,

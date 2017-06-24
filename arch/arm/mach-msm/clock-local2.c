@@ -653,7 +653,10 @@ static struct frac_entry frac_table_675m[] = {	/* link rate of 270M */
 	{11, 50},	/* 148.50 M */
 	{47, 206},	/* 154 M */
 	{31, 100},	/* 205.25 M */
+	{89, 225},	/* 267.00 M */
 	{107, 269},	/* 268.50 M */
+/*	{55, 136},	 272.977 M */
+	{151, 372},	/* 274 M */
 	{0, 0},
 };
 
@@ -668,16 +671,16 @@ static struct frac_entry frac_table_810m[] = { /* Link rate of 162M */
 	{0, 0},
 };
 
-static int set_rate_edp_pixel(struct clk *clk, unsigned long rate)
+int set_rate_edp_pixel(struct clk *clk, unsigned long rate)
 {
 	struct rcg_clk *rcg = to_rcg_clk(clk);
 	struct clk_freq_tbl *pixel_freq = rcg->current_freq;
 	struct frac_entry *frac;
 	int delta = 100000;
-	s64 request;
-	s64 src_rate;
+		s64 request;
+		s64 src_rate;
 
-	src_rate = clk_get_rate(clk->parent);
+		src_rate = clk_get_rate(clk->parent);
 
 	if (src_rate == 810000000)
 		frac = frac_table_810m;
@@ -688,6 +691,7 @@ static int set_rate_edp_pixel(struct clk *clk, unsigned long rate)
 		request = rate;
 		request *= frac->den;
 		request = div_s64(request, frac->num);
+		pr_info("%s rate : %lu requet : %llu delta : %d src_rate : %llu", __func__, rate, request, delta, src_rate);
 		if ((src_rate < (request - delta)) ||
 			(src_rate > (request + delta))) {
 			frac++;
@@ -706,6 +710,8 @@ static int set_rate_edp_pixel(struct clk *clk, unsigned long rate)
 		set_rate_mnd(rcg, pixel_freq);
 		return 0;
 	}
+
+	pr_info("%s fail", __func__);
 	return -EINVAL;
 }
 

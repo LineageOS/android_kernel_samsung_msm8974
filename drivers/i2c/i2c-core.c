@@ -358,7 +358,11 @@ static int i2c_check_client_addr_validity(const struct i2c_client *client)
 			return -EINVAL;
 	} else {
 		/* 7-bit address, reject the general call address */
+#if defined(CONFIG_S5K4ECGX)
+		if (client->addr == 0x00 || client->addr > 0xff)
+#else
 		if (client->addr == 0x00 || client->addr > 0x7f)
+#endif
 			return -EINVAL;
 	}
 	return 0;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -22,8 +22,10 @@
 #include <linux/string.h>
 #include <linux/uaccess.h>
 #include <linux/hrtimer.h>
+#include <linux/sched.h>
 #include <mach/msm_bus_board.h>
 #include <mach/msm_bus.h>
+#include <trace/events/power.h>
 #include "msm_bus_core.h"
 
 #define MAX_BUFF_SIZE 4096
@@ -373,6 +375,8 @@ static int msm_bus_dbg_fill_cl_buffer(const struct msm_bus_scale_pdata *pdata,
 	ts = ktime_to_timespec(ktime_get());
 	i += scnprintf(buf + i, MAX_BUFF_SIZE - i, "\n%d.%d\n",
 		(int)ts.tv_sec, (int)ts.tv_nsec);
+	i += scnprintf(buf + i, MAX_BUFF_SIZE - i, "Process:%s, PID:%d\n",
+			current->comm, current->pid);
 	i += scnprintf(buf + i, MAX_BUFF_SIZE - i, "curr   : %d\n", index);
 	i += scnprintf(buf + i, MAX_BUFF_SIZE - i, "masters: ");
 
@@ -392,6 +396,14 @@ static int msm_bus_dbg_fill_cl_buffer(const struct msm_bus_scale_pdata *pdata,
 		i += scnprintf(buf + i, MAX_BUFF_SIZE - i, "%llu  ",
 			pdata->usecase[index].vectors[j].ib);
 	i += scnprintf(buf + i, MAX_BUFF_SIZE - i, "\n");
+
+	for (j = 0; j < pdata->usecase->num_paths; j++)
+		trace_bus_update_request((int)ts.tv_sec, (int)ts.tv_nsec,
+		pdata->name, index,
+		pdata->usecase[index].vectors[j].src,
+		pdata->usecase[index].vectors[j].dst,
+		pdata->usecase[index].vectors[j].ab,
+		pdata->usecase[index].vectors[j].ib);
 
 	cldata->size = i;
 	return i;
@@ -679,6 +691,7 @@ static int __init msm_bus_debugfs_init(void)
 			commit, (void *)fablist->name, &fabric_data_fops);
 		if (fablist->file == NULL) {
 			MSM_BUS_DBG("Cannot create files for commit data\n");
+			mutex_unlock(&msm_bus_dbg_fablist_lock);
 			goto err;
 		}
 	}

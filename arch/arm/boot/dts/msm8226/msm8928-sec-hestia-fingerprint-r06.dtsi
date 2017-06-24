@@ -1,0 +1,65 @@
+/*
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+	i2c@f9928000 {
+		status = "disable";
+	};
+	spi@f9928000 {
+		compatible = "qcom,spi-qup-v2";
+		cell-index = <6>;
+		reg = <0xf9928000 0x1000>,
+			<0xf9904000 0x19000>;
+		reg-names = "spi_physical", "spi_bam_physical";
+		interrupt-names = "spi_irq", "spi_bam_irq";
+		interrupts = <0 100 0>, <0 238 0>;
+		spi-max-frequency = <19200000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		qcom,gpio-mosi = <&msmgpio 20 0>;
+		qcom,gpio-miso = <&msmgpio 21 0>;
+		qcom,gpio-cs0  = <&msmgpio 22 0>;
+		qcom,gpio-clk  = <&msmgpio 23 0>;
+
+		qcom,infinite-mode = <0>;
+		qcom,use-bam;
+		qcom,ver-reg-exists;
+		qcom,bam-consumer-pipe-index = <22>;
+		qcom,bam-producer-pipe-index = <23>;
+
+		qcom,master-id = <86>;
+		vfsspi-spi@0 {
+			compatible = "vfsspi,vfs61xx";
+			reg = <0>;
+			spi-max-frequency = <19200000>;
+			vfsspi-sleepPin = <&msmgpio 114 0x00>;
+			vfsspi-drdyPin = <&msmgpio 110 0x01>;
+			vfsspi-ldoPin = <&pm8226_mpps 7 0x00>; /* 1.8V enable */
+			vfsspi-ldoPin2 = <&pm8226_mpps 4 0x00>; /* 3.3V enable */
+/*			vfsspi-ocpflag = <&msmgpio 38 0x00>;	*/
+			vfsspi-ocpen = <&pm8226_gpios 2 0x00>;
+			vfsspi-mosipin = <20>;
+			vfsspi-misopin = <21>;
+			vfsspi-cspin = <22>;
+			vfsspi-clkpin = <23>;
+			vfsspi-set_altfunc = <1>; /* for spi alternative function number */
+			vfsspi-mosi_alt = <1>;
+			vfsspi-miso_alt = <1>;
+			vfsspi-cs_alt = <1>;
+			vfsspi-clk_alt = <1>;
+			vfsspi-orient = <0>;
+			vfsspi-ldocontrol= <1>;
+		};
+	};
+
+};

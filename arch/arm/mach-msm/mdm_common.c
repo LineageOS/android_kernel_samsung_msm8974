@@ -42,6 +42,9 @@
 #include "msm_watchdog.h"
 #include "mdm_private.h"
 #include "sysmon.h"
+#ifdef CONFIG_SEC_DEBUG
+#include <mach/sec_debug.h>
+#endif
 
 #define MDM_MODEM_TIMEOUT	6000
 #define MDM_MODEM_DELTA	100
@@ -422,6 +425,14 @@ static long mdm_modem_ioctl(struct file *filp, unsigned int cmd,
 			pr_debug("%s: ramdump collection completed\n",
 					 __func__);
 			mdm_drv->mdm_ram_dump_status = 0;
+#ifdef CONFIG_SEC_DEBUG
+			if (sec_debug_is_enabled()) {
+#ifdef CONFIG_SEC_DEBUG_MDM_FILE_INFO
+				sec_set_mdm_subsys_info(mdm_read_err_report());
+#endif
+				panic("external_modem %s", mdm_read_err_report());
+			}
+#endif
 		}
 		complete(&mdev->mdm_ram_dumps);
 		break;

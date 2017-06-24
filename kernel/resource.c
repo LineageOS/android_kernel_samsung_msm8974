@@ -1087,7 +1087,7 @@ int iomem_map_sanity_check(resource_size_t addr, unsigned long size)
 {
 	struct resource *p = &iomem_resource;
 	int err = 0;
-	loff_t l;
+	loff_t l = 0;
 
 	read_lock(&resource_lock);
 	for (p = p->child; p ; p = r_next(NULL, p, &l)) {
@@ -1140,7 +1140,7 @@ int iomem_is_exclusive(u64 addr)
 {
 	struct resource *p = &iomem_resource;
 	int err = 0;
-	loff_t l;
+	loff_t l = 0;
 	int size = PAGE_SIZE;
 
 	if (!strict_iomem_checks)

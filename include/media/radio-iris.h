@@ -128,6 +128,14 @@
 #define RADIO_HCI_TIMEOUT	(10000)	/* 10 seconds */
 
 #define TUNE_PARAM 16
+
+#define AF_JMP_TUNE 0x03
+/**DIGITAL AUDIO 0 MODE**/
+#define DIG_AUDIO_0_MODE	0x2B
+#define DIG_AUDIO_0_LEN		0x10
+#define SMUTE_TH_OFFSET		2
+#define MAX_SOFTMUTE_TH		127
+
 struct radio_hci_command_hdr {
 	__le16	opcode;		/* OCF & OGF */
 	__u8	plen;
@@ -402,7 +410,7 @@ struct hci_fm_ssbi_peek {
 } __packed;
 
 struct hci_fm_ch_det_threshold {
-	char sinr;
+	signed char sinr;
 	__u8 sinr_samples;
 	__u8 low_th;
 	__u8 high_th;
@@ -440,10 +448,14 @@ struct hci_fm_ch_det_threshold {
 
 #define RDSGRP_DATA_OFFSET	 0x1
 
+#define RDS_GRPS_ALL 0xFFFFFFFF
+
 /*RT PLUS*/
 #define DUMMY_CLASS		0
 #define RT_PLUS_LEN_1_TAG	3
 #define RT_ERT_FLAG_BIT		5
+#define ITEM_TOGGLE_BIT     4
+#define ITEM_RUNNING_BIT    3
 
 /*TAG1*/
 #define TAG1_MSB_OFFSET		3
@@ -660,6 +672,11 @@ struct hci_fm_spur_data {
 #define RDS_PS_DATA_OFFSET 8
 #define RDS_CONFIG_OFFSET  3
 #define RDS_AF_JUMP_OFFSET 4
+#define RDS_RT_OFFSET 0
+#define RDS_PS_ALL_OFFSET 1
+#define RDS_PS_SIMPLE_OFFSET 2
+#define RDS_AF_LIST_OFFSET 3
+#define RDS_GRP_3A 6
 #define PI_CODE_OFFSET 4
 #define AF_SIZE_OFFSET 6
 #define AF_LIST_OFFSET 7

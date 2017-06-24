@@ -309,6 +309,7 @@ static int __devexit hwevent_remove(struct platform_device *pdev)
 {
 	struct hwevent_drvdata *drvdata = platform_get_drvdata(pdev);
 
+	mutex_destroy(&drvdata->mutex);
 	coresight_unregister(drvdata->csdev);
 	return 0;
 }

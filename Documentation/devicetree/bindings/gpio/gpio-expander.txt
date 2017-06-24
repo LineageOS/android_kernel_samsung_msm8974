@@ -1,0 +1,37 @@
+exander gpio controller bindings
+
+Required properties:
+- compatible:
+  - "xxxx,gpio-expander" for expander gpio controllers
+- #gpio-cells : Should be two.
+  - first cell is the pin number
+  - second cell is used to specify optional parameters (unused)
+- gpio-controller : Marks the device node as a GPIO controller.
+- xxxx,gpio_start : Specify the start_number of exander gpios
+- xxxx,ngpio : Specify the number of MSM GPIOs
+
+Example:
+
+	expander_gpios: xxxx@20 {/*chip_name@slave_addr*/
+		commpatible = "xxxx,gpio-expander";
+		gpio-controller;
+		#gpio-cells = <2>;
+		xxxx,gpio_start = <300>;
+		xxxx,ngpio = <16>;
+	};
+
+To specify gpios for a device:
+
+	sample@12 {
+		compatible = "test,sample";
+                sample,expander_lcd_en = <&expander_gpios 4 0>;
+                sample,exapnder_lcd_rst = <&expander_gpios 5 0>;
+	};
+
+4, 5 - gpio numbers.
+The driver for sample can call of_get_gpio() to extract the
+gpio4. In order to extract gpio5, the driver needs to call
+of_get_named_gpio with "sample,exapnder_lcd_rst" as the name parameter.
+Please refer to the file: include/linux/of_gpio.h for the
+complete list of APIs the driver can use to extract gpio
+information from the device tree.

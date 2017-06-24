@@ -36,6 +36,7 @@
 #include <linux/interrupt.h>
 #include <linux/capability.h>
 #include <linux/completion.h>
+#include <linux/cpufreq.h>
 #include <linux/kernel_stat.h>
 #include <linux/debug_locks.h>
 #include <linux/perf_event.h>
@@ -72,7 +73,6 @@
 #include <linux/slab.h>
 #include <linux/init_task.h>
 #include <linux/binfmts.h>
-
 #include <asm/switch_to.h>
 #include <asm/tlb.h>
 #include <asm/irq_regs.h>
@@ -80,6 +80,7 @@
 #ifdef CONFIG_PARAVIRT
 #include <asm/paravirt.h>
 #endif
+#include <mach/sec_debug.h>
 
 #include "sched.h"
 #include "../workqueue_sched.h"
@@ -2201,6 +2202,13 @@ unsigned long this_cpu_load(void)
 	return this->cpu_load[0];
 }
 
+#ifdef CONFIG_RUNTIME_COMPCACHE
+unsigned long this_cpu_loadx(int i)
+{
+	struct rq *this = this_rq();
+	return this->cpu_load[i];
+}
+#endif /* CONFIG_RUNTIME_COMPCACHE */
 
 /* Variables and functions for calc_load */
 static atomic_long_t calc_load_tasks;
@@ -2719,6 +2727,9 @@ void account_user_time(struct task_struct *p, cputime_t cputime,
 
 	/* Account for user time used */
 	acct_update_integrals(p);
+
+	/* Account power usage for user time */
+	acct_update_power(p, cputime);
 }
 
 /*
@@ -2769,6 +2780,9 @@ void __account_system_time(struct task_struct *p, cputime_t cputime,
 
 	/* Account for system time used */
 	acct_update_integrals(p);
+
+	/* Account power usage for system time */
+	acct_update_power(p, cputime);
 }
 
 /*
@@ -3281,6 +3295,10 @@ need_resched:
 		 */
 		cpu = smp_processor_id();
 		rq = cpu_rq(cpu);
+#ifdef CONFIG_SEC_DEBUG
+		sec_debug_task_sched_log(cpu, rq->curr);
+#endif
+
 	} else
 		raw_spin_unlock_irq(&rq->lock);
 
@@ -5240,6 +5258,7 @@ static void migrate_tasks(unsigned int dead_cpu)
 		/* Find suitable destination for @next, with force if needed. */
 		dest_cpu = select_fallback_rq(dead_cpu, next);
 		raw_spin_unlock(&rq->lock);
+		cpu_relax();
 
 		__migrate_task(next, dead_cpu, dest_cpu);
 
@@ -6961,6 +6980,9 @@ void __init sched_init(void)
 {
 	int i, j;
 	unsigned long alloc_size = 0, ptr;
+
+	sec_gaf_supply_rqinfo(offsetof(struct rq, curr),
+						  offsetof(struct cfs_rq, rq));
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	alloc_size += 2 * nr_cpu_ids * sizeof(void **);

@@ -37,12 +37,60 @@ static void idmap_add_pmd(pud_t *pud, unsigned long addr, unsigned long end,
 static void idmap_add_pmd(pud_t *pud, unsigned long addr, unsigned long end,
 	unsigned long prot)
 {
+#ifdef	CONFIG_TIMA_RKP_L1_TABLES
+	unsigned long cmd_id = 0x3f809221;
+	unsigned long tima_wr_out;
+#endif
 	pmd_t *pmd = pmd_offset(pud, addr);
 
 	addr = (addr & PMD_MASK) | prot;
+
+#ifdef	CONFIG_TIMA_RKP_L1_TABLES
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
+        __asm__ __volatile__(".arch_extension sec");
+#endif
+	clean_dcache_area(pmd, 8);
+	__asm__ __volatile__ (
+		"stmfd  sp!,{r0, r8-r11}\n"
+		"mov   	r11, r0\n"
+		"mov    r0, %1\n"
+		"mov	r8, %2\n"
+		"mov    r9, %3\n"
+		"mov    r10, %4\n"
+		"mcr    p15, 0, r8, c7, c14, 1\n"
+		"add    r8, r8, #4\n"
+		"mcr    p15, 0, r8, c7, c14, 1\n"
+		"dsb\n"
+		"smc    #9\n"
+		"sub    r8, r8, #4\n"
+		"mcr    p15, 0, r8, c7, c6,  1\n"
+		"dsb\n"
+
+		"mov    %0, r10\n"
+		"add    r8, r8, #4\n"
+		"mcr    p15, 0, r8, c7, c6,  1\n"
+		"dsb\n"
+
+		"mov    r0, #0\n"
+		"mcr    p15, 0, r0, c8, c3, 0\n"
+		"dsb\n"
+		"isb\n"
+		"pop    {r0, r8-r11}\n"
+		:"=r"(tima_wr_out):"r"(cmd_id),"r"((unsigned long)pmd),"r"(addr),"r"(addr + SECTION_SIZE):"r0","r8","r9","r10","r11","cc");
+
+	if ((pmd[0]|0x4) != (addr|0x4)) {
+		printk(KERN_ERR"pmd[0] %lx != addr %lx - %lx %lx in func: %s tima_wr_out = %lx\n",
+				(unsigned long) pmd[0], addr, (unsigned long) pmd[1], addr + SECTION_SIZE, __func__, tima_wr_out);
+	}
+	if ((pmd[1]|0x4)!=((addr + SECTION_SIZE)|0x4)) {
+		printk(KERN_ERR"pmd[1] %lx != (addr + SECTION_SIZE) %lx in func: %s\n",
+				(unsigned long) pmd[1], (addr + SECTION_SIZE), __func__);
+	}
+#else
 	pmd[0] = __pmd(addr);
 	addr += SECTION_SIZE;
 	pmd[1] = __pmd(addr);
+#endif
 	flush_pmd_entry(pmd);
 }
 #endif	/* CONFIG_ARM_LPAE */

@@ -369,6 +369,9 @@ struct xt_table {
 	/* What hooks you will enter on */
 	unsigned int valid_hooks;
 
+	/* Locking the man behind the curtain ... */
+	atomic_t	private_lock;
+
 	/* Man behind the curtain... */
 	struct xt_table_info *private;
 
@@ -465,6 +468,119 @@ extern void xt_free_table_info(struct xt_table_info *info);
  * Low order bit set to 1 if a writer is active.
  */
 DECLARE_PER_CPU(seqcount_t, xt_recseq);
+
+static inline int get_reader(atomic_t *v){
+#ifdef CONFIG_ARM
+	unsigned long tmp;
+	int result;
+	unsigned long fixup = msm_krait_need_wfe_fixup;
+	smp_mb();
+
+	__asm__ __volatile__("@ get_reader\n"
+"1:	ldrex	%[tmp], [%[counter]]\n"
+"	tst %[tmp], %[val2]\n"
+#ifdef CONFIG_CPU_32v6K
+"2:	beq	3f\n"
+	WFE_SAFE("%[fixup]", "%[tmp]")
+#endif
+"	ldrex	%[tmp], [%[counter]]\n"
+"	tst %[tmp], %[val2]\n"
+"	bne 2b\n"
+"3:	uadd16	%[result], %[tmp], %[val1]\n"
+"	strex	%[tmp], %[result], [%[counter]]\n"
+"	teq	%[tmp], #0\n"
+"	bne	1b"
+	: [result]"=&r" (result), [tmp]"=&r" (tmp), "+Qo" (v->counter),
+		[fixup]"+r" (fixup)
+	: [counter]"r" (&v->counter), [val1]"r" (1), [val2]"r" (0x00010000)
+	: "cc");
+
+	smp_mb();
+	return result;
+#else
+	return 0;
+#endif
+}
+
+static inline int put_reader(atomic_t *v){
+#ifdef CONFIG_ARM
+	unsigned long tmp;
+	int result;
+
+	smp_mb();
+
+	__asm__ __volatile__("@ put_reader\n"
+"1:	ldrex	%[tmp], [%[counter]]\n"
+"	usub16	%[result], %[tmp], %[val1]\n"
+"	strex	%[tmp], %[result], [%[counter]]\n"
+"	teq	%[tmp], #0\n"
+"	bne	1b"
+	: [result]"=&r" (result), [tmp]"=&r" (tmp), "+Qo" (v->counter)
+	: [counter]"r" (&v->counter), [val1]"r" (1)
+	: "cc");
+
+	dsb_sev();
+	return result;
+#else
+	return 0;
+#endif
+}
+
+static inline int get_writer(atomic_t *v){
+#ifdef CONFIG_ARM
+	unsigned long tmp;
+	int result;
+	unsigned long fixup = msm_krait_need_wfe_fixup;
+	smp_mb();
+
+	__asm__ __volatile__("@ get_writer\n"
+"1:	ldrex	%[tmp], [%[counter]]\n"
+"	teq %[tmp], #0\n"
+#ifdef CONFIG_CPU_32v6K
+"2:	beq	3f\n"
+	WFE_SAFE("%[fixup]", "%[tmp]")
+#endif
+"	ldrex	%[tmp], [%[counter]]\n"
+"	teq %[tmp], #0\n"
+"	bne 2b\n"
+"3:	uadd16	%[result], %[tmp], %[val1]\n"
+"	strex	%[tmp], %[result], [%[counter]]\n"
+"	teq	%[tmp], #0\n"
+"	bne	1b"
+	: [result]"=&r" (result), [tmp]"=&r" (tmp), "+Qo" (v->counter),
+		[fixup]"+r" (fixup)
+	: [counter]"r" (&v->counter), [val1]"r" (0x00010000)
+	: "cc");
+
+	smp_mb();
+	return result;
+#else
+	return 0;
+#endif
+}
+
+static inline int put_writer(atomic_t *v){
+#ifdef CONFIG_ARM
+	unsigned long tmp;
+	int result;
+	smp_mb();
+
+	__asm__ __volatile__("@ put_writer\n"
+"1:	ldrex	%[tmp], [%[counter]]\n"
+"	usub16	%[result], %[tmp], %[val1]\n"
+"	strex	%[tmp], %[result], [%[counter]]\n"
+"	teq	%[tmp], #0\n"
+"	bne	1b"
+	: [result]"=&r" (result), [tmp]"=&r" (tmp), "+Qo" (v->counter)
+	: [counter]"r" (&v->counter), [val1]"r" (0x00010000)
+	: "cc");
+
+	dsb_sev();
+	return result;
+#else
+	return 0;
+#endif
+}
 
 /**
  * xt_write_recseq_begin - start of a write section

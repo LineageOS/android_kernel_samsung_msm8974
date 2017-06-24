@@ -18,6 +18,71 @@
 static struct msm_hdmi_mode_timing_info
 	hdmi_supported_video_mode_lut[HDMI_VFRMT_MAX];
 
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+static struct msm_hdmi_mode_timing_info
+	hdmi_mhl_supported_video_mode_lut[HDMI_VFRMT_MAX] = {
+	HDMI_VFRMT_640x480p60_4_3_TIMING,
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x480p60_4_3),
+	HDMI_VFRMT_720x480p60_16_9_TIMING,
+	HDMI_VFRMT_1280x720p60_16_9_TIMING,
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1920x1080i60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480i60_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480i60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x240p60_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x240p60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x480i60_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x480i60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x240p60_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x240p60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480p60_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480p60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1920x1080p60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x576p50_4_3),
+	HDMI_VFRMT_720x576p50_16_9_TIMING,
+	HDMI_VFRMT_1280x720p50_16_9_TIMING,
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1920x1080i50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576i50_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576i50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x288p50_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x288p50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x576i50_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x576i50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x288p50_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x288p50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576p50_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576p50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1920x1080p50_16_9),
+	HDMI_VFRMT_1920x1080p24_16_9_TIMING,
+	HDMI_VFRMT_1920x1080p25_16_9_TIMING,
+	HDMI_VFRMT_1920x1080p30_16_9_TIMING,
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x480p60_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x480p60_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x576p50_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_2880x576p50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1920x1250i50_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1920x1080i100_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1280x720p100_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x576p100_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x576p100_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576i100_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576i100_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1920x1080i120_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1280x720p120_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x480p120_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x480p120_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480i120_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480i120_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x576p200_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x576p200_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576i200_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x576i200_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x480p240_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_720x480p240_16_9),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480i240_4_3),
+	VFRMT_NOT_SUPPORTED(HDMI_VFRMT_1440x480i240_16_9),
+}; /* hdmi_mhl_supported_video_mode_lut */
+#endif
+
 void hdmi_del_supported_mode(u32 mode)
 {
 	struct msm_hdmi_mode_timing_info *ret = NULL;
@@ -42,6 +107,28 @@ const struct msm_hdmi_mode_timing_info *hdmi_get_supported_mode(u32 mode)
 
 	return ret;
 } /* hdmi_get_supported_mode */
+
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+const struct msm_hdmi_mode_timing_info *hdmi_mhl_get_supported_mode(u32 mode)
+{
+	const struct msm_hdmi_mode_timing_info *ret = NULL;
+
+	if (mode >= HDMI_VFRMT_MAX)
+		return NULL;
+
+	if (mode > 0) {
+		ret = &hdmi_mhl_supported_video_mode_lut[mode-1];
+	}
+	else {
+		pr_info("%s: cannot be here!! mode: %d\n", __func__, mode);
+	}
+
+	if (ret == NULL || !ret->supported)
+		return NULL;
+
+	return ret;
+} /* hdmi_mhl_get_supported_mode */
+#endif
 
 int hdmi_get_video_id_code(struct msm_hdmi_mode_timing_info *timing_in)
 {
@@ -120,6 +207,7 @@ void hdmi_setup_video_mode_lut(void)
 	MSM_HDMI_MODES_SET_SUPP_TIMINGS(
 		hdmi_supported_video_mode_lut, MSM_HDMI_MODES_CEA);
 
+#ifndef CONFIG_VIDEO_MHL_V2
 	/* Add all supported extended hdmi modes to the lut */
 	MSM_HDMI_MODES_SET_SUPP_TIMINGS(
 		hdmi_supported_video_mode_lut, MSM_HDMI_MODES_XTND);
@@ -127,6 +215,7 @@ void hdmi_setup_video_mode_lut(void)
 	/* Add any other specific DVI timings (DVI modes, etc.) */
 	MSM_HDMI_MODES_SET_SUPP_TIMINGS(
 		hdmi_supported_video_mode_lut, MSM_HDMI_MODES_DVI);
+#endif
 } /* hdmi_setup_video_mode_lut */
 
 const char *hdmi_get_single_video_3d_fmt_2string(u32 format)
@@ -178,7 +267,7 @@ static void hdmi_ddc_print_data(struct hdmi_tx_ddc_data *ddc_data,
 		return;
 	}
 
-	DEV_DBG("%s: buf=%p, d_len=0x%x, d_addr=0x%x, no_align=%d\n",
+	DEV_DBG("%s: buf=%pK, d_len=0x%x, d_addr=0x%x, no_align=%d\n",
 		caller, ddc_data->data_buf, ddc_data->data_len,
 		ddc_data->dev_addr, ddc_data->no_align);
 	DEV_DBG("%s: offset=0x%x, req_len=0x%x, retry=%d, what=%s\n",

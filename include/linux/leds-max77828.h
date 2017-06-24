@@ -1,0 +1,145 @@
+/*
+ * leds-max77828.h - Flash-led driver for Maxim MAX77828
+ *
+ * Copyright (C) 2011 Samsung Electronics
+ * ByungChang Cha <bc.cha@samsung.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#ifndef __LEDS_MAX77828_H__
+#define __LEDS_MAX77828_H__
+
+/* FLASH & TORCH DATA START */
+/* MAX77828_LED_REG_I_FLASH1 */
+#define MAX77828_FLASH_FLED1_EN		0x80
+#define MAX77828_FLASH_IOUT         0x3F
+
+/* MAX77828_LED_REG_I_TORCH1 */
+#define MAX77828_TORCH_FLED1_EN		0x80
+#define MAX77828_TORCH_IOUT				0x7E
+#define MAX77828_TORCH_DIM_DAC		0x00
+#define MAX77828_TORCH_DIM_PWM		0x01
+
+/* MAX77828_LED_REG_MODE_SEL */
+#define MAX77828_TORCHEN_PD		0x80
+#define MAX77828_FLASHSTB_PD		0x40
+#define MAX77828_TORCH_MODE		0x38
+#define MAX77828_TORCH_MD_DISABLED	0x00
+#define MAX77828_TORCH_MD_TORCHEN	0x08
+#define MAX77828_TORCH_MD_FLASHSTB	0x10
+#define MAX77828_TORCH_MD_ANY		0x18
+#define MAX77828_TORCH_MD_BOTH		0x20
+#define MAX77828_TORCH_MD_ENABLED	0x21
+#define MAX77828_FLASH_MODE		0x07
+#define MAX77828_FLASH_MD_DISABLED	0x00
+#define MAX77828_FLASH_MD_TORCHEN	0x01
+#define MAX77828_FLASH_MD_FLASHSTB	0x02
+#define MAX77828_FLASH_MD_ANY		0x03
+#define MAX77828_FLASH_MD_BOTH		0x04
+#define MAX77828_FLASH_MD_ENABLED	0x05
+
+/* MAX77828_REG_FLASH_RAMP_SEL */
+#define MAX77828_FLASH_RU		0x70
+#define MAX77828_FLASH_RD		0x07
+
+/* MAX77828_REG_TORCH_RAMP_SEL */
+#define MAX77828_TORCH_RU		0x70
+#define MAX77828_TORCH_RD		0x07
+
+/* MAX77828_LED_REG_FLASH_TMR_CNTL */
+#define MAX77828_FLASH_TMR_CNTL		0x80
+#define MAX77828_FLASH_TMR					0x7F
+
+/* MAX77828_LED_REG_TORCH_TMR_CNTL */
+#define MAX77828_TORCH_TMR_CNTL		0x80
+#define MAX77828_TORCH_TMR				0x7C
+
+/* MAX77828_REG_MAXFLASH1 */
+#define MAX77828_MAXFLASH_HYS		0xE0
+#define MAX77828_MAXFLASH_TH		0x1F
+
+/* MAX77828_REG_MAXFLASH2 */
+#define MAX77828_LB_TMR_R		0xF0
+#define MAX77828_LB_TMR_F		0x0F
+
+/* MAX77828_REG_MAXFLASH3 */
+#define MAX77828_MAX_FLASH1_IMIN	0x3F
+
+/* MAX77828_REG_DCDC_CNTL1 */
+#define MAX77828_DCDC_MODE_AM		0x00
+#define MAX77828_DCDC_MODE_PAM		0x01
+#define MAX77828_DCDC_MODE_FAM		0x02
+#define MAX77828_DCDC_MODE_DM		0x03
+
+/* MAX77828_REG_DCDC_CNTL2 */
+#define MAX77828_DCDC_ADPT_REG		0xC0
+#define MAX77828_DCDC_GAIN		0x20
+#define MAX77828_DCDC_OPERATION		0x1C
+
+/* MAX77828_REG_DCDC_LIM */
+#define MAX77828_DCDC_ILIM		0xC0
+#define MAX77828_DCDC_SS		0x3F
+
+/* MAX77828_REG_DCDC_OUT */
+#define MAX77828_DCDC_OUT		0xFF
+
+/* MAX77828_REG_DCDC_OUT_MAX */
+#define MAX77828_DCDC_OUT_MAX		0xFF
+/* FLASH & TORCH DATA END */
+
+/* RGB LED DATA START */
+/* MAX77828_LED_REG_LEDEN */
+#define MAX77828_LED_EN_MASK		0xFF
+#define MAX77828_LED0_EN_MASK	0x01
+#define MAX77828_LED1_EN_MASK	0x02
+#define MAX77828_LED2_EN_MASK	0x04
+#define MAX77828_LED3_EN_MASK	0x08
+#define MAX77828_LED_CURRENT		0xFF
+/* MAX77828_REG_LEDBLNK */
+#define MAX77828_LEDBLINKD	0xF0
+#define MAX77828_LEDBLINKP	0x0F
+/* MAX77828_REG_LEDRMP */
+#define MAX77828_RAMPUP		0xF0
+#define MAX77828_RAMPDN		0x0F
+/* RGB LED DATA END */
+
+enum max77828_led_id {
+        MAX77828_FLASH,
+        MAX77828_TORCH,
+        MAX77828_RGB_R,
+        MAX77828_RGB_G,
+        MAX77828_RGB_B,
+        MAX77828_LED_MAX,
+};
+
+enum max77828_led_mode{
+		MAX77828_MODE_OFF,
+		MAX77828_TORCHEN,
+		MAX77828_FLASHSTB,
+		MAX77828_TORCHEN_OR_FLASHSTB,
+		MAX77828_TORCH_AND_FLASHSTB,
+		MAX77828_MODE_MAX,
+};
+
+struct max77828_led
+{
+	const char 											*name;
+	const char											*default_trigger;
+	int 														id;
+	int														timer;
+	int 														brightness;
+	int														max_brightness;
+};
+
+struct max77828_led_platform_data
+{
+	int num_leds;
+	struct max77828_led leds[MAX77828_LED_MAX];
+};
+
+extern int max77828_led_en(int onoff, int mode);
+
+#endif /*__LEDS_MAX77828_H__ */

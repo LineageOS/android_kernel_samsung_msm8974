@@ -1,0 +1,9 @@
+#
+# Melfas mms136 configuration
+#
+
+config TOUCHSCREEN_MMS136
+	tristate "Melfas i2c touchscreen"
+	depends on I2C
+	help
+		This enable support for Melfas over I2C based touchscreen.

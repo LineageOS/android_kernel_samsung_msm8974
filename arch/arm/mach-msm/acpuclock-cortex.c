@@ -42,6 +42,11 @@
 
 static struct acpuclk_drv_data *priv;
 static uint32_t bus_perf_client;
+#ifdef CONFIG_SEC_DEBUG_VERBOSE_SUMMARY_HTML
+extern int cpu_frequency[CONFIG_NR_CPUS];
+extern int cpu_volt[CONFIG_NR_CPUS];
+extern char cpu_state[CONFIG_NR_CPUS][30];
+#endif
 
 /* Update the bus bandwidth request. */
 static void set_bus_bw(unsigned int bw)
@@ -320,6 +325,22 @@ static int acpuclk_cortex_set_rate(int cpu, unsigned long rate,
 	if (tgt_s->khz < strt_s->khz || reason == SETRATE_INIT)
 		decrease_vdd(tgt_s->vdd_cpu, tgt_s->vdd_mem);
 
+#ifdef CONFIG_SEC_DEBUG_VERBOSE_SUMMARY_HTML
+	/* add to sec debug variable */
+	/* save the voltage level and freq for master core*/
+	if(cpu_online(cpu) && cpu_active(cpu))
+		strncpy(cpu_state[cpu], "Online", ARRAY_SIZE(cpu_state[cpu]));
+	else if(!cpu_online(cpu) && cpu_active(cpu))
+		strncpy(cpu_state[cpu], "Migrating", ARRAY_SIZE(cpu_state[cpu]));
+	else if(!cpu_online(cpu) && !cpu_active(cpu))
+		strncpy(cpu_state[cpu], "Down", ARRAY_SIZE(cpu_state[cpu]));
+	else
+		strncpy(cpu_state[cpu], "On/NotActive", ARRAY_SIZE(cpu_state[cpu]));
+
+	cpu_frequency[cpu] = priv->current_speed->khz;
+	cpu_volt[cpu] = priv->current_speed->vdd_cpu;
+#endif
+
 out:
 	if (reason == SETRATE_CPUFREQ)
 		mutex_unlock(&priv->lock);
@@ -330,6 +351,14 @@ static unsigned long acpuclk_cortex_get_rate(int cpu)
 {
 	return priv->current_speed->khz;
 }
+
+#ifdef CONFIG_SEC_DEBUG_VERBOSE_SUMMARY_HTML
+static unsigned int acpuclk_cortex_get_voltage(int cpu)
+{
+	return priv->current_speed->vdd_cpu;
+}
+#endif
+
 
 #ifdef CONFIG_CPU_FREQ_MSM
 static struct cpufreq_frequency_table freq_table[30];
@@ -366,6 +395,9 @@ static void __init cpufreq_table_init(void) {}
 static struct acpuclk_data acpuclk_cortex_data = {
 	.set_rate = acpuclk_cortex_set_rate,
 	.get_rate = acpuclk_cortex_get_rate,
+#ifdef CONFIG_SEC_DEBUG_VERBOSE_SUMMARY_HTML
+	.get_voltage = acpuclk_cortex_get_voltage,
+#endif
 };
 
 void __init get_speed_bin(void __iomem *base, struct bin_info *bin)

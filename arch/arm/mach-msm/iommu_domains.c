@@ -818,7 +818,7 @@ static int iommu_domain_probe(struct platform_device *pdev)
 		return -ENODEV;
 
 	for (i = 0; i < p->ndomains; i++) {
-		struct msm_iova_layout l;
+		struct msm_iova_layout l = {0};
 		struct msm_iova_partition *part;
 		struct msm_iommu_domain *domains;
 

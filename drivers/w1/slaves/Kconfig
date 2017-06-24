@@ -101,4 +101,10 @@ config W1_SLAVE_BQ27000
 	  Say Y here if you want to use a hdq
 	  bq27000 slave support.
 
+config W1_SLAVE_DS28EL15
+	tristate "MAXIM DS28EL15 DeepCover Secure Authenticator with SHA-256 and 512-Bit User EEPROM"
+	depends on W1
+	help
+	  If you enable this you will have the DS28EL15 secure chip support.
+
 endmenu

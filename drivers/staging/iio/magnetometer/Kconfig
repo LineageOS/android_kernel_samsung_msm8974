@@ -24,4 +24,10 @@ config SENSORS_HMC5843
 	  To compile this driver as a module, choose M here: the module
 	  will be called hmc5843
 
+config SENSORS_YAS_MAGNETOMETER
+	tristate "Yamaha 3-Axis Magnetometer"
+	depends on I2C && SYSFS && IIO && IIO_SW_RING && IIO_TRIGGER
+	help
+	  Say Y here to add support for the Yamaha 3-Axis Magnetometer.
+
 endmenu

@@ -1,0 +1,25 @@
+#
+# Cypress cyttsp5 touchscreen driver configuration
+#
+
+config TOUCHSCREEN_CYTTSP5
+        tristate "Cypress TrueTouch Gen5 Touchscreen Driver"
+	depends on I2C
+	default n
+        select TOUCHSCREEN_CYPRESS_CYTTSP5_MT_B
+	help
+          Core driver for Cypress TrueTouch(tm) Standard Product
+          Geneartion5 touchscreen controllers.
+
+          Say Y here if you have a Cypress Gen5 touchscreen.
+          If unsure, say N.
+          To compile this driver as a module, choose M here.
+
+config TOUCHSCREEN_CYTTSP5_DEVICETREE_SUPPORT
+	bool "Enable Device Tree support"
+	depends on TOUCHSCREEN_CYTTSP5
+	default n	
+	help
+	  Say Y here to enable support for device tree.
+
+	  If unsure, say N. 

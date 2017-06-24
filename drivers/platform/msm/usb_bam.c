@@ -2719,6 +2719,7 @@ EXPORT_SYMBOL(msm_bam_notify_lpm_resume);
 static int usb_bam_remove(struct platform_device *pdev)
 {
 	destroy_workqueue(ctx.usb_bam_wq);
+	device_remove_file(&pdev->dev, &dev_attr_inactivity_timer);
 
 	return 0;
 }

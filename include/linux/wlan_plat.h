@@ -16,7 +16,11 @@
 #define _LINUX_WLAN_PLAT_H_
 
 struct wifi_platform_data {
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE)
+	int (*set_power)(int val,bool b0rev);
+#else
 	int (*set_power)(int val);
+#endif
 	int (*set_reset)(int val);
 	int (*set_carddetect)(int val);
 	void *(*mem_prealloc)(int section, unsigned long size);

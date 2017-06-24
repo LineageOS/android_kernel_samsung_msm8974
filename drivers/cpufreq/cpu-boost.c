@@ -186,6 +186,7 @@ static int boost_mig_sync_thread(void *data)
 				&s->boost_rem, msecs_to_jiffies(boost_ms));
 		} else {
 			s->boost_min = 0;
+			pr_debug("Resetting boost_min to 0\n");
 		}
 		put_online_cpus();
 	}

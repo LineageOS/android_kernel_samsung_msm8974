@@ -1176,7 +1176,7 @@ int dpcm_be_dai_startup(struct snd_soc_pcm_runtime *fe, int stream)
 		    (be->dpcm[stream].state != SND_SOC_DPCM_STATE_CLOSE))
 			continue;
 
-		dev_dbg(be->dev, "dpcm: open BE %s\n", be->dai_link->name);
+		dev_info(be->dev, "dpcm: open BE %s\n", be->dai_link->name);
 
 		be_substream->runtime = be->dpcm[stream].runtime;
 		err = soc_pcm_open(be_substream);
@@ -1265,7 +1265,7 @@ static int soc_dpcm_fe_dai_startup(struct snd_pcm_substream *fe_substream)
 		goto be_err;
 	}
 
-	dev_dbg(fe->dev, "dpcm: open FE %s\n", fe->dai_link->name);
+	dev_info(fe->dev, "dpcm: open FE %s\n", fe->dai_link->name);
 
 	/* start the DAI frontend */
 	ret = soc_pcm_open(fe_substream);
@@ -1316,7 +1316,7 @@ int dpcm_be_dai_shutdown(struct snd_soc_pcm_runtime *fe, int stream)
 		    (be->dpcm[stream].state != SND_SOC_DPCM_STATE_OPEN))
 			continue;
 
-		dev_dbg(be->dev, "dpcm: close BE %s\n",
+		dev_info(be->dev, "dpcm: close BE %s\n",
 			dpcm_params->fe->dai_link->name);
 
 		soc_pcm_close(be_substream);
@@ -1334,8 +1334,8 @@ static int soc_dpcm_fe_dai_shutdown(struct snd_pcm_substream *substream)
 	int stream = substream->stream;
 
 	fe->dpcm[stream].runtime_update = SND_SOC_DPCM_UPDATE_FE;
-	
-	dev_dbg(fe->dev, "dpcm: close FE %s\n", fe->dai_link->name);
+
+	dev_info(fe->dev, "dpcm: close FE %s\n", fe->dai_link->name);
 
 	/* now shutdown the frontend */
 	soc_pcm_close(substream);

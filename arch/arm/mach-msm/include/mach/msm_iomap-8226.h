@@ -45,4 +45,7 @@
 #define MSM_DEBUG_UART_PHYS	0xF991F000
 #endif
 
+#define MSM_MMSS_GP0_BASE 0xFD8C3420
+#define MSM_MMSS_GP1_BASE 0xFD8C3450
+
 #endif

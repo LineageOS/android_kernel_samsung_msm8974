@@ -822,7 +822,7 @@ static int __devinit msm_bus_fabric_probe(struct platform_device *pdev)
 				MSM_BUS_ERR("Couldn't get clock %s\n",
 					pdata->fabclk[ctx]);
 				ret = -EINVAL;
-				goto err;
+				goto err_dev_unregister;
 			}
 			fabric->info.nodeclk[ctx].enable = false;
 			fabric->info.nodeclk[ctx].dirty = false;
@@ -834,7 +834,7 @@ static int __devinit msm_bus_fabric_probe(struct platform_device *pdev)
 	if (ret) {
 		MSM_BUS_ERR("Could not register fabric %d info, ret: %d\n",
 			fabric->fabdev.id, ret);
-		goto err;
+		goto err_dev_unregister;
 	}
 	if (!fabric->ahb) {
 		/* Allocate memory for commit data */
@@ -845,7 +845,7 @@ static int __devinit msm_bus_fabric_probe(struct platform_device *pdev)
 				MSM_BUS_ERR("Failed to alloc commit data for "
 					"fab: %d, ret = %d\n",
 					fabric->fabdev.id, ret);
-				goto err;
+				goto err_dev_unregister;
 			}
 		}
 	}
@@ -854,6 +854,10 @@ static int __devinit msm_bus_fabric_probe(struct platform_device *pdev)
 		pr_warn("Coresight support absent for bus: %d\n", pdata->id);
 
 	return ret;
+
+err_dev_unregister:
+	msm_bus_fabric_device_unregister(&fabric->fabdev);
+
 err:
 	kfree(fabric->info.node_info);
 	kfree(fabric);

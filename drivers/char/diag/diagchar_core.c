@@ -1,4 +1,4 @@
-/* Copyright (c) 2008-2014, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2008-2015, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -261,19 +261,34 @@ fail:
 	return -ENOMEM;
 }
 
-static int diagchar_close(struct inode *inode, struct file *file)
+static int diag_remove_client_entry(struct file *file)
 {
 	int i = -1;
-	struct diagchar_priv *diagpriv_data = file->private_data;
+	struct diagchar_priv *diagpriv_data = NULL;
 
 	pr_debug("diag: process exit %s\n", current->comm);
-	if (!(file->private_data)) {
-		pr_alert("diag: Invalid file pointer");
-		return -ENOMEM;
-	}
 
 	if (!driver)
 		return -ENOMEM;
+
+	mutex_lock(&driver->diag_file_mutex);
+	if (!file) {
+		pr_debug("diag: Invalid file pointer\n");
+		mutex_unlock(&driver->diag_file_mutex);
+		return -ENOENT;
+	}
+	if (!(file->private_data)) {
+		pr_alert("diag: Invalid private data");
+		mutex_unlock(&driver->diag_file_mutex);
+		return -ENOMEM;
+	}
+
+	diagpriv_data = file->private_data;
+
+	if(driver->silent_log_pid) {
+		put_pid(driver->silent_log_pid);
+		driver->silent_log_pid = NULL;
+	}
 
 	/* clean up any DCI registrations, if this is a DCI client
 	* This will specially help in case of ungraceful exit of any DCI client
@@ -329,11 +344,19 @@ static int diagchar_close(struct inode *inode, struct file *file)
 			driver->client_map[i].pid = 0;
 			kfree(diagpriv_data);
 			diagpriv_data = NULL;
+			file->private_data = 0;
 			break;
 		}
 	}
 	mutex_unlock(&driver->diagchar_mutex);
+	mutex_unlock(&driver->diag_file_mutex);
 	return 0;
+}
+
+static int diagchar_close(struct inode *inode, struct file *file)
+{
+	pr_debug("diag: process exit %s\n", current->comm);
+	return diag_remove_client_entry(file);
 }
 
 int diag_find_polling_reg(int i)
@@ -1090,6 +1113,10 @@ long diagchar_ioctl(struct file *filp,
 		result = 1;
 		break;
 	case DIAG_IOCTL_SWITCH_LOGGING:
+		/*
+		 * Get a pid of diag_mdlog(app) and save it.
+		 */
+		driver->silent_log_pid = get_pid(task_pid(current));
 		result = diag_switch_logging(ioarg);
 		break;
 	case DIAG_IOCTL_REMOTE_DEV:
@@ -1139,6 +1166,26 @@ long diagchar_ioctl(struct file *filp,
 	}
 	return result;
 }
+
+/*
+ * silent_log_panic_handler()
+ * If the silent log is enabled for CP and CP is in
+ * trouble, diag_mdlog (APP) should be terminated before
+ * a panic occurs, since it can flush logs to SD card
+ * when it is over. So, please use this function to termimate it.
+ */
+int silent_log_panic_handler(void)
+{
+	int ret = 0;
+	if(driver->silent_log_pid) {
+		pr_info("%s: killing slient log...\n", __func__);
+		kill_pid(driver->silent_log_pid, SIGTERM, 1);
+		driver->silent_log_pid = NULL;
+		ret = 1;
+	}
+	return ret;
+}
+EXPORT_SYMBOL(silent_log_panic_handler);
 
 static int diagchar_read(struct file *file, char __user *buf, size_t count,
 			  loff_t *ppos)
@@ -1327,7 +1374,9 @@ drop:
 		data_type = driver->data_ready[index] & DEINIT_TYPE;
 		COPY_USER_SPACE_OR_EXIT(buf, data_type, 4);
 		driver->data_ready[index] ^= DEINIT_TYPE;
-		goto exit;
+		mutex_unlock(&driver->diagchar_mutex);
+		diag_remove_client_entry(file);
+		return ret;
 	}
 
 	if (driver->data_ready[index] & MSG_MASKS_TYPE) {
@@ -2161,6 +2210,7 @@ static int __init diagchar_init(void)
 		driver->in_busy_pktdata = 0;
 		driver->in_busy_dcipktdata = 0;
 		mutex_init(&driver->diagchar_mutex);
+		mutex_init(&driver->diag_file_mutex);
 		init_waitqueue_head(&driver->wait_q);
 		init_waitqueue_head(&driver->smd_wait_q);
 		INIT_WORK(&(driver->diag_drain_work), diag_drain_work_fn);
@@ -2207,7 +2257,7 @@ static int __init diagchar_init(void)
 			goto fail;
 	} else {
 		printk(KERN_INFO "kzalloc failed\n");
-		goto fail;
+		goto fail2;
 	}
 
 	pr_info("diagchar initialized now");
@@ -2222,6 +2272,8 @@ fail:
 	diag_masks_exit();
 	diag_sdio_fn(EXIT);
 	diagfwd_bridge_fn(EXIT);
+	kfree(driver);
+fail2:
 	return -1;
 }
 

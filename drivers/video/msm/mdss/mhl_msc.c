@@ -16,7 +16,7 @@
 #include <linux/vmalloc.h>
 #include <linux/input.h>
 #include "mhl_msc.h"
-#include "mdss_hdmi_mhl.h"
+#include <linux/mdss_hdmi_mhl.h>
 
 static struct mhl_tx_ctrl *mhl_ctrl;
 static DEFINE_MUTEX(msc_send_workqueue_mutex);

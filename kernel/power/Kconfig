@@ -18,6 +18,16 @@ config SUSPEND_FREEZER
 
 	  Turning OFF this setting is NOT recommended! If in doubt, say Y.
 
+config CPU_FREQ_LIMIT_USERSPACE
+	bool "User space cpufreq limit interface"
+	depends on CPU_FREQ_LIMIT
+	default n
+	help
+	  Add sysfs to limit CPU frequency for a userspace program.
+	  /sys/power/cpufreq_min_limit
+	  /sys/power/cpufreq_max_limit
+	  /sys/power/cpufreq_table
+
 config HIBERNATE_CALLBACKS
 	bool
 

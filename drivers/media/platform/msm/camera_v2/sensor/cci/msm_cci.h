@@ -27,8 +27,6 @@
 #define TRUE  1
 #define FALSE 0
 
-#define CCI_NUM_CLK_MAX	16
-
 enum cci_i2c_queue_t {
 	QUEUE_0,
 	QUEUE_1,
@@ -53,8 +51,8 @@ enum msm_cci_cmd_type {
 	MSM_CCI_SET_SYNC_CID,
 	MSM_CCI_I2C_READ,
 	MSM_CCI_I2C_WRITE,
-	MSM_CCI_I2C_WRITE_SEQ,
 	MSM_CCI_GPIO_WRITE,
+	MSM_CCI_I2C_WRITE_BURST,
 };
 
 struct msm_camera_cci_wait_sync_cfg {
@@ -65,6 +63,13 @@ struct msm_camera_cci_wait_sync_cfg {
 struct msm_camera_cci_gpio_cfg {
 	uint16_t gpio_queue;
 	uint16_t i2c_queue;
+};
+
+struct msm_camera_cci_i2c_write_cfg {
+	struct msm_camera_i2c_reg_conf *reg_conf_tbl;
+	enum msm_camera_i2c_reg_addr_type addr_type;
+	enum msm_camera_i2c_data_type data_type;
+	uint16_t size;
 };
 
 struct msm_camera_cci_i2c_read_cfg {
@@ -96,7 +101,6 @@ struct msm_camera_cci_ctrl {
 struct msm_camera_cci_master_info {
 	uint32_t status;
 	uint8_t reset_pending;
-	struct mutex mutex;
 	struct completion reset_complete;
 };
 
@@ -131,13 +135,14 @@ struct cci_device {
 	uint8_t ref_count;
 	enum msm_cci_state_t cci_state;
 
-	struct clk *cci_clk[CCI_NUM_CLK_MAX];
+	struct clk *cci_clk[5];
 	struct msm_camera_cci_i2c_queue_info
 		cci_i2c_queue_info[NUM_MASTERS][NUM_QUEUES];
 	struct msm_camera_cci_master_info cci_master_info[NUM_MASTERS];
-	struct msm_cci_clk_params_t cci_clk_params[MASTER_MAX];
+	struct msm_cci_clk_params_t cci_clk_params;
 	struct gpio *cci_gpio_tbl;
 	uint8_t cci_gpio_tbl_size;
+	struct mutex mutex;
 };
 
 enum msm_cci_i2c_cmd_type {

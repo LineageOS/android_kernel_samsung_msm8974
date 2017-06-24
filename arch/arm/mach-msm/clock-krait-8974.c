@@ -571,6 +571,10 @@ static void krait_update_uv(int *uv, int num, int boost_uv)
 {
 	int i;
 
+#if defined(CONFIG_MACH_VIENNAEUR) || defined(CONFIG_MACH_FLTESKT) || defined(CONFIG_SEC_LOCALE_KOR_H) || defined(CONFIG_MACH_VIENNAKOR) || defined(CONFIG_MACH_KLTE_CHN)
+	boost_uv=25000;
+	enable_boost=1;
+#endif
 	switch (read_cpuid_id()) {
 	case 0x511F04D0: /* KR28M2A20 */
 	case 0x511F04D1: /* KR28M2A21 */
@@ -580,8 +584,14 @@ static void krait_update_uv(int *uv, int num, int boost_uv)
 	};
 
 	if (enable_boost) {
-		for (i = 0; i < num; i++)
+		for (i = 0; i < num; i++) {
+#if defined(CONFIG_MACH_KLTE_CHN)
+			// case 01545727 msm8974pro should not exceed 1120000 cf. msm8974 v2.x should not exceed 1100000.
+			uv[i] = min(1120000, boost_uv+uv[i]);
+#else
 			uv[i] += boost_uv;
+#endif
+		}
 	}
 }
 

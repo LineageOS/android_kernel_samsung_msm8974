@@ -17,12 +17,13 @@
 /* #define CONFIG_MSM_ISP_DBG 1 */
 
 #ifdef CONFIG_MSM_ISP_DBG
-#define ISP_DBG(fmt, args...) printk(fmt, ##args)
+#define ISP_DBG(fmt, args ...) pr_err(fmt, ## args)
 #else
-#define ISP_DBG(fmt, args...) pr_debug(fmt, ##args)
+#define ISP_DBG(fmt, args ...) pr_debug(fmt, ## args)
 #endif
 
-#define ALT_VECTOR_IDX(x) {x = 3 - x; }
+#define ALT_VECTOR_IDX(x) { x = 3 - x; }
+
 struct msm_isp_bandwidth_info {
 	uint32_t active;
 	uint64_t ab;
@@ -45,25 +46,26 @@ struct msm_isp_bandwidth_mgr {
 
 uint32_t msm_isp_get_framedrop_period(
 	enum msm_vfe_frame_skip_pattern frame_skip_pattern);
+void msm_isp_reset_burst_count_and_frame_drop(
+	struct vfe_device *vfe_dev, struct msm_vfe_axi_stream *stream_info);
 
 int msm_isp_init_bandwidth_mgr(enum msm_isp_hw_client client);
 int msm_isp_update_bandwidth(enum msm_isp_hw_client client,
-	uint64_t ab, uint64_t ib);
+			     uint64_t ab, uint64_t ib);
 void msm_isp_deinit_bandwidth_mgr(enum msm_isp_hw_client client);
 
 int msm_isp_subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh,
-	struct v4l2_event_subscription *sub);
+			    struct v4l2_event_subscription *sub);
 
 int msm_isp_unsubscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh,
-	struct v4l2_event_subscription *sub);
+			      struct v4l2_event_subscription *sub);
 
 int msm_isp_proc_cmd(struct vfe_device *vfe_dev, void *arg);
 int msm_isp_send_event(struct vfe_device *vfe_dev,
-	uint32_t type, struct msm_isp_event_data *event_data);
+		       uint32_t type, struct msm_isp_event_data *event_data);
 int msm_isp_cal_word_per_line(uint32_t output_format,
-	uint32_t pixel_per_line);
+			      uint32_t pixel_per_line);
 int msm_isp_get_bit_per_pixel(uint32_t output_format);
-enum msm_isp_pack_fmt msm_isp_get_pack_format(uint32_t output_format);
 irqreturn_t msm_isp_process_irq(int irq_num, void *data);
 int msm_isp_set_src_state(struct vfe_device *vfe_dev, void *arg);
 void msm_isp_do_tasklet(unsigned long data);

@@ -454,8 +454,10 @@ static irqreturn_t msm_l2_erp_irq(int irq, void *dev_id)
 	if (port_error && print_alert)
 		ERP_PORT_ERR("L2 master port error detected");
 
+#ifdef CONFIG_MSM_L2_ERP_1BIT_PANIC
 	if (soft_error && print_alert)
 		msm_erp_dump_regions();
+#endif
 
 	if (soft_error && !unrecoverable)
 		ERP_1BIT_ERR("L2 single-bit error detected");

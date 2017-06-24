@@ -295,6 +295,8 @@ static int __init check_for_compat(unsigned long node)
 	return 0;
 }
 
+extern int boot_mode_recovery, boot_mode_lpm;
+
 int __init dt_scan_for_memory_reserve(unsigned long node, const char *uname,
 		int depth, void *data)
 {
@@ -303,7 +305,7 @@ int __init dt_scan_for_memory_reserve(unsigned long node, const char *uname,
 	unsigned long memory_name_prop_length;
 	unsigned long memory_remove_prop_length;
 	unsigned long memory_size_prop_length;
-	unsigned int *memory_size_prop;
+	unsigned int *memory_size_prop, *temp_memsize_prop;
 	unsigned int *memory_reserve_prop;
 	unsigned long memory_reserve_prop_length;
 	unsigned int memory_size;
@@ -339,6 +341,21 @@ int __init dt_scan_for_memory_reserve(unsigned long node, const char *uname,
 		memory_size_prop = of_get_flat_dt_prop(node,
 						"qcom,memory-reservation-size",
 						&memory_size_prop_length);
+
+		/*
+		 * hack to reserve memory for display while booting up in to
+		 * LPM and recovery mode.
+		 */
+		if (boot_mode_lpm || boot_mode_recovery) {
+			/*
+			 *  This field is only being used by mdp driver
+			 */
+			temp_memsize_prop = of_get_flat_dt_prop(node,
+					"qcom,memory-alt-reservation-size",
+						&memory_size_prop_length);
+			if (temp_memsize_prop)
+				memory_size_prop = temp_memsize_prop;
+		}
 
 		if (memory_size_prop &&
 		    (memory_size_prop_length == sizeof(unsigned int))) {

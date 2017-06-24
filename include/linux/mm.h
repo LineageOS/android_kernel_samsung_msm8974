@@ -252,6 +252,18 @@ struct inode;
 #define page_private(page)		((page)->private)
 #define set_page_private(page, v)	((page)->private = (v))
 
+/* It's valid only if the page is free path or free_list */
+static inline void set_freepage_migratetype(struct page *page, int migratetype)
+{
+	page->index = migratetype;
+}
+
+/* It's valid only if the page is free path or free_list */
+static inline int get_freepage_migratetype(struct page *page)
+{
+	return page->index;
+}
+
 /*
  * FIXME: take this include out, include page-flags.h in
  * files which need it (119 of them)
@@ -1041,6 +1053,7 @@ void account_page_writeback(struct page *page);
 int set_page_dirty(struct page *page);
 int set_page_dirty_lock(struct page *page);
 int clear_page_dirty_for_io(struct page *page);
+int get_cmdline(struct task_struct *task, char *buffer, int buflen);
 
 /* Is the vma a continuation of the stack vma above it? */
 static inline int vma_growsdown(struct vm_area_struct *vma, unsigned long addr)
@@ -1536,6 +1549,8 @@ int vm_insert_pfn(struct vm_area_struct *vma, unsigned long addr,
 			unsigned long pfn);
 int vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
 			unsigned long pfn);
+int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len);
+
 
 struct page *follow_page(struct vm_area_struct *, unsigned long address,
 			unsigned int foll_flags);
@@ -1549,6 +1564,8 @@ struct page *follow_page(struct vm_area_struct *, unsigned long address,
 #define FOLL_MLOCK	0x40	/* mark page as mlocked */
 #define FOLL_SPLIT	0x80	/* don't return transhuge pages, split them */
 #define FOLL_HWPOISON	0x100	/* check page is hwpoisoned */
+#define FOLL_COW	0x4000	/* internal GUP flag */
+#define FOLL_CMA	0x80000	/* migrate if the page is from cma pageblock */
 
 typedef int (*pte_fn_t)(pte_t *pte, pgtable_t token, unsigned long addr,
 			void *data);

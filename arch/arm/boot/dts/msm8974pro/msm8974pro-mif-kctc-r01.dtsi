@@ -1,0 +1,99 @@
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+	i2c_99: i2c@f9965000 {
+		status = "disabled";
+	};
+	
+	aliases {
+		spi9 = &spi_9;
+	};
+	spi_9: spi@f9965000 {
+		compatible = "qcom,spi-qup-v2";
+		cell-index = <9>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0xf9965000 0x1000>, <0xf9944000 0x19000>;
+		reg-names = "spi_physical", "spi_bam_physical";
+		interrupts = <0 103 0>, <0 239 0>;
+		interrupt-names = "spi_irq", "spi_bam_irq";
+		
+		qcom,gpio-mosi = <&msmgpio 49 0>;
+		qcom,gpio-miso = <&msmgpio 50 0>;
+		qcom,gpio-clk  = <&msmgpio 52 0>;
+		qcom,gpio-cs0  = <&msmgpio 51 0>;
+
+		qcom,use-bam;
+		qcom,bam-consumer-pipe-index = <16>;
+		qcom,bam-producer-pipe-index = <17>;
+		
+		qcom,infinite-mode = <0>;
+		qcom,ver-reg-exists;
+		qcom,master-id = <84>;
+
+		spi-max-frequency = <19200000>;
+		if-spi@0 {
+			compatible = "if_spi_comp";
+			reg = <0>;
+			spi-max-frequency = <12000000>;
+			spi-cpha;
+
+			mif_spi,gpio_ipc_mrdy = <&msmgpio 105 0>;
+			mif_spi,gpio_ipc_sub_mrdy = <&msmgpio 106 0>;
+			mif_spi,gpio_ipc_srdy = <&msmgpio 117 0>;
+			mif_spi,gpio_ipc_sub_srdy = <&msmgpio 104 0>;
+			mif_spi,gpio_cp_dump_int = <&msmgpio 9 0>;
+		};
+	};
+
+	aliases {
+	spi11 = &spi_11;
+	};
+	spi_11: spi@f9967000 {
+		compatible = "qcom,spi-qup-v2";
+		cell-index = <11>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0xf9967000 0x1000>;
+		interrupt-names = "spi_irq";
+		interrupts = <0 105 0>;
+		spi-max-frequency = <19200000>;
+
+		qcom,gpio-mosi = <&msmgpio 81 0>;
+		qcom,gpio-miso = <&msmgpio 82 0>;
+		qcom,gpio-clk  = <&msmgpio 84 0>;
+		qcom,gpio-cs0  = <&msmgpio 83 0>;
+
+		qcom,master-id = <84>;
+
+		STM32F@0 {
+			compatible = "ssp,STM32F";
+			reg = <0>;
+			spi-max-frequency = <4800000>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <18 0>;
+			hub_vreg-supply = <&pma8084_lvs1>;
+			psns_vreg-supply = <&pma8084_l18>;
+			ssp,mcu_int1-gpio = <&msmgpio 18 0x00>;
+			ssp,mcu_int2-gpio = <&msmgpio 86 0x00>;
+			ssp,ap_int-gpio = <&msmgpio 89 0x00>;
+			ssp,rst-gpio = <&msmgpio 9 0x00>;
+			ssp,acc-position = <6>;
+			ssp,mag-position = <7>;
+			ssp,sns-combination = <0>;
+			ssp,ap-rev=<5>;
+			qcom,temphumidity_sensor-vadc = <&pma8084_vadc>;
+		};
+	};
+
+};

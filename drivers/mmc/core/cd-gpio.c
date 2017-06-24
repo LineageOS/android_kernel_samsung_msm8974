@@ -72,8 +72,11 @@ int mmc_cd_gpio_request(struct mmc_host *host, unsigned int gpio)
 		return irq;
 
 	cd = kmalloc(sizeof(*cd) + len, GFP_KERNEL);
-	if (!cd)
+	if (!cd) {
+		host->hotplug.handler_priv = NULL;
+		host->hotplug.irq = 0;
 		return -ENOMEM;
+	}
 
 	snprintf(cd->label, len, "%s cd", dev_name(host->parent));
 
@@ -100,6 +103,8 @@ int mmc_cd_gpio_request(struct mmc_host *host, unsigned int gpio)
 	return 0;
 
 eirqreq:
+	host->hotplug.handler_priv = NULL;
+	host->hotplug.irq = 0;
 	gpio_free(gpio);
 egpioreq:
 	kfree(cd);
@@ -118,5 +123,7 @@ void mmc_cd_gpio_free(struct mmc_host *host)
 	gpio_free(cd->gpio);
 	cd->gpio = -EINVAL;
 	kfree(cd);
+	host->hotplug.handler_priv = NULL;
+   
 }
 EXPORT_SYMBOL(mmc_cd_gpio_free);

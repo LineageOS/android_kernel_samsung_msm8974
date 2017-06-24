@@ -250,7 +250,9 @@ extern int of_parse_phandle_with_args(struct device_node *np,
 
 extern void of_alias_scan(void * (*dt_alloc)(u64 size, u64 align));
 extern int of_alias_get_id(struct device_node *np, const char *stem);
-
+#ifdef CONFIG_OF_SUBCMDLINE_PARSE
+extern int of_parse_args_on_subcmdline(const char *name, char *buf);
+#endif
 extern int of_machine_is_compatible(const char *compat);
 
 extern int prom_add_property(struct device_node* np, struct property* prop);

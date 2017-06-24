@@ -1446,7 +1446,11 @@ msmsdcc_data_err(struct msmsdcc_host *host, struct mmc_data *data,
 				data->error = -ETIMEDOUT;
 		}
 		/* In case of DATA CRC/timeout error, execute tuning again */
-		if (host->tuning_needed && !host->tuning_in_progress)
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE) || defined(CONFIG_BCM4354)
+		if (host->tuning_needed&&!host->tuning_in_progress&&(host->pdev->id!=2))
+#else
+		if (host->tuning_needed&&!host->tuning_in_progress)
+#endif
 			host->tuning_done = false;
 
 	} else if (status & MCI_RXOVERRUN) {
@@ -1805,10 +1809,17 @@ static void msmsdcc_do_cmdirq(struct msmsdcc_host *host, uint32_t status)
 		pr_err("%s: CMD%d: Command CRC error\n",
 			mmc_hostname(host->mmc), cmd->opcode);
 		msmsdcc_dump_sdcc_state(host);
+
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4354)
+		if( host->pdev->id == 2){
+			printk("%s: Skipped tuning.\n",mmc_hostname(host->mmc));
+		}
+#else
 		/* Execute full tuning in case of CRC errors */
 		host->saved_tuning_phase = INVALID_TUNING_PHASE;
 		if (host->tuning_needed)
 			host->tuning_done = false;
+#endif
 		cmd->error = -EILSEQ;
 	}
 
@@ -4309,8 +4320,15 @@ kfree:
 out:
 	spin_lock_irqsave(&host->lock, flags);
 	host->tuning_in_progress = 0;
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE)  || defined(CONFIG_BCM4354)
+	if (!rc || host->pdev->id == 2)
+#else
 	if (!rc)
+#endif
+	{
+		printk("%s : set tuning_done ture.\n", __func__);		//add debug
 		host->tuning_done = true;
+	}
 	spin_unlock_irqrestore(&host->lock, flags);
 exit:
 	pr_debug("%s: Exit %s\n", mmc_hostname(mmc), __func__);
@@ -5728,6 +5746,12 @@ err:
 	return ret;
 }
 
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE)  || defined(CONFIG_BCM4354)
+int brcm_wifi_status_register(
+	void (*callback)(int card_present, void *dev_id), void *dev_id, void *mmc_host);
+unsigned int brcm_wifi_status(struct device *dev);
+#endif /* defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE)  || defined(CONFIG_BCM4354)*/
+
 static struct mmc_platform_data *msmsdcc_populate_pdata(struct device *dev)
 {
 	int i, ret;
@@ -5736,6 +5760,9 @@ static struct mmc_platform_data *msmsdcc_populate_pdata(struct device *dev)
 	u32 bus_width = 0, current_limit = 0;
 	u32 *clk_table = NULL, *sup_voltages = NULL;
 	int clk_table_len, sup_volt_len, len;
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE) || defined(CONFIG_BCM4354)
+	int vendor_type = 0;
+#endif /* defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE)  || defined(CONFIG_BCM4354)*/
 
 	pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata) {
@@ -5843,7 +5870,17 @@ static struct mmc_platform_data *msmsdcc_populate_pdata(struct device *dev)
 		pdata->disable_cmd23 = true;
 	of_property_read_u32(np, "qcom,dat1-mpm-int",
 					&pdata->mpm_sdiowakeup_int);
-
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE)  || defined(CONFIG_BCM4354)
+	printk(KERN_INFO"%s: before parsing vendor_type\n", __func__);
+	if (of_get_property(np, "status-cb", &vendor_type)) {
+		printk(KERN_INFO"%s: vendor_type=%d \n", __func__, vendor_type);
+		//if(1 == vendor_type) {
+			pdata->status = brcm_wifi_status;
+			pdata->register_status_notify = brcm_wifi_status_register;
+			pdata->built_in = 1;
+		//}
+	}
+#endif /* defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE)  || defined(CONFIG_BCM4354) */
 	return pdata;
 err:
 	return NULL;
@@ -6148,6 +6185,8 @@ msmsdcc_probe(struct platform_device *pdev)
 
 	if (plat->is_sdio_al_client)
 		mmc->pm_flags |= MMC_PM_IGNORE_PM_NOTIFY;
+	if (plat->built_in)
+		mmc->pm_flags |= MMC_PM_IGNORE_PM_NOTIFY | MMC_PM_KEEP_POWER;
 
 	mmc->max_segs = msmsdcc_get_nr_sg(host);
 	mmc->max_blk_size = MMC_MAX_BLK_SIZE;
@@ -6250,7 +6289,7 @@ msmsdcc_probe(struct platform_device *pdev)
 			goto sdiowakeup_irq_free;
 		}
 	} else if (plat->register_status_notify) {
-		plat->register_status_notify(msmsdcc_status_notify_cb, host);
+		plat->register_status_notify(msmsdcc_status_notify_cb, host, host->mmc);
 	} else if (!plat->status)
 		pr_err("%s: No card detect facilities available\n",
 		       mmc_hostname(mmc));
@@ -6710,6 +6749,13 @@ msmsdcc_runtime_suspend(struct device *dev)
 		rc = 0;
 		goto out;
 	}
+
+#if defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE)  || defined(CONFIG_BCM4354)
+	if (host->pdev->id == 2) {
+		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
+		printk(KERN_INFO "%s: Enter WIFI suspend\n", __func__);
+	}
+#endif
 
 	pr_debug("%s: %s: start\n", mmc_hostname(mmc), __func__);
 	if (mmc) {

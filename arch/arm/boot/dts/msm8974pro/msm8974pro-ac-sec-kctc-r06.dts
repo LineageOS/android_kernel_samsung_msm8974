@@ -1,0 +1,223 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+/include/ "msm8974pro-sec.dtsi"
+/include/ "msm8974pro-max77804k-k3gduos-chn-ctc_r06.dtsi"
+/include/ "msm8974pro-ac-sec-k-r06.dtsi"
+/include/ "msm8974pro-mif-kctc-r01.dtsi"
+
+/ {
+	model = "SAMSUNG KCTC PROJECT REV06";
+	compatible = "qcom,msm8974-mtp", "qcom,msm8974", "qcom,mtp";
+	/*QCOM BOARD REV TYPE...*/
+	/*qcom,msm-id = <194 8 0x10000>;*/
+	/*SEC BOARD REV TYPE...*/
+        qcom,msm-id = <0xD808FF01 6 0x10000>;
+        /* [31:24] chip-id, [23:16] platform-id, [15:8] national code, [7:0] operator revision, reserved */
+};
+
+&pma8084_vadc {
+	chan@23 {
+		label = "mpp4_div3";
+		reg = <0x23>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <1>; /* 1:3 scaling */
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <0>;
+		qcom,hw-settle-time = <0>;
+		qcom,fast-avg-setup = <0>;
+	};
+	
+	chan@73 {
+		label = "msm_therm";
+		reg = <0x73>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@75 {
+		label = "pa_therm0";
+		reg = <0x75>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@77 {
+		label = "pa_therm1";
+		reg = <0x77>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@78 {
+		label = "quiet_therm";
+		reg = <0x78>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+};
+
+&pma8084_adc_tm {
+	chan@73 {
+		label = "msm_therm";
+		reg = <0x73>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x48>;
+		qcom,thermal-node;
+	};
+
+	chan@75 {
+		label = "pa_therm0";
+		reg = <0x75>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x68>;
+		qcom,thermal-node;
+	};
+
+	chan@77 {
+		label = "pa_therm1";
+		reg = <0x77>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x70>;
+		qcom,thermal-node;
+	};
+
+	chan@78 {
+		label = "quiet_therm";
+		reg = <0x78>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x78>;
+		qcom,thermal-node;
+	};
+};
+
+&soc{
+	sound {
+		qcom,sec-auxpcm-gpio-clk  = <&msmgpio 58 0>;
+		qcom,sec-auxpcm-gpio-sync = <&msmgpio 59 0>;
+		qcom,sec-auxpcm-gpio-din  = <&msmgpio 60 0>;
+		qcom,sec-auxpcm-gpio-dout = <&msmgpio 61 0>;
+	};
+};
+
+&slim_msm {
+	taiko_codec {
+		qcom,cdc-reset-gpio = <&msmgpio 124 0>;
+	};
+	es705-codec {
+		es705-gpioa-gpio = <&msmgpio 110 0>;
+	};
+};
+
+&usb3 {
+	interrupt-names = "irq", "otg_irq", "hs_phy_irq", "pmic_id_irq";
+	interrupt-parent = <&usb3>;
+	interrupts = <0 1>;
+	#interrupt-cells = <1>;
+	interrupt-map-mask = <0x0 0xffffffff>;
+	interrupt-map = <0x0 0 &intc 0 133 0
+			 0x0 1 &spmi_bus 0x0 0x0 0x9 0x0>;
+	interrupt-names = "hs_phy_irq", "pmic_id_irq";
+	/*qcom,misc-ref = <&pm8941_misc>;*/
+};
+
+&soc {
+	aliases {
+	spi11 = &spi_11;
+	};
+	spi_11: spi@f9967000 {
+		compatible = "qcom,spi-qup-v2";
+		cell-index = <11>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0xf9967000 0x1000>;
+		interrupt-names = "spi_irq";
+		interrupts = <0 105 0>;
+		spi-max-frequency = <19200000>;
+
+		qcom,gpio-mosi = <&msmgpio 81 0>;
+		qcom,gpio-miso = <&msmgpio 82 0>;
+		qcom,gpio-clk  = <&msmgpio 84 0>;
+		qcom,gpio-cs0  = <&msmgpio 83 0>;
+
+		qcom,master-id = <84>;
+
+		STM32F@0 {
+			compatible = "ssp,STM32F";
+			reg = <0>;
+			spi-max-frequency = <4800000>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <74 0>;
+			hub_vreg-supply = <&pma8084_lvs1>;
+			psns_vreg-supply = <&pma8084_l18>;
+			ssp,mcu_int1-gpio = <&msmgpio 74 0x00>;
+			ssp,mcu_int2-gpio = <&msmgpio 86 0x00>;
+			ssp,ap_int-gpio = <&msmgpio 89 0x00>;
+			ssp,rst-gpio = <&msmgpio 119 0x00>;
+			ssp,acc-position = <6>;
+			ssp,mag-position = <7>;
+			ssp,sns-combination = <0>;
+			ssp,ap-rev=<5>;
+			qcom,temphumidity_sensor-vadc = <&pma8084_vadc>;
+		};
+	};
+	i2c@f9923000 { /* BLSP#1 */
+		status = "ok";
+		pn547@29 {
+			compatible = "pn547";
+			reg = <0x29>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <73 0>;
+			pn547,irq-gpio = <&msmgpio 73 0x00>;
+			pn547,ven-gpio = <&pma8084_gpios 9 0x00>;
+			pn547,firm-expander-gpio = <311>;
+		};
+	};
+};

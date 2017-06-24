@@ -472,6 +472,7 @@ EXPORT_SYMBOL(mmc_cleanup_queue);
 int mmc_queue_suspend(struct mmc_queue *mq, int wait)
 {
 	struct request_queue *q = mq->queue;
+	struct request *req;
 	unsigned long flags;
 	int rc = 0;
 
@@ -491,9 +492,26 @@ int mmc_queue_suspend(struct mmc_queue *mq, int wait)
 			blk_start_queue(q);
 			spin_unlock_irqrestore(q->queue_lock, flags);
 			rc = -EBUSY;
-		} else if (rc && wait) {
-			down(&mq->thread_sem);
-			rc = 0;
+		} else if (wait) {
+			/*
+			 * wait is set only when mmc_blk_shutdown calls this.
+			 */
+			mutex_lock(&q->sysfs_lock);
+			queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
+			spin_lock_irqsave(q->queue_lock, flags);
+			queue_flag_set(QUEUE_FLAG_DEAD, q);
+
+			while((req = blk_fetch_request(q)) != NULL){
+				req->cmd_flags |= REQ_QUIET;
+				__blk_end_request_all(req,-EIO);
+			}
+
+			spin_unlock_irqrestore(q->queue_lock, flags);
+			mutex_unlock(&q->sysfs_lock);
+			if (rc) {
+				down(&mq->thread_sem);
+				rc = 0;
+			}
 		}
 	}
 	return rc;

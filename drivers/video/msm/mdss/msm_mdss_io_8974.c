@@ -10,6 +10,8 @@
  * GNU General Public License for more details.
  *
  */
+#include <linux/kernel.h>
+#include <linux/sched.h>
 #include <linux/clk.h>
 #include <linux/interrupt.h>
 #include <linux/delay.h>
@@ -18,7 +20,9 @@
 
 #include <mach/clk.h>
 #include <mach/msm_iomap.h>
+#include <mach/clk-provider.h>
 
+#include "mdss.h"
 #include "mdss_dsi.h"
 #include "mdss_edp.h"
 
@@ -315,7 +319,11 @@ static void mdss_dsi_bus_clk_stop(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 
 static int mdss_dsi_link_clk_set_rate(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
+#if defined(CONFIG_SEC_ATLANTIC_PROJECT) || defined(CONFIG_SEC_PATEK_PROJECT)
+	u32 esc_clk_rate = 12000000;
+#else
 	u32 esc_clk_rate = 19200000;
+#endif
 	int rc = 0;
 
 	if (!ctrl_pdata) {
@@ -382,6 +390,8 @@ static int mdss_dsi_link_clk_start(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 		pr_err("%s: Failed to enable dsi pixel clk\n", __func__);
 		goto pixel_clk_err;
 	}
+
+	ctrl_pdata->mdss_dsi_clk_on = 1;
 
 	return rc;
 
@@ -534,7 +544,9 @@ int mdss_dsi_clk_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 			m_changed += __mdss_dsi_update_clk_cnt(
 				&mctrl->link_clk_cnt, enable);
 	}
-
+#if defined (CONFIG_FB_MSM_MDSS_DSI_DBG)
+	xlog(__func__,ctrl->ndx, enable,changed,m_changed,ctrl->bus_clk_cnt,mctrl?mctrl->bus_clk_cnt:0xbbb);
+#endif
 	if (changed) {
 		if (enable && m_changed) {
 			rc = mdss_dsi_clk_ctrl_sub(mctrl, clk_type, enable);
@@ -756,6 +768,166 @@ void mdss_dsi_phy_init(struct mdss_panel_data *pdata)
 
 }
 
+#if defined(CONFIG_FB_MSM_EDP_SAMSUNG)
+/* EDP phy configuration settings */
+void mdss_edp_phy_sw_reset(unsigned char *edp_base)
+{
+	/* phy sw reset */
+	edp_write(edp_base + 0x74, 0x100); /* EDP_PHY_CTRL */
+	wmb();
+	usleep(1);
+	edp_write(edp_base + 0x74, 0x000); /* EDP_PHY_CTRL */
+	wmb();
+	usleep(1);
+
+	/* phy PLL sw reset */
+	edp_write(edp_base + 0x74, 0x001); /* EDP_PHY_CTRL */
+	wmb();
+	usleep(1);
+	edp_write(edp_base + 0x74, 0x000); /* EDP_PHY_CTRL */
+	wmb();
+	usleep(1);
+}
+
+void mdss_edp_hw_powerup(unsigned char *edp_base, int enable)
+{
+	int ret = 0;
+
+	if (enable) {
+		/* EDP_PHY_EDPPHY_GLB_PD_CTL */
+		edp_write(edp_base + 0x52c, 0x3f);
+		/* EDP_PHY_EDPPHY_GLB_CFG */
+		edp_write(edp_base + 0x528, 0x1);
+		/* EDP_PHY_PLL_UNIPHY_PLL_GLB_CFG */
+		edp_write(edp_base + 0x620, 0xf);
+		/* EDP_AUX_CTRL */
+		ret = edp_read(edp_base + 0x300);
+		edp_write(edp_base + 0x300, ret | 0x1);
+	} else {
+		/* EDP_PHY_EDPPHY_GLB_PD_CTL */
+		edp_write(edp_base + 0x52c, 0xc0);
+	}
+}
+
+void mdss_edp_pll_configure(unsigned char *edp_base, int rate)
+{
+	if (rate == 810000000) {
+		edp_write(edp_base + 0x60c, 0x18);
+		edp_write(edp_base + 0x664, 0x5);
+		edp_write(edp_base + 0x600, 0x0);
+		edp_write(edp_base + 0x638, 0x36);
+		edp_write(edp_base + 0x63c, 0x69);
+		edp_write(edp_base + 0x640, 0xff);
+		edp_write(edp_base + 0x644, 0x2f);
+		edp_write(edp_base + 0x648, 0x0);
+		edp_write(edp_base + 0x66c, 0x0a);
+		edp_write(edp_base + 0x674, 0x01);
+		edp_write(edp_base + 0x684, 0x5a);
+		edp_write(edp_base + 0x688, 0x0);
+		edp_write(edp_base + 0x68c, 0x60);
+		edp_write(edp_base + 0x690, 0x0);
+		edp_write(edp_base + 0x694, 0x2a);
+		edp_write(edp_base + 0x698, 0x3);
+		edp_write(edp_base + 0x65c, 0x10);
+		edp_write(edp_base + 0x660, 0x1a);
+		edp_write(edp_base + 0x604, 0x0);
+		edp_write(edp_base + 0x624, 0x0);
+		edp_write(edp_base + 0x628, 0x0);
+
+		edp_write(edp_base + 0x620, 0x1);
+		edp_write(edp_base + 0x620, 0x5);
+		edp_write(edp_base + 0x620, 0x7);
+		edp_write(edp_base + 0x620, 0xf);
+	} else if (rate >= 268500000) {
+		edp_write(edp_base + 0x664, 0x5); /* UNIPHY_PLL_LKDET_CFG2 */
+		edp_write(edp_base + 0x600, 0x1); /* UNIPHY_PLL_REFCLK_CFG */
+		edp_write(edp_base + 0x638, 0x36); /* UNIPHY_PLL_SDM_CFG0 */
+		edp_write(edp_base + 0x63c, 0x62); /* UNIPHY_PLL_SDM_CFG1 */
+		edp_write(edp_base + 0x640, 0x0); /* UNIPHY_PLL_SDM_CFG2 */
+		edp_write(edp_base + 0x644, 0x28); /* UNIPHY_PLL_SDM_CFG3 */
+		edp_write(edp_base + 0x648, 0x0); /* UNIPHY_PLL_SDM_CFG4 */
+		edp_write(edp_base + 0x64c, 0x80); /* UNIPHY_PLL_SSC_CFG0 */
+		edp_write(edp_base + 0x650, 0x0); /* UNIPHY_PLL_SSC_CFG1 */
+		edp_write(edp_base + 0x654, 0x0); /* UNIPHY_PLL_SSC_CFG2 */
+		edp_write(edp_base + 0x658, 0x0); /* UNIPHY_PLL_SSC_CFG3 */
+		edp_write(edp_base + 0x66c, 0xa); /* UNIPHY_PLL_CAL_CFG0 */
+		edp_write(edp_base + 0x674, 0x1); /* UNIPHY_PLL_CAL_CFG2 */
+		edp_write(edp_base + 0x684, 0x5a); /* UNIPHY_PLL_CAL_CFG6 */
+		edp_write(edp_base + 0x688, 0x0); /* UNIPHY_PLL_CAL_CFG7 */
+		edp_write(edp_base + 0x68c, 0x60); /* UNIPHY_PLL_CAL_CFG8 */
+		edp_write(edp_base + 0x690, 0x0); /* UNIPHY_PLL_CAL_CFG9 */
+		edp_write(edp_base + 0x694, 0x46); /* UNIPHY_PLL_CAL_CFG10 */
+		edp_write(edp_base + 0x698, 0x5); /* UNIPHY_PLL_CAL_CFG11 */
+		edp_write(edp_base + 0x65c, 0x10); /* UNIPHY_PLL_LKDET_CFG0 */
+		edp_write(edp_base + 0x660, 0x1a); /* UNIPHY_PLL_LKDET_CFG1 */
+		edp_write(edp_base + 0x604, 0x0); /* UNIPHY_PLL_POSTDIV1_CFG */
+		edp_write(edp_base + 0x624, 0x0); /* UNIPHY_PLL_POSTDIV2_CFG */
+		edp_write(edp_base + 0x628, 0x0); /* UNIPHY_PLL_POSTDIV3_CFG */
+
+		edp_write(edp_base + 0x620, 0x1); /* UNIPHY_PLL_GLB_CFG */
+		edp_write(edp_base + 0x620, 0x5); /* UNIPHY_PLL_GLB_CFG */
+		edp_write(edp_base + 0x620, 0x7); /* UNIPHY_PLL_GLB_CFG */
+		edp_write(edp_base + 0x620, 0xf); /* UNIPHY_PLL_GLB_CFG */
+	} else {
+		pr_err("%s: Unknown configuration rate\n", __func__);
+	}
+}
+
+void mdss_edp_enable_aux(unsigned char *edp_base, int enable)
+{
+	if (!enable) {
+		edp_write(edp_base + 0x300, 0); /* EDP_AUX_CTRL */
+		return;
+	}
+
+	/*reset AUX */
+	edp_write(edp_base + 0x300, BIT(1)); /* EDP_AUX_CTRL */
+	edp_write(edp_base + 0x300, 0); /* EDP_AUX_CTRL */
+
+	/* Enable AUX */
+	edp_write(edp_base + 0x300, BIT(0)); /* EDP_AUX_CTRL */
+
+	edp_write(edp_base + 0x550, 0x2c); /* AUX_CFG0 */
+	edp_write(edp_base + 0x308, 0x24924924); /* INTR_STATUS */
+	edp_write(edp_base + 0x568, 0xff); /* INTR_MASK */
+}
+
+void mdss_edp_enable_mainlink(unsigned char *edp_base, int enable)
+{
+	u32 data;
+
+	data = edp_read(edp_base + 0x004);
+	data &= ~BIT(0);
+
+	if (enable) {
+		data |= 0x3;
+		edp_write(edp_base + 0x004, data);
+		edp_write(edp_base + 0x004, 0x1);
+	} else {
+		data |= 0x0;
+		edp_write(edp_base + 0x004, data);
+	}
+}
+
+void mdss_edp_enable_lane_bist(unsigned char *edp_base, int lane, int enable)
+{
+	unsigned char *addr_ln_bist_cfg, *addr_ln_pd_ctrl;
+
+	/* EDP_PHY_EDPPHY_LNn_PD_CTL */
+	addr_ln_pd_ctrl = edp_base + 0x404 + (0x40 * lane);
+	/* EDP_PHY_EDPPHY_LNn_BIST_CFG0 */
+	addr_ln_bist_cfg = edp_base + 0x408 + (0x40 * lane);
+
+	if (enable) {
+		edp_write(addr_ln_pd_ctrl, 0x0);
+		edp_write(addr_ln_bist_cfg, 0x10);
+
+	} else {
+		edp_write(addr_ln_pd_ctrl, 0xf);
+		edp_write(addr_ln_bist_cfg, 0x10);
+	}
+}
+#endif
 void mdss_edp_clk_deinit(struct mdss_edp_drv_pdata *edp_drv)
 {
 	if (edp_drv->aux_clk)
@@ -870,6 +1042,7 @@ int mdss_edp_clk_enable(struct mdss_edp_drv_pdata *edp_drv)
 		return 0;
 	}
 
+	pr_info("%s: aux_rate=%d\n", __func__, edp_drv->aux_rate);
 	if (clk_set_rate(edp_drv->link_clk, edp_drv->link_rate * 27000000) < 0)
 		pr_err("%s: link_clk - clk_set_rate failed\n",
 					__func__);

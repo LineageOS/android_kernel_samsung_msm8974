@@ -1,0 +1,50 @@
+
+
+
+
+
+&soc {
+
+	/* NFC/FELICA changes start */
+
+        sec_nfc
+        {
+                compatible = "sec-nfc";
+                sec-nfc,pon-gpio =      <&msmgpio 73 0x00>;
+                sec-nfc,rfs-gpio =      <&msmgpio 89 0x00>;
+        };
+
+        sec_nfc_fn
+        {
+                compatible = "sec-nfc-fn";
+                sec-nfc-fn,int-gpio =   <&msmgpio 59 0x00>;
+        };
+
+        
+        felica_uart: serial@f995f000
+        {
+                compatible = "qcom,msm-lsuart-v14";
+                interrupts = <0 115 0>;
+                reg = <0xf995f000 0x1000>;
+                status = "ok";
+
+                qcom,config-gpio = <4>;
+                qcom,tx-gpio = <&msmgpio 49 0x00>;
+                qcom,rx-gpio = <&msmgpio 50 0x00>;
+                qcom,cts-gpio = <&msmgpio 51 0x00>;
+                qcom,rfr-gpio = <&msmgpio 52 0x00>;
+                qcom,msm-bus,name = "serial_uart2";
+                qcom,msm-bus,num-cases = <2>;
+                qcom,msm-bus,num-paths = <1>;
+                qcom,msm-bus,vectors-KBps =
+                <86 512 0 0>,
+                <86 512 500 800>;
+        }; /* felica_uart */
+
+	aliases {
+                serial2 = &felica_uart;
+        };
+
+}; /* soc */
+
+

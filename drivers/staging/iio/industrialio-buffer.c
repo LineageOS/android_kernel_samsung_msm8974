@@ -42,10 +42,14 @@ ssize_t iio_buffer_read_first_n_outer(struct file *filp, char __user *buf,
 {
 	struct iio_dev *indio_dev = filp->private_data;
 	struct iio_buffer *rb = indio_dev->buffer;
+	ssize_t ret;
 
 	if (!rb || !rb->access->read_first_n)
 		return -EINVAL;
-	return rb->access->read_first_n(rb, n, buf);
+	mutex_lock(&indio_dev->mlock);
+	ret = rb->access->read_first_n(rb, n, buf);
+	mutex_unlock(&indio_dev->mlock);
+	return ret;
 }
 
 /**

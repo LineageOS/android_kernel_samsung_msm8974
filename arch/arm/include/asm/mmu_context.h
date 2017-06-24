@@ -105,10 +105,18 @@ enter_lazy_tlb(struct mm_struct *mm, struct task_struct *tsk)
  * calling the CPU specific function when the mm hasn't
  * actually changed.
  */
+#ifdef	CONFIG_TIMA_RKP
+extern unsigned long tima_switch_count;
+extern spinlock_t tima_switch_count_lock;
+#endif
 static inline void
 switch_mm(struct mm_struct *prev, struct mm_struct *next,
 	  struct task_struct *tsk)
 {
+	
+#ifdef	CONFIG_TIMA_RKP
+	unsigned long flags;
+#endif
 #ifdef CONFIG_MMU
 	unsigned int cpu = smp_processor_id();
 
@@ -125,6 +133,11 @@ switch_mm(struct mm_struct *prev, struct mm_struct *next,
 #endif
 		check_context(next);
 		cpu_switch_mm(next->pgd, next);
+#ifdef	CONFIG_TIMA_RKP
+		spin_lock_irqsave(&tima_switch_count_lock, flags);
+		tima_switch_count++;
+		spin_unlock_irqrestore(&tima_switch_count_lock, flags);
+#endif
 		if (cache_is_vivt())
 			cpumask_clear_cpu(cpu, mm_cpumask(prev));
 	}

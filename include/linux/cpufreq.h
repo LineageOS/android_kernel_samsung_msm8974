@@ -20,6 +20,7 @@
 #include <linux/workqueue.h>
 #include <linux/cpumask.h>
 #include <asm/div64.h>
+#include <asm/cputime.h>
 
 #define CPUFREQ_NAME_LEN 16
 
@@ -102,6 +103,9 @@ struct cpufreq_policy {
 	unsigned int		cur;    /* in kHz, only needed if cpufreq
 					 * governors are used */
 	unsigned int            util;  /* CPU utilization at max frequency */
+#ifdef CONFIG_SEC_PM
+	unsigned int            load_at_max;  /* CPU utilization at max frequency */
+#endif
 	unsigned int		policy; /* see above */
 	struct cpufreq_governor	*governor; /* see below */
 
@@ -345,6 +349,88 @@ static inline unsigned int cpufreq_quick_get_max(unsigned int cpu)
 }
 #endif
 
+#if defined (CONFIG_SEC_DVFS) || defined (CONFIG_CPU_FREQ_LIMIT_USERSPACE)
+enum {
+	BOOT_CPU = 0,
+#if defined(CONFIG_SEC_MILLET_PROJECT) || defined(CONFIG_SEC_MATISSE_PROJECT) || defined(CONFIG_SEC_VICTOR_PROJECT) \
+	|| defined(CONFIG_SEC_BERLUTI_PROJECT)|| defined(CONFIG_SEC_FRESCONEO_PROJECT) || defined(CONFIG_SEC_AFYON_PROJECT) \
+	|| defined(CONFIG_SEC_S3VE_PROJECT) || defined(CONFIG_SEC_ATLANTIC_PROJECT) || defined(CONFIG_SEC_DEGAS_PROJECT) \
+	|| defined(CONFIG_SEC_HESTIA_PROJECT) || defined(CONFIG_SEC_MEGA2_PROJECT) || defined(CONFIG_SEC_GNOTE_PROJECT) \
+	|| defined(CONFIG_SEC_T10_PROJECT) || defined(CONFIG_SEC_T8_PROJECT) || defined(CONFIG_SEC_VASTA_PROJECT) || defined(CONFIG_SEC_VICTOR3GDSDTV_PROJECT) \
+	|| defined(CONFIG_SEC_RUBENS_PROJECT) || defined(CONFIG_SEC_VASTALTE_CHN_CMMCC_DUOS_PROJECT)
+	NON_BOOT_CPU,
+#endif
+};
+#if defined(CONFIG_SEC_MILLET_PROJECT) || defined(CONFIG_SEC_MATISSE_PROJECT) || defined(CONFIG_SEC_VICTOR_PROJECT) \
+	|| defined(CONFIG_SEC_BERLUTI_PROJECT)|| defined(CONFIG_SEC_FRESCONEO_PROJECT) || defined(CONFIG_SEC_AFYON_PROJECT) \
+	|| defined(CONFIG_SEC_S3VE_PROJECT) || defined(CONFIG_SEC_ATLANTIC_PROJECT) || defined(CONFIG_SEC_DEGAS_PROJECT) \
+	|| defined(CONFIG_SEC_HESTIA_PROJECT) || defined(CONFIG_SEC_MEGA2_PROJECT) || defined(CONFIG_SEC_GNOTE_PROJECT) \
+	|| defined(CONFIG_SEC_T10_PROJECT) || defined(CONFIG_SEC_T8_PROJECT) || defined(CONFIG_SEC_VASTA_PROJECT) || defined(CONFIG_SEC_VICTOR3GDSDTV_PROJECT) \
+	|| defined(CONFIG_SEC_MS01_PROJECT) || defined(CONFIG_SEC_RUBENS_PROJECT) || defined(CONFIG_SEC_VASTALTE_CHN_CMMCC_DUOS_PROJECT)
+
+int get_max_freq(void);
+int get_min_freq(void);
+
+#define MAX_FREQ_LIMIT		get_max_freq() /* 1512000 */
+#define MIN_FREQ_LIMIT		get_min_freq() /* 384000 */
+#define MIN_TOUCH_LIMIT_SECOND 787200
+#define MIN_TOUCH_LIMIT		998400
+#define MIN_TOUCH_LIMIT_SECOND_9LEVEL	MIN_TOUCH_LIMIT
+#define MAX_UNICPU_LIMIT	1190400
+#define MIN_SENSOR_LIMIT	1497600
+#if defined(CONFIG_SEC_GNOTE_PROJECT) || defined(CONFIG_SEC_HESTIA_PROJECT) || defined(CONFIG_SEC_RUBENS_PROJECT)
+#define MIN_TOUCH_LOW_LIMIT	1497600
+#define MIN_TOUCH_HIGH_LIMIT	2457600
+#endif
+
+#define UPDATE_NOW_BITS		0xFF
+#else
+#define MIN_TOUCH_LOW_LIMIT	1497600
+#if defined(CONFIG_SEC_S_PROJECT)
+#define MIN_TOUCH_LIMIT			1190400
+#define MIN_TOUCH_LIMIT_SECOND		883200
+#define MIN_TOUCH_LIMIT_SECOND_9LEVEL	1728000
+#else
+#define MIN_TOUCH_LIMIT		1728000
+#define MIN_TOUCH_LIMIT_SECOND		1190400
+#define MIN_TOUCH_LIMIT_SECOND_9LEVEL	MIN_TOUCH_LIMIT
+#endif
+#define MIN_TOUCH_HIGH_LIMIT	2457600
+#define MIN_CAMERA_LIMIT    998400
+#endif
+enum {
+	DVFS_NO_ID			= 0,
+
+	/* need to update now */
+	DVFS_TOUCH_ID			= 0x00000001,
+	DVFS_APPS_MIN_ID		= 0x00000002,
+	DVFS_APPS_MAX_ID		= 0x00000004,
+	DVFS_UNICPU_ID			= 0x00000008,
+	DVFS_LTETP_ID			= 0x00000010,
+	DVFS_CAMERA_ID		= 0x00000012,
+	DVFS_SENSOR_ID		= 0x00000020,
+
+	/* DO NOT UPDATE NOW */
+	DVFS_THERMALD_ID		= 0x00000100,
+
+	DVFS_MAX_ID
+};
+
+
+int set_freq_limit(unsigned long id, unsigned int freq);
+#if defined(CONFIG_SEC_MILLET_PROJECT) || defined(CONFIG_SEC_MATISSE_PROJECT) || defined(CONFIG_SEC_VICTOR_PROJECT) \
+	|| defined(CONFIG_SEC_BERLUTI_PROJECT)|| defined(CONFIG_SEC_FRESCONEO_PROJECT) || defined(CONFIG_SEC_AFYON_PROJECT) \
+	|| defined(CONFIG_SEC_S3VE_PROJECT) || defined(CONFIG_SEC_ATLANTIC_PROJECT) || defined(CONFIG_SEC_DEGAS_PROJECT) \
+	|| defined(CONFIG_SEC_HESTIA_PROJECT) || defined(CONFIG_SEC_MEGA2_PROJECT) ||  defined(CONFIG_SEC_GNOTE_PROJECT) \
+	|| defined(CONFIG_SEC_T10_PROJECT) || defined(CONFIG_SEC_T8_PROJECT) || defined(CONFIG_SEC_VASTA_PROJECT) || defined(CONFIG_SEC_VICTOR3GDSDTV_PROJECT) \
+	|| defined(CONFIG_SEC_MS01_PROJECT) || defined(CONFIG_SEC_RUBENS_PROJECT)  || defined(CONFIG_SEC_VASTALTE_CHN_CMMCC_DUOS_PROJECT)
+unsigned int get_min_lock(void);
+unsigned int get_max_lock(void);
+void set_min_lock(int freq);
+void set_max_lock(int freq);
+#endif
+#endif
+
 
 /*********************************************************************
  *                       CPUFREQ DEFAULT GOVERNOR                    *
@@ -416,5 +502,11 @@ void cpufreq_frequency_table_get_attr(struct cpufreq_frequency_table *table,
 
 void cpufreq_frequency_table_put_attr(unsigned int cpu);
 
+
+/*********************************************************************
+ *                         CPUFREQ STATS                             *
+ *********************************************************************/
+
+void acct_update_power(struct task_struct *p, cputime_t cputime);
 
 #endif /* _LINUX_CPUFREQ_H */

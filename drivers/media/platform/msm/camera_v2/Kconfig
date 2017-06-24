@@ -36,16 +36,6 @@ config MSM_CSI20_HEADER
           This config macro is required targets based on 8960,
           8930 and 8064 platforms.
 
-config MSM_CSI22_HEADER
-        bool "Qualcomm MSM CSI 2.2 Header"
-        depends on MSMB_CAMERA
-        ---help---
-          Enable support for CSI drivers to include 2.2
-          header. This header has register macros and its
-          values and bit mask for register configuration bits
-          This config macro is required targets based on 8610
-          platform.
-
 config MSM_CSI30_HEADER
         bool "Qualcomm MSM CSI 3.0 Header"
         depends on MSMB_CAMERA
@@ -92,14 +82,22 @@ config MSM_ISPIF
           of any CID of CSID can be routed to of of pixel or raw
           data interface in VFE.
 
-config MSM_ISPIF_V1
-        bool "Qualcomm MSM Image Signal Processing interface support"
-        depends on MSMB_CAMERA
-        ---help---
-          Enable support for Image Signal Processing interface module.
-          This module acts as a crossbar between CSID and VFE. Output
-          of any CID of MSM_CSI22_HEADER can be routed to of pixel
-          or raw data interface in VFE.
+config S5K3L1YX
+	bool "Sensor S5K3L1YX (BAYER 12M)"
+	depends on MSMB_CAMERA
+	---help---
+		Samsung 12 MP Bayer Sensor with auto focus, uses
+		4 mipi lanes, preview config = 1984 * 1508 at 30 fps,
+		snapshot config = 4000 * 3000 at 20 fps,
+		hfr video at 60, 90 and 120 fps.
+
+config S5K4E5YA
+	bool "Sensor S5K4E5YA (BAYER 5M)"
+	depends on MSMB_CAMERA
+	---help---
+		Samsung 5 MP Bayer Sensor with auto focus, uses
+		2 mipi lanes, preview config = 1280 * 980 at 30 fps,
+		snapshot config = 2608 * 1960 at 30 fps.
 
 config IMX134
 	bool "Sensor IMX134 (BAYER 8M)"
@@ -107,35 +105,42 @@ config IMX134
 	---help---
 		Sony 8 MP Bayer Sensor with auto focus, uses
 		4 mipi lanes full resolution @30fps and
-		HFR @60fps and @120fps
+                HFR @60fps and @120fps
 		Video HDR support.
 
-config OV9724
-	bool "Sensor OV9724 (BAYER 2M)"
+config IMX135
+	bool "Sensor IMX135 (BAYER 13M)"
 	depends on MSMB_CAMERA
 	---help---
-		OmniVision 2 MP Bayer Sensor, supports 2 mipi lanes,
+		Sony 13 MP Bayer Sensor with auto focus, uses
+		4 mipi lanes, preview config = 2104 x 1560 at 49 fps,
+		snapshot config = 4208 x 3120 at 24 fps,
+		Video HDR support.
+
+config S5K6B2YX
+	bool "Sensor S5K6B2YX (BAYER 2MP)"
+	depends on MSMB_CAMERA
+	---help---
+		Samsung 2 MP Bayer Sensor, supports 1 mipi lane.
+		Supports low-power vision mode.
+		This sensor does not support auto focus.
+
+config S5K8B1YX
+	bool "Sensor S5K8B1YX (BAYER 2M)"
+	depends on MSMB_CAMERA
+	---help---
+		LSI 2 MP Bayer Sensor, supports 2 mipi lanes,
 		preview and snapshot config at 1280*720 at 30 fps,
 		hfr video at 60, 90 and 120 fps. This sensor driver does
 		not support auto focus.
-
-config HI256
-        bool "Hynix hi256 (YUV 2MP)"
-        depends on MSMB_CAMERA
-        ---help---
-                OmniVision 8 MP Bayer Sensor with auto focus.uses
-                2 mipi lanes, preview config = 1632*1224 30 fps,
-                snapshot config = 3264 * 2448 at 18 fps.
-                2 lanes max fps is 18, 4 lanes max fps is 24.
-
-config OV5648
-	bool "Sensor OV5648 (BAYER 5M)"
+config OV2720
+	bool "Sensor OV2720 (BAYER 2M)"
 	depends on MSMB_CAMERA
 	---help---
-		OmniVision 5 MP Bayer Sensor, only use 1 mipi lane,
-		preview set to 1296*972 at 30 fps,
-		snapshot set to 2592*1944 at 12 fps,
-		This sensor driver does not support auto focus.
+		OmniVision 2 MP Bayer Sensor, supports 2 mipi lanes,
+		preview and snapshot config at 1932 * 1092 at 30 fps,
+		hfr video at 60, 90 and 120 fps. This sensor driver does
+		not support auto focus.
 
 config MT9M114
 	bool "Sensor MT9M114 (YUV 1.26MP)"
@@ -145,60 +150,6 @@ config MT9M114
 		and snapshot. The preview and snapshot resolution shall be
 		1280 * 270. It does not support auto focus. It supports
 		few special effects like saturation.
-
-config SP1628
-	bool "Sensor SP1628 (YUV 720P)"
-	depends on MSMB_CAMERA
-	---help---
-		SP1628 is SuperPix YUV sensor. It supports 720P preview
-		and snapshot. The preview and snapshot resolution shall be
-		1280 * 270. It does not support auto focus. It supports
-		few special effects like mono.
-
-config GC0339
-	bool "Sensor GC0339 (BAYER .3M)"
-	depends on MSMB_CAMERA
-	---help---
-		gc0339 is a Galaxycore .3 MP Bayer Sensor.
-		It supports 1 or 2 mipi lanes.
-		Preview and snapshot resolution shall be 640*480 at 30 fps,
-		It does not support auto focus.
-
-config OV8825
-	bool "OmniVision OV8825 (BAYER 8MP)"
-	depends on MSMB_CAMERA
-	---help---
-		OmniVision 8 MP Bayer Sensor with auto focus.uses
-		2 mipi lanes, preview config = 1632*1224 30 fps,
-		snapshot config = 3264 * 2448 at 18 fps.
-		2 lanes max fps is 18, 4 lanes max fps is 24.
-
-config OV8865
-	bool "OmniVision OV8865 (BAYER 8MP)"
-	depends on MSMB_CAMERA
-	---help---
-		OmniVision 8 MP Bayer Sensor with auto focus.uses
-		4 mipi lanes, preview config = 1632*1224 30 fps,
-		snapshot config = 3264 * 2448 at 30 fps.
-		Max fps is 30fps at 3264 * 2448, 60fps at 1632 * 1224
-
-config s5k4e1
-	bool "Sensor s5k4e1 (BAYER 5MP)"
-	depends on MSMB_CAMERA
-	---help---
-		Samsung 5 MP Bayer Sensor. It uses 2 mipi lanes,
-		supports 720P preview at 30 fps
-		and QSXGA snapshot at 15 fps.
-		This sensor driver does not support auto focus.
-
-config OV12830
-	bool "OmniVision OV12830 (BAYER 12MP)"
-	depends on MSMB_CAMERA
-	---help---
-		OmniVision 12.8 MP Bayer Sensor with auto focus.uses
-		4 mipi lanes, preview config = 2112 * 1500 at 30 fps,
-		snapshot config = 4224 * 3000 at 15 fps.
-		2 lanes max fps is 18, 4 lanes max fps is 24.
 
 config MSM_V4L2_VIDEO_OVERLAY_DEVICE
 	tristate "Qualcomm MSM V4l2 video overlay device"
@@ -217,8 +168,8 @@ config MSMB_JPEG
 	  This module serves as the common driver
 	  for the JPEG 1.0 encoder and decoder.
 
-config MSM_GEMINI
-	tristate "Qualcomm MSM Gemini JPEG engine support"
-	depends on MSMB_CAMERA && (ARCH_MSM7X30 || ARCH_MSM8X60 || ARCH_MSM8960)
-	---help---
-	  Enables support for the Gemini JPEG encoder engine for 8x60.
+config COMPANION
+        tristate "External companion support"
+        depends on MSMB_CAMERA && ARCH_MSM8974
+        ---help---
+          Enables support for external companion chip for 8974.

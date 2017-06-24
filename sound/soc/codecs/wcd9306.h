@@ -85,4 +85,6 @@ extern void tapan_event_register(
 	int (*machine_event_cb)(struct snd_soc_codec *codec,
 				 enum wcd9xxx_codec_event),
 	struct snd_soc_codec *codec);
+extern void tapan_register_mclk_cb(struct snd_soc_codec *codec,
+			int (*mclk_cb_fn) (struct snd_soc_codec*, int, bool));
 #endif

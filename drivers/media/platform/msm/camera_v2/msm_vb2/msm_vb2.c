@@ -13,17 +13,13 @@
 #include "msm_vb2.h"
 
 static int msm_vb2_queue_setup(struct vb2_queue *q,
-	const struct v4l2_format *fmt,
-	unsigned int *num_buffers, unsigned int *num_planes,
-	unsigned int sizes[], void *alloc_ctxs[])
+			       const struct v4l2_format *fmt,
+			       unsigned int *num_buffers, unsigned int *num_planes,
+			       unsigned int sizes[], void *alloc_ctxs[])
 {
 	int i;
 	struct msm_v4l2_format_data *data = q->drv_priv;
 
-	if (!data) {
-		pr_err("%s: drv_priv NULL\n", __func__);
-		return -EINVAL;
-	}
 	if (data->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
 		if (WARN_ON(data->num_planes > VIDEO_MAX_PLANES))
 			return -EINVAL;
@@ -34,7 +30,7 @@ static int msm_vb2_queue_setup(struct vb2_queue *q,
 			sizes[i] = data->plane_sizes[i];
 	} else {
 		pr_err("%s: Unsupported buf type :%d\n", __func__,
-			   data->type);
+		       data->type);
 		return -EINVAL;
 	}
 	return 0;
@@ -102,7 +98,7 @@ static int msm_vb2_buf_finish(struct vb2_buffer *vb)
 
 	spin_lock_irqsave(&stream->stream_lock, flags);
 	list_for_each_entry_safe(msm_vb2_entry, temp, &(stream->queued_list),
-		list) {
+				 list) {
 		if (msm_vb2_entry == msm_vb2) {
 			list_del_init(&msm_vb2_entry->list);
 			break;
@@ -151,13 +147,14 @@ struct vb2_ops *msm_vb2_get_q_ops(void)
 }
 
 static void *msm_vb2_dma_contig_get_userptr(void *alloc_ctx,
-	unsigned long vaddr, unsigned long size, int write)
+					    unsigned long vaddr, unsigned long size, int write)
 {
 	struct msm_vb2_private_data *priv;
+
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
 	if (!priv)
 		return ERR_PTR(-ENOMEM);
-	priv->vaddr = (void *)vaddr;
+	priv->vaddr = (void*)vaddr;
 	priv->size = size;
 	priv->alloc_ctx = alloc_ctx;
 	return priv;
@@ -179,13 +176,13 @@ struct vb2_mem_ops *msm_vb2_get_q_mem_ops(void)
 }
 
 static struct vb2_queue *msm_vb2_get_queue(int session_id,
-	unsigned int stream_id)
+					   unsigned int stream_id)
 {
 	return msm_get_stream_vb2q(session_id, stream_id);
 }
 
 static struct vb2_buffer *msm_vb2_get_buf(int session_id,
-	unsigned int stream_id)
+					  unsigned int stream_id)
 {
 	struct msm_stream *stream;
 	struct vb2_buffer *vb2_buf = NULL;
@@ -216,18 +213,19 @@ static struct vb2_buffer *msm_vb2_get_buf(int session_id,
 	}
 	msm_vb2 = NULL;
 	vb2_buf = NULL;
-end:
+ end:
 	spin_unlock_irqrestore(&stream->stream_lock, flags);
 	return vb2_buf;
 }
 
 static int msm_vb2_put_buf(struct vb2_buffer *vb, int session_id,
-				unsigned int stream_id)
+			   unsigned int stream_id)
 {
 	struct msm_stream *stream;
 	struct msm_vb2_buffer *msm_vb2;
 	int rc = 0;
 	unsigned long flags;
+
 	stream = msm_get_stream(session_id, stream_id);
 	if (IS_ERR_OR_NULL(stream))
 		return -EINVAL;
@@ -250,12 +248,11 @@ static int msm_vb2_put_buf(struct vb2_buffer *vb, int session_id,
 }
 
 static int msm_vb2_buf_done(struct vb2_buffer *vb, int session_id,
-				unsigned int stream_id)
+			    unsigned int stream_id)
 {
 	unsigned long flags;
 	struct msm_vb2_buffer *msm_vb2;
 	struct msm_stream *stream;
-	struct vb2_buffer *vb2_buf = NULL;
 	int rc = 0;
 
 	stream = msm_get_stream(session_id, stream_id);
@@ -263,18 +260,6 @@ static int msm_vb2_buf_done(struct vb2_buffer *vb, int session_id,
 		return 0;
 	spin_lock_irqsave(&stream->stream_lock, flags);
 	if (vb) {
-		list_for_each_entry(msm_vb2, &(stream->queued_list), list) {
-			vb2_buf = &(msm_vb2->vb2_buf);
-			if (vb2_buf == vb)
-				break;
-		}
-		if (vb2_buf != vb) {
-			pr_err("%s:%d VB buffer is INVALID vb=%x, ses_id=%d, str_id=%d\n",
-				__func__, __LINE__, (unsigned int)vb,
-				session_id, stream_id);
-			rc = -EINVAL;
-			goto out;
-		}
 		msm_vb2 =
 			container_of(vb, struct msm_vb2_buffer, vb2_buf);
 		/* put buf before buf done */
@@ -285,11 +270,10 @@ static int msm_vb2_buf_done(struct vb2_buffer *vb, int session_id,
 		} else
 			rc = -EINVAL;
 	} else {
-		pr_err("%s:%d VB buffer is NULL for ses_id=%d, str_id=%d\n",
-			__func__, __LINE__, session_id, stream_id);
+		pr_err("%s: VB buffer is null\n", __func__);
 		rc = -EINVAL;
 	}
-out:
+
 	spin_unlock_irqrestore(&stream->stream_lock, flags);
 	return rc;
 }

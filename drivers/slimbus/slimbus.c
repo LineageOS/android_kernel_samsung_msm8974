@@ -43,6 +43,8 @@ static DEFINE_IDR(ctrl_idr);
 static struct device_type slim_dev_type;
 static struct device_type slim_ctrl_type;
 
+extern unsigned int system_rev;
+
 static const struct slim_device_id *slim_match(const struct slim_device_id *id,
 					const struct slim_device *slim_dev)
 {
@@ -1890,10 +1892,10 @@ int slim_dealloc_ch(struct slim_device *sb, u16 chanh)
 {
 	struct slim_controller *ctrl = sb->ctrl;
 	u8 chan = SLIM_HDL_TO_CHIDX(chanh);
-	struct slim_ich *slc = &ctrl->chans[chan];
+	struct slim_ich *slc;
 	if (!ctrl)
 		return -EINVAL;
-
+	slc = &ctrl->chans[chan];
 	mutex_lock(&ctrl->sched.m_reconf);
 	if (slc->state == SLIM_CH_FREE) {
 		mutex_unlock(&ctrl->sched.m_reconf);

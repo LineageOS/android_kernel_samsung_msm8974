@@ -23,6 +23,7 @@
 static int msm_i2c_mux_config(struct i2c_mux_device *mux_device, uint8_t *mode)
 {
 	uint32_t val;
+
 	val = msm_camera_io_r(mux_device->ctl_base);
 	if (*mode == MODE_DUAL) {
 		msm_camera_io_w(val | 0x3, mux_device->ctl_base);
@@ -41,15 +42,16 @@ static int msm_i2c_mux_config(struct i2c_mux_device *mux_device, uint8_t *mode)
 static int msm_i2c_mux_init(struct i2c_mux_device *mux_device)
 {
 	int rc = 0, val = 0;
+
 	if (mux_device->use_count == 0) {
 		mux_device->ctl_base = ioremap(mux_device->ctl_mem->start,
-			resource_size(mux_device->ctl_mem));
+					       resource_size(mux_device->ctl_mem));
 		if (!mux_device->ctl_base) {
 			rc = -ENOMEM;
 			return rc;
 		}
 		mux_device->rw_base = ioremap(mux_device->rw_mem->start,
-			resource_size(mux_device->rw_mem));
+					      resource_size(mux_device->rw_mem));
 		if (!mux_device->rw_base) {
 			rc = -ENOMEM;
 			iounmap(mux_device->ctl_base);
@@ -65,6 +67,7 @@ static int msm_i2c_mux_init(struct i2c_mux_device *mux_device)
 static int msm_i2c_mux_release(struct i2c_mux_device *mux_device)
 {
 	int val = 0;
+
 	mux_device->use_count--;
 	if (mux_device->use_count == 0) {
 		val = msm_camera_io_r(mux_device->rw_base);
@@ -76,10 +79,11 @@ static int msm_i2c_mux_release(struct i2c_mux_device *mux_device)
 }
 
 static long msm_i2c_mux_subdev_ioctl(struct v4l2_subdev *sd,
-			unsigned int cmd, void *arg)
+				     unsigned int cmd, void *arg)
 {
 	struct i2c_mux_device *mux_device;
 	int rc = 0;
+
 	mux_device = v4l2_get_subdevdata(sd);
 	if (mux_device == NULL) {
 		rc = -ENOMEM;
@@ -88,7 +92,7 @@ static long msm_i2c_mux_subdev_ioctl(struct v4l2_subdev *sd,
 	mutex_lock(&mux_device->mutex);
 	switch (cmd) {
 	case VIDIOC_MSM_I2C_MUX_CFG:
-		rc = msm_i2c_mux_config(mux_device, (uint8_t *) arg);
+		rc = msm_i2c_mux_config(mux_device, (uint8_t*)arg);
 		break;
 	case VIDIOC_MSM_I2C_MUX_INIT:
 		rc = msm_i2c_mux_init(mux_device);
@@ -104,17 +108,18 @@ static long msm_i2c_mux_subdev_ioctl(struct v4l2_subdev *sd,
 }
 
 static struct v4l2_subdev_core_ops msm_i2c_mux_subdev_core_ops = {
-	.ioctl = &msm_i2c_mux_subdev_ioctl,
+	.ioctl	= &msm_i2c_mux_subdev_ioctl,
 };
 
 static const struct v4l2_subdev_ops msm_i2c_mux_subdev_ops = {
-	.core = &msm_i2c_mux_subdev_core_ops,
+	.core	= &msm_i2c_mux_subdev_core_ops,
 };
 
 static int __devinit i2c_mux_probe(struct platform_device *pdev)
 {
 	struct i2c_mux_device *mux_device;
 	int rc = 0;
+
 	CDBG("%s: device id = %d\n", __func__, pdev->id);
 	mux_device = kzalloc(sizeof(struct i2c_mux_device), GFP_KERNEL);
 	if (!mux_device) {
@@ -128,28 +133,28 @@ static int __devinit i2c_mux_probe(struct platform_device *pdev)
 	mutex_init(&mux_device->mutex);
 
 	mux_device->ctl_mem = platform_get_resource_byname(pdev,
-					IORESOURCE_MEM, "i2c_mux_ctl");
+							   IORESOURCE_MEM, "i2c_mux_ctl");
 	if (!mux_device->ctl_mem) {
 		pr_err("%s: no mem resource?\n", __func__);
 		rc = -ENODEV;
 		goto i2c_mux_no_resource;
 	}
 	mux_device->ctl_io = request_mem_region(mux_device->ctl_mem->start,
-		resource_size(mux_device->ctl_mem), pdev->name);
+						resource_size(mux_device->ctl_mem), pdev->name);
 	if (!mux_device->ctl_io) {
 		pr_err("%s: no valid mem region\n", __func__);
 		rc = -EBUSY;
 		goto i2c_mux_no_resource;
 	}
 	mux_device->rw_mem = platform_get_resource_byname(pdev,
-					IORESOURCE_MEM, "i2c_mux_rw");
+							  IORESOURCE_MEM, "i2c_mux_rw");
 	if (!mux_device->rw_mem) {
 		pr_err("%s: no mem resource?\n", __func__);
 		rc = -ENODEV;
 		goto i2c_mux_no_resource;
 	}
 	mux_device->rw_io = request_mem_region(mux_device->rw_mem->start,
-		resource_size(mux_device->rw_mem), pdev->name);
+					       resource_size(mux_device->rw_mem), pdev->name);
 	if (!mux_device->rw_io) {
 		pr_err("%s: no valid mem region\n", __func__);
 		rc = -EBUSY;
@@ -158,17 +163,17 @@ static int __devinit i2c_mux_probe(struct platform_device *pdev)
 	mux_device->pdev = pdev;
 	return 0;
 
-i2c_mux_no_resource:
+ i2c_mux_no_resource:
 	mutex_destroy(&mux_device->mutex);
 	kfree(mux_device);
-	return 0;
+	return rc;
 }
 
 static struct platform_driver i2c_mux_driver = {
-	.probe = i2c_mux_probe,
-	.driver = {
-		.name = MSM_I2C_MUX_DRV_NAME,
-		.owner = THIS_MODULE,
+	.probe		= i2c_mux_probe,
+	.driver		= {
+		.name	= MSM_I2C_MUX_DRV_NAME,
+		.owner	= THIS_MODULE,
 	},
 };
 

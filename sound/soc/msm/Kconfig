@@ -251,6 +251,28 @@ config SND_SOC_MSM8X10
 	 the machine drivers and the corresponding
 	 DAI-links.
 
+config EXT_MAINMIC_BIAS
+	depends on ARCH_MSM8610
+	default n
+	bool "EXTERNAL MAIN MICBIAS"
+	---help---
+         Support for the SAMSUNG MSM8930 audio.
+         Say Y here if you want use External bias
+         for Main mic.
+	 To compile this option, choose M here:
+	 If unsure, say N here.
+
+ config EXT_SUBMIC_BIAS
+	 depends on ARCH_MSM8610
+	 default n
+	 bool "EXTERNAL MAIN MICBIAS"
+	 ---help---
+         Support for the SAMSUNG MSM8930 audio.
+         Say Y here if you want use External bias
+         for Main mic.
+	 To compile this option, choose M here:
+	 If unsure, say N here.
+
 config SND_SOC_MSM8660_APQ
         tristate "Soc Machine driver for APQ8060 WM8903 codec"
         depends on ARCH_MSM8X60
@@ -271,4 +293,117 @@ config SND_SOC_MDM9625
 	select SND_DYNAMIC_MINORS
 	help
 	 To add support for SoC audio on MDM9625 boards.
+
+config SND_SOC_ES_515
+        tristate "SoC Audio support for Audience ES515"
+        help
+          Say Y if you want to add support for SoC audio on Audience ES515.
+	  If enabled, the control and data bus interface with ES515
+	  must be selected. Three interfaces (I2C, I2S & SLIMbus) are
+	  supported as of now.
+
+choice
+        prompt "earSmart control interface"
+        depends on SND_SOC_ES_515
+        default SND_SOC_ES_SLIM
+        help
+          Select either I2C or SLIMBUS for control interface. The currnet
+	  possible control and data bus selections are:
+	  * I2C for control - I2S for data
+	  * SLIMbus for control -I2S for data
+	  * SLIMbus(for both, control and data interface)
+
+
+config SND_SOC_ES_I2C
+        bool "earSmart I2C"
+        help
+          Y to use the I2C as control interface to communicate with
+	  Audience chips.
+
+config SND_SOC_ES_SLIM
+        bool "earSmart SLIMbus"
+        help
+          Y to use the SLIMbus as the command and control path
+endchoice
+
+config SND_SOC_ES_I2S
+	tristate "earSmart I2S data interface"
+        depends on SND_SOC_ES_515
+        help
+          Say Y if you want to add support for I2S data connections for
+          Audience chips.
+
+
+config SND_SOC_ES_UART
+	tristate "earSmart UART interface"
+        depends on SND_SOC_ES_515
+        help
+          Say Y if you want to add support for UART interface for
+          Audience chips. The UART interface can be used to send and
+	  receive control messages to Audience chips. It can also be
+	  used to stream out the audio data for debugging purpose.
+
+config SND_SOC_ES_CDEV
+	tristate "earSmart character device interface"
+        depends on SND_SOC_ES_515
+        help
+          Say Y if you want to add support for character device interface to
+          Audience chips. This interface can also be used to stream out the
+	  audio data for debugging purpose by using existing available control
+	  interface.
+
+config JACK_AUDIO
+	tristate "Low Latency for JAM audio"
+	default y
+
+config SEC_DHA_SOL_MAL
+        tristate "Samsung DHA solution"
+        default n
+        help
+         To add support for Samsung DHA solution
+
+config AUDIO_DUAL_CP
+        tristate "Audio Flag For DUAL CP"
+        default n
+        help
+         To add support for udio Flag For DUAL CP
+
+config SEC_DEVIDE_RINGTONE_GAIN
+	tristate "Samsung ringback tone gain devide"
+	default n
+	help
+	 To add support for Ringback tone gain devide
+
+ config LDO_SUBMIC_BIAS
+	depends on ARCH_MSM8974
+	default n
+	bool "LDO SUB MICBIAS"
+	 ---help---
+         Support for the SAMSUNG MSM8974 audio.
+         Say Y here if you want use LDO bias
+         for Sub mic.
+	 To compile this option, choose M here:
+	 If unsure, say N here.
+
+ config LDO_EARMIC_BIAS
+	depends on ARCH_MSM8974
+	default n
+	bool "LDO EAR MICBIAS"
+	 ---help---
+         Support for the SAMSUNG MSM8974 audio.
+         Say Y here if you want use LDO bias
+         for Ear mic.
+	 To compile this option, choose M here:
+	 If unsure, say N here
+
+config GPIO_MAINMIC_BIAS
+	tristate "Main MicBias using gpio"
+	help
+		To add support if the main-mic bias is
+		supplied using external LDO
+
+config DSDA_VIA_UART
+	tristate "DualStandbyDualActive function via UART"
+	help
+	 To add support dsda via uart
 endmenu

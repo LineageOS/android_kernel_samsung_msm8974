@@ -1,0 +1,21 @@
+/* Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/include/ "dsi_panel_samsung_2560p_video_R63319.dtsi"
+/include/ "dsi_panel_samsung_octa_1080p_cmd_s6e3fa0.dtsi"
+/include/ "dsi_panel_samsung_octa_1080p_cmd_s6e3fa2.dtsi"
+/include/ "dsi_panel_samsung_octa_1080p_video.dtsi"
+/include/ "dsi_panel_magna_octa_720p_video.dtsi"
+/include/ "dsi_panel_samsung_octa_720p_video_s6e8aa4.dtsi"
+/include/ "dsi_panel_jdi_tft_fhd_video.dtsi"
+/include/ "dsi_panel_samsung_octa_2560p_cmd_S6TNMR7.dtsi"
+/include/ "dsi_panel_samsung_octa_2560p_cmd_S6E3HA1.dtsi"

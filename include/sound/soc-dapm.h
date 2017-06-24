@@ -414,6 +414,9 @@ struct snd_soc_dapm_widget *snd_soc_get_platform_widget(struct snd_soc_card *car
 int snd_soc_dapm_dai_get_connected_widgets(struct snd_soc_dai *dai, int stream,
 	struct snd_soc_dapm_widget_list **list);
 
+int snd_soc_dapm_codec_dai_get_playback_connected_widgets(struct snd_soc_dai *dai,
+		struct snd_soc_dapm_widget_list **list);
+
 /* dapm widget types */
 enum snd_soc_dapm_type {
 	snd_soc_dapm_input = 0,		/* input pin */

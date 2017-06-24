@@ -640,6 +640,12 @@ struct hfi_properties_supported {
 	u32 rg_properties[1];
 };
 
+struct hfi_vpe_color_space_conversion {
+	u32 csc_matrix[9];
+	u32 csc_bias[3];
+	u32 csc_limit[6];
+};
+
 #define HFI_ROTATE_NONE					(HFI_COMMON_BASE + 0x1)
 #define HFI_ROTATE_90					(HFI_COMMON_BASE + 0x2)
 #define HFI_ROTATE_180					(HFI_COMMON_BASE + 0x3)

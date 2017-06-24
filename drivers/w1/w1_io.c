@@ -368,6 +368,26 @@ void w1_search_devices(struct w1_master *dev, u8 search_type, w1_slave_found_cal
 		w1_search(dev, search_type, cb);
 }
 
+#ifdef CONFIG_W1_CF
+/**
+ * Resets the bus and then selects the slave by sending either a skip rom
+ * or a rom match.
+ * The w1 master lock must be held.
+ *
+ * @param sl	the slave to select
+ * @return 	0=success, anything else=error
+ */
+int w1_reset_overdrive_select_slave(struct w1_slave *sl)
+{
+	if (w1_reset_bus(sl->master))
+		return -1;
+
+	w1_write_8(sl->master, W1_OVSKIP_ROM);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(w1_reset_overdrive_select_slave);
+#endif
+
 /**
  * Resets the bus and then selects the slave by sending either a skip rom
  * or a rom match.

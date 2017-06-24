@@ -259,6 +259,13 @@
 #define cpu_suspend_size		__glue(CPU_NAME,_suspend_size)
 #define cpu_do_suspend			__glue(CPU_NAME,_do_suspend)
 #define cpu_do_resume			__glue(CPU_NAME,_do_resume)
+# ifdef CONFIG_TIMA_RKP_L2_TABLES
+#  ifdef CONFIG_CPU_V7
+#   define cpu_tima_set_pte_ext                __glue(CPU_NAME,_tima_set_pte_ext)
+#  else
+#    warning "TIMA L2 manage only supports ARM v7 arch"
+#  endif
+# endif
 #endif
 
 #endif

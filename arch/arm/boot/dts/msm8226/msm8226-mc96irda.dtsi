@@ -1,0 +1,37 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/ {
+        i2c@22 {
+                cell-index = <22>;
+                compatible = "i2c-gpio";
+                gpios = <&msmgpio 4 0 /* sda */
+                         &msmgpio 5 0 /* scl */
+                         >;
+                i2c-gpio,delay-us = <2>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                mc96fr332@50 {
+                        compatible = "mc96fr332,i2c";
+                        reg = <0x50>;
+                        interrupt-parent = <&msmgpio>;
+                        interrupts = <64 0>;
+			vled_ic_1.8v-supply = <&pm8226_l27>;
+                        mc96fr332,irda_irq_gpio = <&msmgpio 64 0x00>;
+                        mc96fr332,irda_wake = <&msmgpio 62 0x00>;
+			mc96fr332,irda_led_en = <&msmgpio 115 0x00>;
+			mc96fr332,scl-gpio = <&msmgpio 5 0x00>;
+			mc96fr332,sda-gpio = <&msmgpio 4 0x00>;
+                };
+        };
+};

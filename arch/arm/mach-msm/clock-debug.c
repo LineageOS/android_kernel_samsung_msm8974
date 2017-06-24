@@ -33,7 +33,7 @@ static LIST_HEAD(clk_list);
 static DEFINE_SPINLOCK(clk_list_lock);
 
 static struct dentry *debugfs_base;
-static u32 debug_suspend;
+static u32 debug_suspend = 1;
 
 struct clk_table {
 	struct list_head node;
@@ -267,6 +267,29 @@ static int clock_debug_print_clock(struct clk *c, struct seq_file *m)
 
 	return 1;
 }
+
+int clock_debug_print_clock2(struct clk *c)
+{
+	char *start = "";
+
+	if (!c)
+		return 0;
+	pr_info("\n");
+	do {
+		if (c->vdd_class)
+			pr_info("%s%s:%u:%u [%ld, %lu]", start, c->dbg_name,
+				c->prepare_count, c->count, c->rate,
+				c->vdd_class->cur_level);
+		else
+		pr_info("%s%s:%u:%u [%ld]", start, c->dbg_name,
+		c->prepare_count, c->count, c->rate);
+		start = " -> ";
+	} while ((c = clk_get_parent(c)));
+
+	pr_cont("\n");
+
+return 1;
+} 
 
 /**
  * clock_debug_print_enabled_clocks() - Print names of enabled clocks

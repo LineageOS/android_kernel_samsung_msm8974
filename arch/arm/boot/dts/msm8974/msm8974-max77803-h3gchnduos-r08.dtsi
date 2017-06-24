@@ -1,0 +1,64 @@
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/ {
+	i2c@13 {
+		cell-index = <13>;
+		compatible = "i2c-gpio";
+		gpios = <&msmgpio 91 0 /* sda */
+			 &msmgpio 49 0 /* scl */
+			 >;
+		i2c-gpio,delay-us = <2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		max77803@66 {
+			compatible = "max77803,i2c";
+			reg = <0x66>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <102 0>;
+			max77803,irq-gpio = <&msmgpio 102 0x00>;
+			max77803,irq-base = <353>;
+			max77803,wc-irq-gpio = <0>;
+			max77803,wakeup = <1>;
+		};
+	};
+
+	i2c@19 {
+		compatible = "i2c-gpio";
+		gpios = <&msmgpio 87 0 /* sda */
+		&msmgpio 88 0 /* scl */
+		>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		sec-fuelgauge@36 {
+			compatible = "sec-fuelgauge,i2c";
+			reg = <0x36>;
+			fuelgauge,fuel_int = <&pm8941_gpios 26 0x1>;
+			fuelgauge,bat_int = <&pm8941_mpps 8 0>;
+
+			fuelgauge,capacity_max = <1000>;
+			fuelgauge,capacity_max_margin = <50>;
+			fuelgauge,capacity_min = <0>;
+			fuelgauge,capacity_calculation_type = <0x17>;
+			fuelgauge,fuel_alert_soc = <2>;
+			/* fuelgaguge,repeated_fuelalert; */
+			fuelgauge,rcomp0 = <0x73>;
+			fuelgauge,rcomp_charging = <0x8D>;
+			fuelgauge,temp_cohot = <(-1000)>;
+			fuelgauge,temp_cocold = <(-4325)>;
+			fuelgauge,is_using_model_data;
+			fuelgauge,type_str = "SDI";
+			qcom,sec-fuelgauge-vadc = <&pm8941_vadc>;
+		};
+	};
+};

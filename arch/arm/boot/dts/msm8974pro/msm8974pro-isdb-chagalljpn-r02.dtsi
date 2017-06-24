@@ -1,0 +1,43 @@
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+	tspp: msm_tspp@f99d8000 {
+		status = "okay";
+	};
+	/* BLSP 1 */
+	i2c_1: i2c@f9923000 {
+
+		status = "ok";
+
+		isdb_fc8300@58 {
+			compatible = "isdb,isdb_fc8300";
+			reg = <0x58>;
+		};
+	};
+
+	spi_1: spi@f9923000 {
+		status = "disabled";
+	};
+
+	isdbt_fc8300_data {
+		compatible = "isdb_fc8300_pdata";
+		qcom,isdb-gpio-pwr-en = <&msmgpio 76 0>;
+		qcom,isdb-gpio-rst = <&msmgpio 73 0>;
+		qcom,isdb-gpio-irq = <&pma8084_gpios 11 0>;
+		qcom,isdb-gpio-i2c_sda = <&msmgpio 2 0>;
+		qcom,isdb-gpio-i2c_scl = <&msmgpio 3 0>;
+		qcom,isdb-gpio-tmm_sw = <&msmgpio 115 0>;
+		qcom,isdb-bbm-xtal-freq = <26000>;
+	};
+
+};

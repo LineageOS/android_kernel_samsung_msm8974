@@ -447,7 +447,7 @@ static int ext4_has_free_clusters(struct ext4_sb_info *sbi,
 
 	free_clusters  = percpu_counter_read_positive(fcc);
 	dirty_clusters = percpu_counter_read_positive(dcc);
-	root_clusters = EXT4_B2C(sbi, ext4_r_blocks_count(sbi->s_es));
+	root_clusters = EXT4_B2C(sbi, atomic64_read(&sbi->s_r_blocks_count));
 
 	if (free_clusters - (nclusters + root_clusters + dirty_clusters) <
 					EXT4_FREECLUSTERS_WATERMARK) {

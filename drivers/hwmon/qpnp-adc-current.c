@@ -1594,6 +1594,7 @@ fail:
 		i++;
 	}
 	hwmon_device_unregister(iadc->iadc_hwmon);
+	mutex_destroy(&iadc->adc->adc_lock);
 
 	return rc;
 }

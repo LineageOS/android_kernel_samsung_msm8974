@@ -1,0 +1,113 @@
+/*
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+    led_flash0: qcom,camera-led-flash {
+        cell-index = <0>;
+        compatible = "qcom,camera-led-flash";
+        qcom,flash-type = <1>;
+    };
+};
+
+&cci {
+
+	/*dummy actuator node to satify mm-camera AF capabilities*/
+    actuator1: qcom,actuator@0 {
+        cell-index = <1>;
+        reg = <0x0>;
+        compatible = "qcom,actuator";
+        qcom,cci-master = <0>;
+    };
+
+    qcom,camera@0 {
+        cell-index = <0>;
+        compatible = "qcom,camera";
+        reg = <0x0>;
+        qcom,csiphy-sd-index = <0>;
+        qcom,csid-sd-index = <0>;
+        qcom,led-flash-src = <&led_flash0>;
+        qcom,actuator-src = <&actuator1>;
+        cam_vdig-supply = <&pm8226_l26>;
+        cam_vio-supply = <&pm8226_l23>;
+        cam_vaf-supply = <&pm8226_l5>;
+        qcom,cam-vreg-name ="cam_vdig","cam_vio", "cam_vaf";
+        qcom,cam-vreg-type = <0 0 0>;
+        qcom,cam-vreg-min-voltage = <1250000 1800000 1200000>;
+        qcom,cam-vreg-max-voltage = <1250000 1800000 1200000>;
+        qcom,cam-vreg-op-mode = <1250000 1800000 1200000>;
+        qcom,gpio-no-mux = <0>;
+        gpios = <&msmgpio 26 0>,
+                <&msmgpio 110 0>,
+                <&msmgpio 36 0>,
+                <&msmgpio 112 0>,
+                <&msmgpio 16 0>,
+                <&msmgpio 28 0>,
+                <&msmgpio 35 0>,
+                <&msmgpio 116 0>,
+                <&msmgpio 64 0>,
+                <&msmgpio 65 0>;
+        qcom,gpio-reset	  = <1>;
+        qcom,gpio-standby = <2>;
+        qcom,gpio-ext-vana-power = <3>;
+        qcom,gpio-ext-vio-power = <4>;
+        qcom,gpio-vt-reset = <5>;
+        qcom,gpio-vt-standby = <6>;
+        qcom,gpio-ext-vaf-power = <7>;
+        qcom,gpio-ext-flash-en = <8>;
+        qcom,gpio-ext-torch-en = <9>;
+        qcom,gpio-req-tbl-num = <0 1 2 3 4 5 6 7 8 9>;
+        qcom,gpio-req-tbl-flags = <1 0 0 0 0 0 0 0 0 0>;
+        qcom,gpio-req-tbl-label = "CAMIF_MCLK" , "CAM_RESET" , "CAM_STBY" , "CAM_ANALOG_EN",
+                                  "VTCAM_EN", "VT_RESET", "VT_STANDBY", "CAM_AF_EN",
+                                  "CAM_FLASH_EN", "CAM_TORCH_EN";
+
+        qcom,cci-master = <0>;
+        status = "ok";
+	};
+
+
+    qcom,camera@2 {
+        cell-index = <2>;
+        compatible = "qcom,camera";
+        reg = <0x2>;
+        qcom,csiphy-sd-index = <1>;
+        qcom,csid-sd-index = <1>;
+        cam_vdig-supply = <&pm8226_l26>;
+        cam_vio-supply = <&pm8226_l23>;
+        qcom,cam-vreg-name = "cam_vdig", "cam_vio";
+        qcom,cam-vreg-type = <0 0>;
+        qcom,cam-vreg-min-voltage = <1250000 1800000>;
+        qcom,cam-vreg-max-voltage = <1250000 1800000>;
+        qcom,cam-vreg-op-mode = <1250000 1800000>;
+        qcom,gpio-no-mux = <0>;
+        gpios = <&msmgpio 27 0>,
+                <&msmgpio 110 0>,
+                <&msmgpio 36 0>,
+                <&msmgpio 28 0>,
+                <&msmgpio 35 0>,
+                <&msmgpio 112 0>,
+                <&msmgpio 16 0>;
+        qcom,gpio-reset = <1>;
+        qcom,gpio-standby = <2>;
+        qcom,gpio-vt-reset = <3>;
+        qcom,gpio-vt-standby = <4>;
+        qcom,gpio-ext-vana-power = <5>;
+        qcom,gpio-ext-vio-power = <6>;
+        qcom,gpio-req-tbl-num = <0 1 2 3 4 5 6>;
+        qcom,gpio-req-tbl-flags = <1 0 0 0 0 0 0>;
+        qcom,gpio-req-tbl-label = "CAMIF_MCLK" , "CAM_RESET" , "CAM_STBY" , "VT_RESET" ,
+                                  "VT_STBY" , "CAM_ANALOG_EN", "VTCAM_EN";
+        qcom,cci-master = <0>;
+        status = "ok";
+    };
+};

@@ -3,6 +3,9 @@
 
 #include <linux/huge_mm.h>
 #include <linux/swap.h>
+#ifdef CONFIG_SCFS_LOWER_PAGECACHE_INVALIDATION
+#include <linux/page-flags.h>
+#endif
 
 /**
  * page_is_file_cache - should the page be on a file LRU or anon LRU?
@@ -28,8 +31,20 @@ add_page_to_lru_list(struct zone *zone, struct page *page, enum lru_list lru)
 	struct lruvec *lruvec;
 
 	lruvec = mem_cgroup_lru_add_list(zone, page, lru);
+#ifdef CONFIG_SCFS_LOWER_PAGECACHE_INVALIDATION
+	if (PageNocache(page))
+		list_add_tail(&page->lru, &lruvec->lists[lru]);
+	else
+		list_add(&page->lru, &lruvec->lists[lru]);
+#else
 	list_add(&page->lru, &lruvec->lists[lru]);
+#endif
 	__mod_zone_page_state(zone, NR_LRU_BASE + lru, hpage_nr_pages(page));
+
+#if defined(CONFIG_CMA_PAGE_COUNTING)
+	if (PageCMA(page))
+		__mod_zone_page_state(zone, NR_FREE_CMA_PAGES + 1 + lru, 1);
+#endif
 }
 
 static inline void
@@ -38,6 +53,11 @@ del_page_from_lru_list(struct zone *zone, struct page *page, enum lru_list lru)
 	mem_cgroup_lru_del_list(page, lru);
 	list_del(&page->lru);
 	__mod_zone_page_state(zone, NR_LRU_BASE + lru, -hpage_nr_pages(page));
+
+#if defined(CONFIG_CMA_PAGE_COUNTING)
+	if (PageCMA(page))
+		__mod_zone_page_state(zone, NR_FREE_CMA_PAGES + 1 + lru, -1);
+#endif
 }
 
 /**

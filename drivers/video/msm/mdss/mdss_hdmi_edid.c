@@ -14,7 +14,9 @@
 #include <linux/types.h>
 #include <mach/board.h>
 #include "mdss_hdmi_edid.h"
-
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+#include "../mhl_v2/sii8240/sii8240_driver.h"
+#endif
 #define DBC_START_OFFSET 4
 
 /*
@@ -69,6 +71,9 @@ struct hdmi_edid_ctrl {
 	u16 audio_latency;
 	u16 video_latency;
 	u32 present_3d;
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+	u32 audio_channel_info;
+#endif
 	u8 audio_data_block[MAX_AUDIO_DATA_BLOCK_SIZE];
 	int adb_size;
 	u8 spkr_alloc_data_block[MAX_SPKR_ALLOC_DATA_BLOCK_SIZE];
@@ -252,6 +257,7 @@ static struct hdmi_edid_video_mode_property_type
 	{HDMI_VFRMT_2880x480p60_4_3, 2880, 480, false, 3432, 552, 525, 45,
 	 31500, 60000, 108108, 60000, true},
 };
+int hdmi_forced_resolution = -1;
 
 static ssize_t hdmi_edid_sysfs_rda_modes(struct device *dev,
 	struct device_attribute *attr, char *buf)
@@ -284,7 +290,10 @@ static ssize_t hdmi_edid_sysfs_rda_modes(struct device *dev,
 			edid_ctrl->video_resolution);
 	}
 
-	DEV_DBG("%s: '%s'\n", __func__, buf);
+	if (hdmi_forced_resolution >= 0)
+		ret = snprintf(buf, PAGE_SIZE, "%d", hdmi_forced_resolution+1);
+
+	DEV_INFO("%s: '%s'\n", __func__, buf);
 	ret += scnprintf(buf + ret, PAGE_SIZE - ret, "\n");
 
 	return ret;
@@ -405,6 +414,11 @@ static struct attribute_group hdmi_edid_fs_attrs_group = {
 	.attrs = hdmi_edid_fs_attrs,
 };
 
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+struct hdmi_edid_ctrl *edid_ctrl_ext;
+#endif
+
+#if !defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
 static int hdmi_edid_read_block(struct hdmi_edid_ctrl *edid_ctrl, int block,
 	u8 *edid_buf)
 {
@@ -454,6 +468,17 @@ read_retry:
 		block_size /= 2;
 	} while (status && (block_size >= 16));
 
+	/* EDID Debug - YHM */
+	pr_info("****EDID : [%d] block****\n", block);
+	for (ndx = 0; ndx < 0x80; ndx += 16)
+		pr_info("EDID[%02x-%02x] %02x %02x %02x %02x  "
+			"%02x %02x %02x %02x    %02x %02x %02x %02x  "
+			"%02x %02x %02x %02x\n", ndx, ndx+15,
+			b[ndx+0], b[ndx+1], b[ndx+2], b[ndx+3],
+			b[ndx+4], b[ndx+5], b[ndx+6], b[ndx+7],
+			b[ndx+8], b[ndx+9], b[ndx+10], b[ndx+11],
+			b[ndx+12], b[ndx+13], b[ndx+14], b[ndx+15]);
+
 	if (status)
 		goto error;
 
@@ -486,6 +511,7 @@ read_retry:
 error:
 	return status;
 } /* hdmi_edid_read_block */
+#endif
 
 #define EDID_BLK_LEN 128
 #define EDID_DTD_LEN 18
@@ -631,10 +657,17 @@ static void hdmi_edid_extract_audio_data_blocks(
 {
 	u8 len, cnt = 0;
 	const u8 *adb = NULL;
+	u16 audio_ch = 0;
+	u32 bit_rate = 0;
 
 	if (!edid_ctrl) {
 		DEV_ERR("%s: invalid input\n", __func__);
 		return;
+	}
+
+	if (in_buf[3] & (1<<6)) {
+		DEV_INFO("%s: default audio format\n", __func__);
+		edid_ctrl_ext->audio_channel_info |= 2;
 	}
 
 	adb = hdmi_edid_find_block(in_buf, DBC_START_OFFSET, AUDIO_DATA_BLOCK,
@@ -649,21 +682,42 @@ static void hdmi_edid_extract_audio_data_blocks(
 	edid_ctrl->adb_size = len;
 
 	while (len >= 3 && cnt < 16) {
-		DEV_DBG("%s: ch=%d fmt=%d sampling=0x%02x bitdepth=0x%02x\n",
+		DEV_INFO("%s: ch=%d fmt=%d sampling=0x%02x bitdepth=0x%02x\n",
 			__func__, (adb[1]&0x7)+1, adb[1]>>3, adb[2], adb[3]);
-
+		if(adb[1]>>3 == 1) {
+			audio_ch |= (1 << (adb[1] & 0x7));
+			if((adb[1] & 0x7) > 0x04)
+				audio_ch |= 0x20;
+			if (adb[3] & 0x07) {
+				bit_rate = adb[3] & 0x7;
+				bit_rate |= (adb[2] & 0x7F) << 3;
+			}
+		}
 		cnt++;
 		len -= 3;
 		adb += 3;
 	}
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+	edid_ctrl_ext->audio_channel_info |= (bit_rate << 16);
+	edid_ctrl_ext->audio_channel_info |= audio_ch;
+	DEV_INFO("%s: HDMI Audio info : 0x%X\n", __func__,
+				edid_ctrl_ext->audio_channel_info);
+#endif
+
 } /* hdmi_edid_extract_audio_data_blocks */
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+u32 hdmi_get_audio_ch(void)
+{
+	return edid_ctrl_ext->audio_channel_info;
+}
+#endif
 
 static void hdmi_edid_extract_speaker_allocation_data(
 	struct hdmi_edid_ctrl *edid_ctrl, const u8 *in_buf)
 {
 	u8 len;
 	const u8 *sadb = NULL;
-
+	u16 speaker_allocation = 0;
 	if (!edid_ctrl) {
 		DEV_ERR("%s: invalid input\n", __func__);
 		return;
@@ -679,8 +733,8 @@ static void hdmi_edid_extract_speaker_allocation_data(
 
 	memcpy(edid_ctrl->spkr_alloc_data_block, sadb + 1, len);
 	edid_ctrl->sadb_size = len;
-
-	DEV_DBG("%s: EDID: speaker alloc data SP byte = %08x %s%s%s%s%s%s%s\n",
+	speaker_allocation |= (sadb[1] & 0x7F);
+	DEV_INFO("%s: EDID: speaker alloc data SP byte = %08x %s%s%s%s%s%s%s\n",
 		__func__, sadb[1],
 		(sadb[1] & BIT(0)) ? "FL/FR," : "",
 		(sadb[1] & BIT(1)) ? "LFE," : "",
@@ -689,6 +743,7 @@ static void hdmi_edid_extract_speaker_allocation_data(
 		(sadb[1] & BIT(4)) ? "RC," : "",
 		(sadb[1] & BIT(5)) ? "FLC/FRC," : "",
 		(sadb[1] & BIT(6)) ? "RLC/RRC," : "");
+	edid_ctrl_ext->audio_channel_info |= (speaker_allocation << 8);
 } /* hdmi_edid_extract_speaker_allocation_data */
 
 static void hdmi_edid_extract_latency_fields(struct hdmi_edid_ctrl *edid_ctrl,
@@ -908,6 +963,7 @@ static void hdmi_edid_add_sink_video_format(
 	const struct msm_hdmi_mode_timing_info *timing =
 		hdmi_get_supported_mode(video_format);
 	u32 supported = timing != NULL;
+	u32 mhl_supported = supported;
 
 	if (video_format >= HDMI_VFRMT_MAX) {
 		DEV_ERR("%s: video format: %s is not supported\n", __func__,
@@ -915,11 +971,19 @@ static void hdmi_edid_add_sink_video_format(
 		return;
 	}
 
-	DEV_DBG("%s: EDID: format: %d [%s], %s\n", __func__,
+	DEV_INFO("%s: EDID: format: %d [%s], %s\n", __func__,
 		video_format, msm_hdmi_mode_2string(video_format),
 		supported ? "Supported" : "Not-Supported");
-
-	if (supported) {
+	/* TODO : Should check MHL Connection */
+	if (!sii8240_support_packedpixel()) {
+		const struct msm_hdmi_mode_timing_info *mhl_timing =
+			hdmi_mhl_get_supported_mode(video_format);
+		mhl_supported = mhl_timing != NULL;
+		DEV_INFO("%s: EDID: format: %d [%s], %s by MHL\n",__func__,
+			video_format,  msm_hdmi_mode_2string(video_format),
+			mhl_supported ? "Supported" : "Not-Supported");
+	}
+	if (supported && mhl_supported) {
 		/* todo: MHL */
 		sink_data->disp_mode_list[sink_data->num_of_elements++] =
 			video_format;
@@ -1397,14 +1461,19 @@ static void hdmi_edid_get_display_mode(struct hdmi_edid_ctrl *edid_ctrl,
 int hdmi_edid_read(void *input)
 {
 	/* EDID_BLOCK_SIZE[0x80] Each page size in the EDID ROM */
-	u8 *edid_buf = NULL;
+	u8 *edid_buf;
+#ifndef CONFIG_VIDEO_MHL_V2
+	u32 i = 1;
+#endif
 	u32 cea_extension_ver = 0;
 	u32 num_of_cea_blocks = 0;
 	u32 ieee_reg_id = 0;
-	u32 i = 1;
 	int status = 0;
 	char vendor_id[5];
 	struct hdmi_edid_ctrl *edid_ctrl = (struct hdmi_edid_ctrl *)input;
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+	edid_ctrl_ext = edid_ctrl;
+#endif
 
 	if (!edid_ctrl) {
 		DEV_ERR("%s: invalid input\n", __func__);
@@ -1413,20 +1482,29 @@ int hdmi_edid_read(void *input)
 
 	edid_buf = edid_ctrl->edid_buf;
 
+#ifdef CONFIG_VIDEO_MHL_V2
+	memcpy(edid_buf, sii8240_get_mhl_edid(),MAX_EDID_BLOCK_SIZE);
+#endif
+	/* audio_channel_info reset */
+	edid_ctrl->audio_channel_info = 0;
 	edid_ctrl->pt_scan_info = 0;
 	edid_ctrl->it_scan_info = 0;
 	edid_ctrl->ce_scan_info = 0;
 	edid_ctrl->present_3d = 0;
 	memset(&edid_ctrl->sink_data, 0, sizeof(edid_ctrl->sink_data));
-	memset(edid_buf, 0, sizeof(edid_ctrl->edid_buf));
+#if !defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+	memset(edid_buf, 0, sizeof(edid_buf));
+#endif
 	memset(edid_ctrl->audio_data_block, 0,
 		sizeof(edid_ctrl->audio_data_block));
 	memset(edid_ctrl->spkr_alloc_data_block, 0,
 		sizeof(edid_ctrl->spkr_alloc_data_block));
 	edid_ctrl->adb_size = 0;
 	edid_ctrl->sadb_size = 0;
-
+#if !defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
 	status = hdmi_edid_read_block(edid_ctrl, 0, edid_buf);
+#endif
+
 	if (status || !hdmi_edid_check_header(edid_buf)) {
 		if (!status)
 			status = -EPROTO;
@@ -1450,12 +1528,14 @@ int hdmi_edid_read(void *input)
 			edid_ctrl->sink_mode ? "no" : "yes");
 		break;
 	case 1: /* Read block 1 */
+#if !defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
 		status = hdmi_edid_read_block(edid_ctrl, 1, &edid_buf[0x80]);
 		if (status) {
 			DEV_ERR("%s: ddc read block(1) failed: %d\n", __func__,
 				status);
 			goto error;
 		}
+#endif
 		if (edid_buf[0x80] != 2)
 			num_of_cea_blocks = 0;
 		if (num_of_cea_blocks) {
@@ -1482,6 +1562,7 @@ int hdmi_edid_read(void *input)
 	case 2:
 	case 3:
 	case 4:
+#if !defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
 		for (i = 1; i <= num_of_cea_blocks; i++) {
 			if (!(i % 2)) {
 				status = hdmi_edid_read_block(
@@ -1501,6 +1582,7 @@ int hdmi_edid_read(void *input)
 				}
 			}
 		}
+#endif
 		break;
 	default:
 		DEV_ERR("%s: ddc read failed, not supported multi-blocks: %d\n",

@@ -1,5 +1,6 @@
 
 source "drivers/video/msm/vidc/Kconfig"
+source "drivers/video/msm/mhl_v2/Kconfig"
 
 config FB_MSM
 	tristate "MSM Framebuffer support"

@@ -595,7 +595,7 @@ static void shmem_evict_inode(struct inode *inode)
 		kfree(xattr->name);
 		kfree(xattr);
 	}
-	BUG_ON(inode->i_blocks);
+	WARN_ON(inode->i_blocks);
 	shmem_free_inode(inode->i_sb);
 	end_writeback(inode);
 }
@@ -713,8 +713,17 @@ static int shmem_writepage(struct page *page, struct writeback_control *wbc)
 	info = SHMEM_I(inode);
 	if (info->flags & VM_LOCKED)
 		goto redirty;
+#ifdef CONFIG_RUNTIME_COMPCACHE
+	/*
+	 * Modification for runtime compcache
+	 * shmem_writepage can be reason of kernel panic when using swap.
+	 * This modification prevent using swap by shmem.
+	 */
+	goto redirty;
+#else
 	if (!total_swap_pages)
 		goto redirty;
+#endif /* CONFIG_RUNTIME_COMPCACHE */
 
 	/*
 	 * shmem_backing_dev_info's capabilities prevent regular writeback or
@@ -1111,6 +1120,18 @@ out_nomem:
 static int shmem_mmap(struct file *file, struct vm_area_struct *vma)
 {
 	file_accessed(file);
+#ifdef CONFIG_TIMA_RKP
+	if (vma->vm_end - vma->vm_start) {
+		/* iommu optimization- needs to be turned ON from
+		* the tz side.
+		*/
+		cpu_v7_tima_iommu_opt(vma->vm_start, vma->vm_end, (unsigned long)vma->vm_mm->pgd);
+		__asm__ __volatile__ (
+		"mcr    p15, 0, r0, c8, c3, 0\n"
+		"dsb\n"
+		"isb\n");
+	}
+#endif
 	vma->vm_ops = &shmem_vm_ops;
 	vma->vm_flags |= VM_CAN_NONLINEAR;
 	return 0;
@@ -2168,6 +2189,7 @@ static int shmem_remount_fs(struct super_block *sb, int *flags, char *data)
 	unsigned long inodes;
 	int error = -EINVAL;
 
+	config.mpol = NULL;
 	if (shmem_parse_options(data, &config, true))
 		return error;
 
@@ -2192,8 +2214,13 @@ static int shmem_remount_fs(struct super_block *sb, int *flags, char *data)
 	sbinfo->max_inodes  = config.max_inodes;
 	sbinfo->free_inodes = config.max_inodes - inodes;
 
-	mpol_put(sbinfo->mpol);
-	sbinfo->mpol        = config.mpol;	/* transfers initial ref */
+	/*
+	 * Preserve previous mempolicy unless mpol remount option was specified.
+	 */
+	if (config.mpol) {
+		mpol_put(sbinfo->mpol);
+		sbinfo->mpol = config.mpol;	/* transfers initial ref */
+	}
 out:
 	spin_unlock(&sbinfo->stat_lock);
 	return error;

@@ -969,6 +969,9 @@ static unsigned long do_mmap_pgoff(struct file *file, unsigned long addr,
 	int error;
 	unsigned long reqprot = prot;
 
+	while (file && (file->f_mode & FMODE_NONMAPPABLE))
+		file = file->f_op->get_lower_file(file);
+
 	/*
 	 * Does the application expect PROT_READ to imply PROT_EXEC?
 	 *
@@ -1365,6 +1368,43 @@ munmap_back:
 	vma_link(mm, vma, prev, rb_link, rb_parent);
 	file = vma->vm_file;
 
+#ifdef CONFIG_TIMA_RKP
+	if(file && (strcmp(current->comm, "zygote") == 0)){
+		char *tmp;
+		char *pathname;
+		struct path path;
+
+		path = file->f_path;
+		path_get(&file->f_path);
+
+		tmp = (char *)__get_free_page(GFP_TEMPORARY);
+
+		if (!tmp) {
+			path_put(&path);
+			return -ENOMEM;
+		}
+
+		pathname = d_path(&path, tmp, PAGE_SIZE);
+		path_put(&path);
+
+		if (IS_ERR(pathname)) {
+			free_page((unsigned long)tmp);
+			return PTR_ERR(pathname);
+		}
+		
+		if (strstr(pathname, "dalvik-heap") != NULL 
+				|| strstr(pathname, "dalvik-bitmap") != NULL
+				|| strstr(pathname, "dalvik-LinearAlloc") != NULL 
+				|| strstr(pathname, "dalvik-mark-stack") != NULL
+				|| strstr(pathname, "dalvik-card-table") != NULL) {
+			//printk("PROC %s\tFILE %s\tSTART %lx\tLEN %lx\n", current->comm, pathname, addr, len);
+			tima_send_cmd2(addr, len, 0x30);
+		}
+
+		/* do something here with pathname */
+		free_page((unsigned long)tmp);
+	}
+#endif
 	/* Once vma denies write, undo our temporary denial count */
 	if (correct_wcount)
 		atomic_inc(&inode->i_writecount);

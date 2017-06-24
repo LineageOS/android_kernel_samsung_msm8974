@@ -298,6 +298,11 @@ int q6audio_validate_port(u16 port_id)
 	case AFE_PORT_ID_QUATERNARY_MI2S_TX:
 	case AFE_PORT_ID_SECONDARY_MI2S_RX:
 	case AFE_PORT_ID_SECONDARY_MI2S_TX:
+#if defined (CONFIG_SND_SOC_MAX98504) || defined (CONFIG_SND_SOC_MAX98505) \
+ || defined (CONFIG_SND_SOC_MAX98506)
+	case AFE_PORT_ID_TERTIARY_MI2S_RX:
+	case AFE_PORT_ID_TERTIARY_MI2S_TX:
+#endif
 	{
 		ret = 0;
 		break;

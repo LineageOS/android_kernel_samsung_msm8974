@@ -2285,6 +2285,7 @@ static int __devinit epm_adc_probe(struct platform_device *pdev)
 
 	if (misc_register(&epm_adc->misc)) {
 		dev_err(&pdev->dev, "Unable to register misc device!\n");
+		kfree(epm_adc);
 		return -EFAULT;
 	}
 
@@ -2292,6 +2293,7 @@ static int __devinit epm_adc_probe(struct platform_device *pdev)
 	if (rc) {
 		dev_err(&pdev->dev, "msm_adc_dev_init failed\n");
 		misc_deregister(&epm_adc->misc);
+		kfree(epm_adc);
 		return rc;
 	}
 
@@ -2300,6 +2302,7 @@ static int __devinit epm_adc_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "hwmon_device_register failed\n");
 		misc_deregister(&epm_adc->misc);
 		rc = PTR_ERR(epm_adc->hwmon);
+		kfree(epm_adc);
 		return rc;
 	}
 

@@ -1,0 +1,39 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/*
+ * Only 8026-specific property overrides should be placed inside this
+ * file. Device definitions should be placed inside the msm8226.dtsi
+ * file.
+ */
+
+/include/ "msm8226-v2.dtsi"
+
+/ {
+	model = "Qualcomm APQ 8026";
+	compatible = "qcom,apq8026";
+};
+
+&tsens {
+	qcom,sensors = <6>;
+	qcom,slope = <2901 2846 3038 2955 2901 2846>;
+};
+
+&memory_hole {
+	qcom,memblock-remove = <0x08400000 0x2000000
+				0x0cb00000 0x2b00000 /* Increase TZ apps region to 6MB (SR #0133393) + 1MB reserved for TIMA logging at 0xd100000 */
+				0x0fa00000 0x500000>; /* Address and Size of Hole */
+};
+
+&sec_8926_qseecom {
+          reg = <0x0cb00000 0x600000>;
+ };

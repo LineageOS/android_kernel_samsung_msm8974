@@ -110,6 +110,13 @@ void pgd_free(struct mm_struct *mm, pgd_t *pgd_base)
 	pud_t *pud;
 	pmd_t *pmd;
 	pgtable_t pte;
+#ifdef  CONFIG_TIMA_RKP_L1_TABLES
+	unsigned long cmd_id = 0x3f80b221;
+	unsigned long pmd_base;
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
+        __asm__ __volatile__(".arch_extension sec\n");
+#endif
+#endif
 
 	if (!pgd_base)
 		return;
@@ -153,6 +160,28 @@ no_pgd:
 		pmd_free(mm, pmd);
 		pgd_clear(pgd);
 		pud_free(mm, pud);
+	}
+#endif
+#ifdef  CONFIG_TIMA_RKP_L1_TABLES
+	if (tima_is_pg_protected((unsigned long) pgd) != 0) {
+	__asm__ __volatile__ (
+		"stmfd  sp!,{r0-r1, r11}\n"
+		"mov   	r11, r0\n"
+		"mov    r0, %0\n"
+		"mov    r1, %1\n"
+		"smc    #11\n"
+		"mov    r0, #0\n"
+		"mcr    p15, 0, r0, c8, c3, 0\n"
+       		"dsb\n"
+       		"isb\n"
+		"pop    {r0-r1, r11}\n"
+		::"r"(cmd_id),"r"(pgd):"r0","r1","r11","cc");
+
+        pmd_base = ((unsigned long)pgd) & (~0x3fff);
+	tima_verify_state(pmd_base, 0, 0, 3);
+	tima_verify_state(pmd_base + 0x1000, 0, 0, 3);
+	tima_verify_state(pmd_base + 0x2000, 0, 0, 3);
+	tima_verify_state(pmd_base + 0x3000, 0, 0, 3);
 	}
 #endif
 	__pgd_free(pgd_base);

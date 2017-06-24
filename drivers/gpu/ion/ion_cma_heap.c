@@ -22,6 +22,7 @@
 #include <linux/err.h>
 #include <linux/dma-mapping.h>
 #include <linux/msm_ion.h>
+#include <linux/highmem.h>
 #include <mach/iommu_domains.h>
 
 #include <asm/cacheflush.h>
@@ -100,6 +101,11 @@ static int ion_cma_allocate(struct ion_heap *heap, struct ion_buffer *buffer,
 	/* keep this for memory release */
 	buffer->priv_virt = info;
 	dev_dbg(dev, "Allocate buffer %p\n", buffer);
+	if (heap->id == ION_QSECOM_HEAP_ID ) {
+		// printk("[ION_alloc id==27|QSEECOM] 0x%p/0x%x => kmap_flush_unused\n", (void*)info->handle, (unsigned int)len);
+		kmap_flush_unused();
+	}
+
 	return 0;
 
 err:
@@ -156,6 +162,18 @@ static int ion_cma_mmap(struct ion_heap *mapper, struct ion_buffer *buffer,
 {
 	struct device *dev = buffer->heap->priv;
 	struct ion_cma_buffer_info *info = buffer->priv_virt;
+#ifdef CONFIG_TIMA_RKP
+        if (buffer->size) {
+        /* iommu optimization- needs to be turned ON from
+         * the tz side.
+         */
+                cpu_v7_tima_iommu_opt(vma->vm_start, vma->vm_end, (unsigned long)vma->vm_mm->pgd);
+                __asm__ __volatile__ (
+                "mcr    p15, 0, r0, c8, c3, 0\n"
+                "dsb\n"
+                "isb\n");
+        }
+#endif
 
 	if (info->is_cached)
 		return dma_mmap_nonconsistent(dev, vma, info->cpu_addr,

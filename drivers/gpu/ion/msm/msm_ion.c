@@ -78,6 +78,10 @@ static struct ion_heap_desc ion_heap_meta[] = {
 		.name	= ION_SF_HEAP_NAME,
 	},
 	{
+		.id	= ION_IOMMUCA_HEAP_ID,
+		.name	= ION_IOMMUCA_HEAP_NAME,
+	},
+	{
 		.id	= ION_QSECOM_HEAP_ID,
 		.name	= ION_QSECOM_HEAP_NAME,
 	},
@@ -95,6 +99,7 @@ static struct ion_heap_desc ion_heap_meta[] = {
 	},
 	{
 		.id	= ION_CP_WB_HEAP_ID,
+		.type	= ION_HEAP_TYPE_CARVEOUT,
 		.name	= ION_WB_HEAP_NAME,
 	},
 	{
@@ -622,6 +627,7 @@ static struct heap_types_info {
 	MAKE_HEAP_TYPE_MAPPING(CARVEOUT),
 	MAKE_HEAP_TYPE_MAPPING(CHUNK),
 	MAKE_HEAP_TYPE_MAPPING(DMA),
+	MAKE_HEAP_TYPE_MAPPING(IOMMUCA),
 	MAKE_HEAP_TYPE_MAPPING(CP),
 	MAKE_HEAP_TYPE_MAPPING(SECURE_DMA),
 	MAKE_HEAP_TYPE_MAPPING(REMOVED),
@@ -1010,6 +1016,56 @@ static long msm_ion_custom_ioctl(struct ion_client *client,
 			return ret;
 		break;
 	}
+
+#if defined(CONFIG_MACH_KLTE_JPN) || defined(CONFIG_DTCP_ION_PHYS)
+	case ION_IOC_GET_PHYS:
+	{
+		struct ion_buffer_data data;
+		struct ion_handle *handle;
+
+		int ret = 0;
+
+		if (copy_from_user(&data, (void __user *)arg,
+					sizeof(struct ion_buffer_data)))
+			return -EFAULT;
+
+		handle = ion_handle_get_by_id(client,(int)data.handle);
+		if (IS_ERR(handle)) {
+			pr_info("%s: Could not find handle: %d\n",__func__, (int)data.handle);
+			return PTR_ERR(handle); 
+		}
+		ret = ion_phys(client,handle,(ion_phys_addr_t*)(&data.paddr),&data.length);
+
+		if (ret < 0)
+			return ret;
+
+		if (copy_to_user((void __user *)arg, &data,
+					sizeof(struct ion_buffer_data)))
+			return -EFAULT;
+		break;
+	}
+#elif defined(CONFIG_MACH_HLTEDCM) || defined(CONFIG_MACH_HLTEKDI) || defined(CONFIG_MACH_JS01LTEDCM)
+	case ION_IOC_GET_PHYS:
+	{
+		struct ion_buffer_data data;
+		int ret = 0;
+
+		if (copy_from_user(&data, (void __user *)arg,
+					sizeof(struct ion_buffer_data)))
+			return -EFAULT;
+
+		ret = ion_phys(client, data.handle,
+				(ion_phys_addr_t*)(&data.paddr), &data.length);
+		if (ret < 0)
+			return ret;
+
+		if (copy_to_user((void __user *)arg, &data,
+					sizeof(struct ion_buffer_data)))
+			return -EFAULT;
+		break;
+	}
+#endif
+
 	case ION_IOC_PREFETCH:
 	{
 		struct ion_prefetch_data data;
@@ -1046,6 +1102,9 @@ static struct ion_heap *msm_ion_heap_create(struct ion_platform_heap *heap_data)
 	struct ion_heap *heap = NULL;
 
 	switch ((int)heap_data->type) {
+	case ION_HEAP_TYPE_IOMMUCA:
+		heap = ion_iommu_heap_create(heap_data);
+		break;
 	case ION_HEAP_TYPE_CP:
 		heap = ion_cp_heap_create(heap_data);
 		break;
@@ -1085,6 +1144,9 @@ static void msm_ion_heap_destroy(struct ion_heap *heap)
 		return;
 
 	switch ((int)heap->type) {
+	case ION_HEAP_TYPE_IOMMUCA:
+		ion_iommu_heap_destroy(heap);
+		break;
 	case ION_HEAP_TYPE_CP:
 		ion_cp_heap_destroy(heap);
 		break;

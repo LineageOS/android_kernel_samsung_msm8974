@@ -26,6 +26,7 @@
 #include <linux/syscore_ops.h>
 #include <linux/rtc.h>
 #include <trace/events/power.h>
+#include <linux/pm_qos.h>
 
 #include "power.h"
 
@@ -38,6 +39,7 @@ const char *const pm_states[PM_SUSPEND_MAX] = {
 };
 
 static const struct platform_suspend_ops *suspend_ops;
+static struct pm_qos_request suspend_pm_qos;
 
 /**
  * suspend_set_ops - Set the global suspend method table.
@@ -283,6 +285,10 @@ static int enter_state(suspend_state_t state)
 	sys_sync();
 	printk("done.\n");
 
+	pm_qos_add_request(&suspend_pm_qos, PM_QOS_CPU_DMA_LATENCY,
+                      PM_QOS_DEFAULT_VALUE);
+	pm_qos_update_request(&suspend_pm_qos, 0);
+
 	pr_debug("PM: Preparing system for %s sleep\n", pm_states[state]);
 	error = suspend_prepare();
 	if (error)
@@ -300,6 +306,8 @@ static int enter_state(suspend_state_t state)
 	pr_debug("PM: Finishing wakeup.\n");
 	suspend_finish();
  Unlock:
+	pm_qos_update_request(&suspend_pm_qos, PM_QOS_CPU_DMA_LATENCY);
+	pm_qos_remove_request(&suspend_pm_qos);
 	mutex_unlock(&pm_mutex);
 	return error;
 }

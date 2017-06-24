@@ -128,4 +128,23 @@ source "drivers/media/radio/Kconfig"
 
 source "drivers/media/dvb/Kconfig"
 
+#
+# TDMB drivers
+#
+
+source "drivers/media/tdmb/Kconfig"
+
+#
+# ISDB-Tmm Drivers
+#
+source "drivers/media/isdbtmm/Kconfig"
+
+# ISDBT Drivers
+#
+source "drivers/media/isdbt/Kconfig"
+
+# MTV Drivers
+#
+source "drivers/media/mtv/Kconfig"
+
 endif # MEDIA_SUPPORT

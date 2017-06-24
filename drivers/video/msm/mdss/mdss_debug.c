@@ -90,7 +90,7 @@ static ssize_t mdss_debug_base_offset_read(struct file *file,
 {
 	struct mdss_debug_base *dbg = file->private_data;
 	int len = 0;
-	char buf[24];
+	char buf[24] = {'\0'};
 
 	if (!dbg)
 		return -ENODEV;
@@ -99,10 +99,10 @@ static ssize_t mdss_debug_base_offset_read(struct file *file,
 		return 0;	/* the end */
 
 	len = snprintf(buf, sizeof(buf), "0x%08x %x\n", dbg->off, dbg->cnt);
-	if (len < 0)
+	if (len < 0 || len >= sizeof(buf))
 		return 0;
 
-	if (copy_to_user(buff, buf, len))
+	if ((count < sizeof(buf)) || copy_to_user(buff, buf, len))
 		return -EFAULT;
 
 	*ppos += len;	/* increase offset */
@@ -333,6 +333,78 @@ static const struct file_operations mdss_stat_fops = {
 	.read = mdss_debug_stat_read,
 };
 
+static ssize_t mdss_debug_factor_write(struct file *file,
+		    const char __user *user_buf, size_t count, loff_t *ppos)
+{
+	struct mdss_fudge_factor *factor  = file->private_data;
+	u32 numer = factor->numer;
+	u32 denom = factor->denom;
+	char buf[32];
+
+	if (!factor)
+		return -ENODEV;
+
+	if (count >= sizeof(buf))
+		return -EFAULT;
+
+	if (copy_from_user(buf, user_buf, count))
+		return -EFAULT;
+
+	buf[count] = 0;	/* end of string */
+
+	if (strnchr(buf, count, '/')) {
+		/* Parsing buf as fraction */
+		if (sscanf(buf, "%u/%u", &numer, &denom) != 2)
+			return -EFAULT;
+	} else {
+		/* Parsing buf as percentage */
+		if (kstrtouint(buf, 0, &numer))
+			return -EFAULT;
+		denom = 100;
+	}
+
+	if (numer && denom) {
+		factor->numer = numer;
+		factor->denom = denom;
+	}
+
+	pr_debug("numer=%d  denom=%d\n", numer, denom);
+
+	return count;
+}
+
+static ssize_t mdss_debug_factor_read(struct file *file,
+			char __user *buff, size_t count, loff_t *ppos)
+{
+	struct mdss_fudge_factor *factor = file->private_data;
+	int len = 0;
+	char buf[32] = {'\0'};
+
+	if (!factor)
+		return -ENODEV;
+
+	if (*ppos)
+		return 0;	/* the end */
+
+	len = snprintf(buf, sizeof(buf), "%d/%d\n",
+			factor->numer, factor->denom);
+	if (len < 0 || len >= sizeof(buf))
+		return 0;
+
+	if ((count < sizeof(buf)) || copy_to_user(buff, buf, len))
+		return -EFAULT;
+
+	*ppos += len;	/* increase offset */
+
+	return len;
+}
+
+static const struct file_operations mdss_factor_fops = {
+	.open = simple_open,
+	.read = mdss_debug_factor_read,
+	.write = mdss_debug_factor_write,
+};
+
 static int mdss_debugfs_cleanup(struct mdss_debug_data *mdd)
 {
 	struct mdss_debug_base *base, *tmp;
@@ -349,6 +421,36 @@ static int mdss_debugfs_cleanup(struct mdss_debug_data *mdd)
 		debugfs_remove_recursive(mdd->root);
 
 	kfree(mdd);
+
+	return 0;
+}
+
+static int mdss_debugfs_perf_init(struct mdss_debug_data *mdd,
+			struct mdss_data_type *mdata) {
+
+	debugfs_create_u32("min_mdp_clk", 0644, mdd->perf,
+		(u32 *)&mdata->perf_tune.min_mdp_clk);
+
+	debugfs_create_u64("min_bus_vote", 0644, mdd->perf,
+		(u64 *)&mdata->perf_tune.min_bus_vote);
+
+	debugfs_create_file("ab_factor", 0644, mdd->perf,
+		&mdata->ab_factor, &mdss_factor_fops);
+
+	debugfs_create_file("ib_factor", 0644, mdd->perf,
+		&mdata->ib_factor, &mdss_factor_fops);
+
+	debugfs_create_file("ib_factor_overlap", 0644, mdd->perf,
+		&mdata->ib_factor_overlap, &mdss_factor_fops);
+
+	debugfs_create_file("clk_factor", 0644, mdd->perf,
+		&mdata->clk_factor, &mdss_factor_fops);
+
+	debugfs_create_u32("threshold_low", 0644, mdd->perf,
+		(u32 *)&mdata->max_bw_low);
+
+	debugfs_create_u32("threshold_high", 0644, mdd->perf,
+		(u32 *)&mdata->max_bw_high);
 
 	return 0;
 }
@@ -371,25 +473,31 @@ int mdss_debugfs_init(struct mdss_data_type *mdata)
 
 	mdd->root = debugfs_create_dir("mdp", NULL);
 	if (IS_ERR_OR_NULL(mdd->root)) {
-		pr_err("debugfs_create_dir fail, error %ld\n",
+		pr_err("debugfs_create_dir for mdp failed, error %ld\n",
 		       PTR_ERR(mdd->root));
-		mdd->root = NULL;
-		mdss_debugfs_cleanup(mdd);
-		return -ENODEV;
+		goto err;
 	}
 	debugfs_create_file("stat", 0644, mdd->root, mdata, &mdss_stat_fops);
 
-	debugfs_create_u32("min_mdp_clk", 0644, mdd->root,
-			(u32 *)&mdata->min_mdp_clk);
+	mdd->perf = debugfs_create_dir("perf", mdd->root);
+	if (IS_ERR_OR_NULL(mdd->perf)) {
+		pr_err("debugfs_create_dir perf fail, error %ld\n",
+			PTR_ERR(mdd->perf));
+		goto err;
+ 	}
 
-	if (mdss_create_xlog_debug(mdd)) {
-		mdss_debugfs_cleanup(mdd);
-		return -ENODEV;
-	}
+	mdss_debugfs_perf_init(mdd, mdata);
+
+	if (mdss_create_xlog_debug(mdd))
+		goto err;
 
 	mdata->debug_inf.debug_data = mdd;
 
 	return 0;
+
+err:
+	mdss_debugfs_cleanup(mdd);
+	return -ENODEV;
 }
 
 int mdss_debugfs_remove(struct mdss_data_type *mdata)
@@ -419,7 +527,7 @@ void mdss_dump_reg(char __iomem *base, int len)
 		x4 = readl_relaxed(addr+0x4);
 		x8 = readl_relaxed(addr+0x8);
 		xc = readl_relaxed(addr+0xc);
-		pr_info("%p : %08x %08x %08x %08x\n", addr, x0, x4, x8, xc);
+		pr_info("%pK : %08x %08x %08x %08x\n", addr, x0, x4, x8, xc);
 		addr += 16;
 	}
 	mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_OFF, false);
@@ -489,7 +597,7 @@ static inline struct mdss_mdp_misr_map *mdss_misr_get_map(u32 block_id)
 {
 	struct mdss_mdp_misr_map *map;
 
-	if (block_id > DISPLAY_MISR_MDP) {
+	if (block_id > DISPLAY_MISR_HDMI && block_id != DISPLAY_MISR_MDP) {
 		pr_err("MISR Block id (%d) out of range\n", block_id);
 		return NULL;
 	}
@@ -512,6 +620,11 @@ int mdss_misr_set(struct mdss_data_type *mdata,
 	u32 config = 0, val = 0;
 	u32 mixer_num = 0;
 	bool is_valid_wb_mixer = true;
+	if (!mdata || !req || !ctl) {
+		pr_err("Invalid input params: mdata = %pK req = %pK ctl = %pK",
+			mdata, req, ctl);
+		return -EINVAL;
+	}
 	map = mdss_misr_get_map(req->block_id);
 	if (!map) {
 		pr_err("Invalid MISR Block=%d\n", req->block_id);

@@ -135,6 +135,11 @@ config USB_MSM_OTG
 	  This driver is not supported on boards like trout which
 	  has an external PHY.
 
+config USBIRQ_BALANCING_LTE_HIGHTP
+	bool "USBIRQ_BALANCING_LTE_HIGHTP"
+	depends on USB_MSM_OTG
+	default n
+
 config USB_MSM_ACA
 	bool "Support for Accessory Charger Adapter (ACA)"
 	depends on (USB_MSM_OTG || USB_MSM_OTG_72K) && ARCH_MSM

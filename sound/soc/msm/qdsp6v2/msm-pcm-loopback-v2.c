@@ -389,7 +389,7 @@ static __devinit int msm_pcm_probe(struct platform_device *pdev)
 	dev_dbg(&pdev->dev, "%s: dev name %s\n",
 		__func__, dev_name(&pdev->dev));
 
-	pcm = kzalloc(sizeof(struct msm_pcm_loopback), GFP_KERNEL);
+	pcm = devm_kzalloc(&pdev->dev, sizeof(struct msm_pcm_loopback), GFP_KERNEL);
 	if (!pcm) {
 		dev_err(&pdev->dev, "%s Failed to allocate memory for pcm\n",
 			__func__);

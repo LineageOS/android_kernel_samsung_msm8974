@@ -37,7 +37,16 @@
 #include <asm/dma-iommu.h>
 
 #include "mm.h"
+#ifdef CONFIG_TIMA_RKP_DMA_MVA_TO_SETWAY
 
+#define L1_NWAY 4
+#define L2_NWAY 8
+#define L1_WAY_OFFSET 30
+#define L2_WAY_OFFSET 29
+#define TIMA_L1_SETMASK 0xfc0
+#define TIMA_L2_SETMASK 0x3ff80
+
+#endif/*CONFIG_TIMA_RKP_DMA_MVA_TO_SETWAY*/
 /*
  * The DMA API is built upon the notion of "buffer ownership".  A buffer
  * is either exclusively owned by the CPU (and therefore may be accessed
@@ -576,7 +585,9 @@ static inline pgprot_t __get_dma_pgprot(struct dma_attrs *attrs, pgprot_t prot)
 	/* if non-consistent just pass back what was given */
 	else if (!dma_get_attr(DMA_ATTR_NON_CONSISTENT, attrs))
 		prot = pgprot_dmacoherent(prot);
-
+#ifdef CONFIG_TIMA_RKP
+	 prot = __pgprot_modify(prot, 0, L_PTE_XN);
+#endif
 	return prot;
 }
 
@@ -730,6 +741,81 @@ void arm_dma_free(struct device *dev, size_t size, void *cpu_addr,
 		__free_from_contiguous(dev, page, cpu_addr, size);
 	}
 }
+#ifdef CONFIG_TIMA_RKP_DMA_MVA_TO_SETWAY
+
+void tima_cache_invalidate_setway(unsigned int reg_c7)
+{
+          __asm__ __volatile__ (
+                        "mov    r0, %0\n"
+                        "mcr	p15, 0, r0, c7, c14, 2\n"
+                        ::"r"(reg_c7):"r0");
+}
+void tima_cache_clean_setway(unsigned int reg_c7)
+{
+        __asm__ __volatile__ (
+                        "mov    r0, %0\n"
+                        "mcr	p15, 0, r0, c7, c10, 2\n"		 
+                        ::"r"(reg_c7):"r0");
+}
+
+void tima_flush_cache_setway_func(unsigned int reg_c7,enum dma_data_direction dir)
+{
+        __asm__ __volatile__ (
+                        "mov    r0, %0\n"
+                        "mov    r1, %1\n"
+                        "teq	r1, #2\n"
+                        "beq	tima_cache_invalidate_setway\n"
+                        "mov    r0, %0\n"
+                        "b	tima_cache_clean_setway\n"
+                        ::"r"(reg_c7),"r"(dir));
+}
+static void tima_cache_isb_dsb(void)
+{
+        __asm__ __volatile__ (
+                        "dsb\n"
+                        "isb\n"
+                        );
+}
+/**
+ *    tima_flush_cache- Flush Nonsecure side caches using set/way mechanism
+ */
+
+static void tima_flush_cache(unsigned int phy_addr,enum dma_data_direction dir)
+{
+        unsigned int l1_set_mask = TIMA_L1_SETMASK;
+        unsigned int l2_set_mask = TIMA_L2_SETMASK;
+        unsigned int way;
+        unsigned int reg_c7;
+        unsigned int addr_offset;
+
+        for (way = 0; way < L1_NWAY; way++) {
+                for (addr_offset=0;addr_offset<l1_set_mask;addr_offset+=0x40) {
+                        reg_c7 = 0x00 | ((phy_addr+addr_offset) & l1_set_mask) | (way << L1_WAY_OFFSET);
+                        tima_flush_cache_setway_func(reg_c7,dir);
+                }
+        }
+
+        for (way = 0; way < L2_NWAY; way++) {
+                for (addr_offset=0;addr_offset<0x1000;addr_offset+=0x80) {
+                        reg_c7 = 0x02 | ((phy_addr+addr_offset) & l2_set_mask) | (way << L2_WAY_OFFSET);
+                        tima_flush_cache_setway_func(reg_c7,dir);
+                }
+        }
+        tima_cache_isb_dsb();
+}
+
+/*
+ *    tima_cache_maint_page- Tima Equivalent of dma_cache_maint_page().
+ *    Here we flush cache based on physical address+set/way mechanism
+ */
+static void tima_cache_maint_page(struct page *page,enum dma_data_direction dir)
+{
+    unsigned long paddr;
+
+    paddr = page_to_phys(page);
+    tima_flush_cache(paddr,dir);
+}
+#endif/*CONFIG_TIMA_RKP_DMA_MVA_TO_SETWAY*/
 
 static void dma_cache_maint_page(struct page *page, unsigned long offset,
 	size_t size, enum dma_data_direction dir,
@@ -758,9 +844,14 @@ static void dma_cache_maint_page(struct page *page, unsigned long offset,
 				len = PAGE_SIZE - offset;
 
 			if (cache_is_vipt_nonaliasing()) {
+#ifdef CONFIG_TIMA_RKP_DMA_MVA_TO_SETWAY
+                tima_cache_maint_page(page,dir);
+#else
+				/* unmapped pages might still be cached */
 				vaddr = kmap_atomic(page);
 				op(vaddr + offset, len, dir);
 				kunmap_atomic(vaddr);
+#endif/*CONFIG_TIMA_RKP_DMA_MVA_TO_SETWAY*/
 			} else {
 				vaddr = kmap_high_get(page);
 				if (vaddr) {

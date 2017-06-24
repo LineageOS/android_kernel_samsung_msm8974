@@ -330,6 +330,46 @@ DEFINE_EVENT(power_domain, power_domain_target,
 
 	TP_ARGS(name, state, cpu_id)
 );
+
+TRACE_EVENT(bus_update_request,
+
+	TP_PROTO(int sec, int nsec, const char *name, unsigned int index,
+		int src, int dest, unsigned long long ab, unsigned long long ib),
+
+	TP_ARGS(sec, nsec, name, index, src, dest, ab, ib),
+
+	TP_STRUCT__entry(
+		__field(int, sec)
+		__field(int, nsec)
+		__string(name, name)
+		__field(u32, index)
+		__field(int, src)
+		__field(int, dest)
+		__field(u64, ab)
+		__field(u64, ib)
+	),
+
+	TP_fast_assign(
+		__entry->sec = sec;
+		__entry->nsec = nsec;
+		__assign_str(name, name);
+		__entry->index = index;
+		__entry->src = src;
+		__entry->dest = dest;
+		__entry->ab = ab;
+		__entry->ib = ib;
+	),
+
+	TP_printk("time= %d.%d name=%s index=%u src=%d dest=%d ab=%llu ib=%llu",
+		__entry->sec,
+		__entry->nsec,
+		__get_str(name),
+		(unsigned int)__entry->index,
+		__entry->src,
+		__entry->dest,
+		(unsigned long long)__entry->ab,
+		(unsigned long long)__entry->ib)
+);
 #endif /* _TRACE_POWER_H */
 
 /* This part must be outside protection */

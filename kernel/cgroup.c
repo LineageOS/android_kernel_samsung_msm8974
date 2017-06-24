@@ -373,37 +373,6 @@ static struct hlist_head *css_set_hash(struct cgroup_subsys_state *css[])
 	return &css_set_table[index];
 }
 
-static void free_css_set_work(struct work_struct *work)
-{
-	struct css_set *cg = container_of(work, struct css_set, work);
-	struct cg_cgroup_link *link;
-	struct cg_cgroup_link *saved_link;
-
-	write_lock(&css_set_lock);
-	list_for_each_entry_safe(link, saved_link, &cg->cg_links,
-				 cg_link_list) {
-		struct cgroup *cgrp = link->cgrp;
-		list_del(&link->cg_link_list);
-		list_del(&link->cgrp_link_list);
-		if (atomic_dec_and_test(&cgrp->count)) {
-			check_for_release(cgrp);
-			cgroup_wakeup_rmdir_waiter(cgrp);
-		}
-		kfree(link);
-	}
-	write_unlock(&css_set_lock);
-
-	kfree(cg);
-}
-
-static void free_css_set_rcu(struct rcu_head *obj)
-{
-	struct css_set *cg = container_of(obj, struct css_set, rcu_head);
-
-	INIT_WORK(&cg->work, free_css_set_work);
-	schedule_work(&cg->work);
-}
-
 /* We don't maintain the lists running through each css_set to its
  * task until after the first call to cgroup_iter_start(). This
  * reduces the fork()/exit() overhead for people who have cgroups
@@ -420,6 +389,9 @@ static inline void get_css_set(struct css_set *cg)
 
 static void put_css_set(struct css_set *cg)
 {
+	struct cg_cgroup_link *link;
+	struct cg_cgroup_link *saved_link;
+
 	/*
 	 * Ensure that the refcount doesn't hit zero while any readers
 	 * can see it. Similar to atomic_dec_and_lock(), but for an
@@ -436,8 +408,23 @@ static void put_css_set(struct css_set *cg)
 	hlist_del(&cg->hlist);
 	css_set_count--;
 
+	list_for_each_entry_safe(link, saved_link, &cg->cg_links,
+				 cg_link_list) {
+		struct cgroup *cgrp = link->cgrp;
+		list_del(&link->cg_link_list);
+		list_del(&link->cgrp_link_list);
+
+		rcu_read_lock();
+		if (atomic_dec_and_test(&cgrp->count)) {
+			check_for_release(cgrp);
+			cgroup_wakeup_rmdir_waiter(cgrp);
+		}
+		rcu_read_unlock();
+
+		kfree(link);
+	}
 	write_unlock(&css_set_lock);
-	call_rcu(&cg->rcu_head, free_css_set_rcu);
+	kfree_rcu(cg, rcu_head);
 }
 
 /*
@@ -2116,7 +2103,6 @@ static int cgroup_attach_proc(struct cgroup *cgrp, struct task_struct *leader)
 	/*
 	 * step 5: success! and cleanup
 	 */
-	synchronize_rcu();
 	cgroup_wakeup_rmdir_waiter(cgrp);
 	retval = 0;
 out_put_css_set_refs:
@@ -5223,7 +5209,7 @@ static int cgroup_css_links_read(struct cgroup *cont,
 		struct css_set *cg = link->cg;
 		struct task_struct *task;
 		int count = 0;
-		seq_printf(seq, "css_set %p\n", cg);
+		seq_printf(seq, "css_set %pK\n", cg);
 		list_for_each_entry(task, &cg->tasks, cg_list) {
 			if (count++ > MAX_TASKS_SHOWN_PER_CSS) {
 				seq_puts(seq, "  ...\n");

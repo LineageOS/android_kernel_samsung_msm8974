@@ -81,6 +81,7 @@
 #include <linux/stddef.h>
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
+#include <linux/inetdevice.h>
 
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
@@ -1669,6 +1670,9 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	struct sock *sk;
 	int ret;
 	struct net *net = dev_net(skb->dev);
+#if !defined(CONFIG_SEC_LOCALE_CHN)
+	struct in_device *in_dev;
+#endif
 
 	if (skb->pkt_type != PACKET_HOST)
 		goto discard_it;
@@ -1759,7 +1763,17 @@ no_tcp_socket:
 bad_packet:
 		TCP_INC_STATS_BH(net, TCP_MIB_INERRS);
 	} else {
+#if defined(CONFIG_SEC_LOCALE_CHN)
 		tcp_v4_send_reset(NULL, skb);
+#else
+		in_dev = in_dev_get(skb->dev);
+		if (in_dev) {
+			if (!IN_DEV_FORWARD(in_dev))
+				tcp_v4_send_reset(NULL, skb);
+			in_dev_put(in_dev);
+		} else
+			tcp_v4_send_reset(NULL, skb);
+#endif
 	}
 
 discard_it:

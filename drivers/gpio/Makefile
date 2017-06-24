@@ -3,6 +3,7 @@
 ccflags-$(CONFIG_DEBUG_GPIO)	+= -DDEBUG
 
 obj-$(CONFIG_GPIOLIB)		+= gpiolib.o devres.o
+obj-$(CONFIG_SEC_GPIO_DVS)	+= secgpio_dvs.o
 
 # Device drivers. Generally keep list sorted alphabetically
 obj-$(CONFIG_GPIO_GENERIC)	+= gpio-generic.o
@@ -27,6 +28,7 @@ obj-$(CONFIG_GPIO_MAX7300)	+= gpio-max7300.o
 obj-$(CONFIG_GPIO_MAX7301)	+= gpio-max7301.o
 obj-$(CONFIG_GPIO_MAX732X)	+= gpio-max732x.o
 obj-$(CONFIG_GPIO_MC33880)	+= gpio-mc33880.o
+obj-$(CONFIG_GPIO_MC5587)	+= gpio-mc5587.o
 obj-$(CONFIG_GPIO_MC9S08DZ60)	+= gpio-mc9s08dz60.o
 obj-$(CONFIG_GPIO_MCP23S08)	+= gpio-mcp23s08.o
 obj-$(CONFIG_GPIO_ML_IOH)	+= gpio-ml-ioh.o
@@ -45,7 +47,7 @@ obj-$(CONFIG_GPIO_PCF857X)	+= gpio-pcf857x.o
 obj-$(CONFIG_GPIO_PCH)		+= gpio-pch.o
 obj-$(CONFIG_GPIO_PL061)	+= gpio-pl061.o
 obj-$(CONFIG_GPIO_PM8XXX)	+= pm8xxx-gpio.o
-obj-$(CONFIG_GPIO_PM8XXX_MPP) 	+= pm8xxx-mpp.o
+obj-$(CONFIG_GPIO_PM8XXX_MPP)	+= pm8xxx-mpp.o
 obj-$(CONFIG_GPIO_PM8XXX_RPC)	+= gpio-pm8xxx-rpc.o
 obj-$(CONFIG_GPIO_PXA)		+= gpio-pxa.o
 obj-$(CONFIG_GPIO_QPNP_PIN)	+= qpnp-pin.o
@@ -70,3 +72,4 @@ obj-$(CONFIG_GPIO_WM831X)	+= gpio-wm831x.o
 obj-$(CONFIG_GPIO_WM8350)	+= gpio-wm8350.o
 obj-$(CONFIG_GPIO_WM8994)	+= gpio-wm8994.o
 obj-$(CONFIG_GPIO_XILINX)	+= gpio-xilinx.o
+obj-$(CONFIG_GPIO_PCAL6416A)	+= gpio-pcal6416a.o

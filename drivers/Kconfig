@@ -136,6 +136,8 @@ source "drivers/hwspinlock/Kconfig"
 
 source "drivers/clocksource/Kconfig"
 
+source "drivers/motor/Kconfig"
+
 source "drivers/iommu/Kconfig"
 
 source "drivers/remoteproc/Kconfig"
@@ -151,7 +153,25 @@ source "drivers/gud/Kconfig"
 source "drivers/coresight/Kconfig"
 
 source "drivers/bif/Kconfig"
+source "drivers/battery/Kconfig"
 
 source "drivers/sensors/Kconfig"
+
+source "drivers/barcode_emul/Kconfig"
+
+source "drivers/motor/Kconfig"
+
+source "drivers/sensorhub/Kconfig"
+source "drivers/fingerprint/Kconfig"
+
+source "drivers/adsp_factory/Kconfig"
+
+source "drivers/felica/Kconfig"
+
+source "drivers/extcon/Kconfig"
+
+source "drivers/irda/Kconfig"
+
+source "drivers/qsc/Kconfig"
 
 endmenu

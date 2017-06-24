@@ -37,11 +37,10 @@ static struct snd_pcm_hw_constraint_list constraints_sample_rates = {
 static int multimedia_startup(struct snd_pcm_substream *substream,
 	struct snd_soc_dai *dai)
 {
-	snd_pcm_hw_constraint_list(substream->runtime, 0,
+	return snd_pcm_hw_constraint_list(substream->runtime, 0,
 		SNDRV_PCM_HW_PARAM_RATE,
 		&constraints_sample_rates);
 
-	return 0;
 }
 
 static struct snd_soc_dai_ops msm_fe_Multimedia_dai_ops = {
@@ -763,6 +762,35 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.ops = &msm_fe_Multimedia_dai_ops,
 		.name = "MultiMedia9",
 	},
+#ifdef CONFIG_JACK_AUDIO	
+	{
+		.playback = {
+			.stream_name = "MultiMedia10 Playback",
+			.aif_name = "MM_DL10",
+			.rates = (SNDRV_PCM_RATE_8000_192000 |
+					SNDRV_PCM_RATE_KNOT),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+						SNDRV_PCM_FMTBIT_S24_LE),
+			.channels_min = 1,
+			.channels_max = 8,
+			.rate_min =	8000,
+			.rate_max = 192000,
+		},
+		.capture = {
+			.stream_name = "MultiMedia10 Capture",
+			.aif_name = "MM_UL10",
+			.rates = (SNDRV_PCM_RATE_8000_48000|
+					SNDRV_PCM_RATE_KNOT),
+			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.channels_min = 1,
+			.channels_max = 8,
+			.rate_min = 8000,
+			.rate_max =	48000,
+		},
+		.ops = &msm_fe_Multimedia_dai_ops,
+		.name = "MultiMedia10",
+	},
+#endif	
 	{
 		.playback = {
 			.stream_name = "QCHAT Playback",

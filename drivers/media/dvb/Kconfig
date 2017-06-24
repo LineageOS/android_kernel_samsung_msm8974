@@ -28,6 +28,10 @@ config DVB_DYNAMIC_MINORS
 
 	  If you are unsure about this, say N here.
 
+config JPN_DEMUX_MOD
+	bool "Japan demux modificatiob for PCR"
+	default n
+
 menuconfig DVB_CAPTURE_DRIVERS
 	bool "DVB/ATSC adapters"
 	depends on DVB_CORE

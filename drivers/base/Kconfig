@@ -247,6 +247,13 @@ config CMA
 
 if CMA
 
+config CMA_PAGE_COUNTING
+	bool "CMA page counting"
+	default n
+	help
+	  Counting cma pages in the anonymous & file active/inactive lists
+	  to subtract cma pages when calculating a lmk other_file threshold.
+
 config CMA_DEBUG
 	bool "CMA debug messages (DEVELOPMENT)"
 	depends on DEBUG_KERNEL
@@ -255,6 +262,13 @@ config CMA_DEBUG
 	  messages for every CMA call as well as various messages while
 	  processing calls such as dma_alloc_from_contiguous().
 	  This option does not affect warning and error messages.
+	  
+config CMA_PINPAGE_MIGRATION
+	bool "CMA pinned page migration (EXPERIMENTAL)"
+	depends on CMA
+	default n
+	help
+	  Turns on cma page migration for pinned page.
 
 comment "Default contiguous memory area size:"
 

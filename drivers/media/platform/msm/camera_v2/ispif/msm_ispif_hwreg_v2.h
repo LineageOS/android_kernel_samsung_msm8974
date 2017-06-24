@@ -80,17 +80,15 @@
 #define RAW_INTF_2_OVERFLOW_IRQ                  BIT(12)
 #define RESET_DONE_IRQ                           BIT(27)
 
-#define ISPIF_IRQ_STATUS_MASK                    0x0A493249
-#define ISPIF_IRQ_STATUS_1_MASK                  0x02493249
-#define ISPIF_IRQ_STATUS_2_MASK                  0x00001249
+#define ISPIF_IRQ_STATUS_MASK                    0x08000001//0x0A493249
+#define ISPIF_IRQ_STATUS_1_MASK                  0x0//0x02493249
+#define ISPIF_IRQ_STATUS_2_MASK                  0x0//0x00001249
 
-#define ISPIF_IRQ_STATUS_PIX_SOF_MASK            0x249
+#define ISPIF_IRQ_STATUS_PIX_SOF_MASK            0x0//0x249
 #define ISPIF_IRQ_STATUS_RDI0_SOF_MASK           0x492000
 #define ISPIF_IRQ_STATUS_RDI1_SOF_MASK           0x492000
 #define ISPIF_IRQ_STATUS_RDI2_SOF_MASK           0x249
 
 #define ISPIF_IRQ_GLOBAL_CLEAR_CMD               0x1
-
-#define ISPIF_STOP_INTF_IMMEDIATELY              0xAAAAAAAA
 
 #endif /* __MSM_ISPIF_HWREG_V2_H__ */

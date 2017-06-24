@@ -314,6 +314,9 @@ static inline void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
 {
 }
 
+#if defined(CONFIG_GSM_MODEM_SPRD6500)
+extern int get_console_suspended(void);
+#endif
 #endif
 
 #endif

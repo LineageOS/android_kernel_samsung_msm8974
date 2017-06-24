@@ -18,7 +18,7 @@
 #include "nl80211.h"
 #include "wext-compat.h"
 
-#define IEEE80211_SCAN_RESULT_EXPIRE	(3 * HZ)
+#define IEEE80211_SCAN_RESULT_EXPIRE	(6 * HZ)
 
 void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
 {
@@ -360,9 +360,14 @@ static int cmp_bss_core(struct cfg80211_bss *a,
 {
 	int r;
 
+#if !(defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) \
+        || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE) \
+        || defined(CONFIG_BCM4354) || defined(CONFIG_BCM4354_MODULE) \
+        || defined(CONFIG_BCM4356) || defined(CONFIG_BCM4356_MODULE) \
+        || defined(CONFIG_BCM4358) || defined(CONFIG_BCM4358_MODULE))
 	if (a->channel != b->channel)
 		return b->channel->center_freq - a->channel->center_freq;
-
+#endif /* CONFIG_BCM43xx */
 	if (is_mesh_bss(a) && is_mesh_bss(b)) {
 		r = cmp_ies(WLAN_EID_MESH_ID,
 			    a->information_elements,
@@ -378,7 +383,18 @@ static int cmp_bss_core(struct cfg80211_bss *a,
 			       b->len_information_elements);
 	}
 
-	return memcmp(a->bssid, b->bssid, ETH_ALEN);
+	r = memcmp(a->bssid, b->bssid, ETH_ALEN);
+#if (defined(CONFIG_BCM4335) || defined(CONFIG_BCM4335_MODULE) \
+        || defined(CONFIG_BCM4339) || defined(CONFIG_BCM4339_MODULE) \
+        || defined(CONFIG_BCM4354) || defined(CONFIG_BCM4354_MODULE) \
+        || defined(CONFIG_BCM4356) || defined(CONFIG_BCM4356_MODULE) \
+        || defined(CONFIG_BCM4358) || defined(CONFIG_BCM4358_MODULE))
+	if (r)
+		return r;
+	if (a->channel != b->channel)
+		return b->channel->center_freq - a->channel->center_freq;
+#endif /* CONFIG_BCM43xx */
+	return r;
 }
 
 static int cmp_bss(struct cfg80211_bss *a,

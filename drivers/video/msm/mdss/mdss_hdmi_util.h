@@ -257,7 +257,9 @@ int hdmi_get_video_id_code(struct msm_hdmi_mode_timing_info *timing_in);
 const struct msm_hdmi_mode_timing_info *hdmi_get_supported_mode(u32 mode);
 void hdmi_del_supported_mode(u32 mode);
 ssize_t hdmi_get_video_3d_fmt_2string(u32 format, char *buf, u32 size);
-
+#if defined (CONFIG_VIDEO_MHL_V2) || defined (CONFIG_VIDEO_MHL_SII8246)
+const struct msm_hdmi_mode_timing_info *hdmi_mhl_get_supported_mode(u32 mode);
+#endif
 /* todo: Fix this. Right now this is defined in mdss_hdmi_tx.c */
 void *hdmi_get_featuredata_from_sysfs_dev(struct device *device, u32 type);
 

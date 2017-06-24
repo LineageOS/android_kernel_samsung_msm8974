@@ -163,6 +163,8 @@ static inline struct measure_clk *to_measure_clk(struct clk *clk)
 void set_rate_mnd(struct rcg_clk *clk, struct clk_freq_tbl *nf);
 void set_rate_hid(struct rcg_clk *clk, struct clk_freq_tbl *nf);
 
+extern int set_rate_edp_pixel(struct clk *clk, unsigned long rate);
+
 /*
  * Variables from the clock-local driver
  */

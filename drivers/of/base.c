@@ -1270,3 +1270,43 @@ int of_alias_get_id(struct device_node *np, const char *stem)
 	return id;
 }
 EXPORT_SYMBOL_GPL(of_alias_get_id);
+
+#ifdef CONFIG_OF_SUBCMDLINE_PARSE
+int of_parse_args_on_subcmdline(const char *name, char *buf)
+{
+        struct device_node *node;
+        static const char *subcmdline;
+        char *param_start, *param_end;
+        int len = 0, name_len, cmd_len;
+
+        node = of_find_node_by_path("/chosen");
+        if (!node) {
+                pr_err("%s: get chosen node failed\n", __func__);
+                return -ENODEV;
+        }
+        subcmdline = of_get_property(node, "subcmdline", &len);
+        if (!subcmdline || len <= 0) {
+                pr_err("%s: get bootargs failed\n", __func__);
+                return -ENODEV;
+        }
+
+        name_len = strlen(name);
+        cmd_len = strlen(subcmdline);
+        param_start = strnstr(subcmdline, name, cmd_len);
+        if (!param_start) {
+                pr_err("%s: %s not found within cmdline\n", __func__, name);
+                return -1;
+        }
+        param_start += name_len;
+        param_end = strnstr(param_start, " ", 100);
+        if (!param_end) {
+                pr_err("%s: no space after %s found within cmdline\n", __func__, name);
+                return -1;
+        }
+
+        strlcpy(buf, param_start, param_end-param_start+1);
+        /* All parsed OK. */
+        return 0;
+}
+EXPORT_SYMBOL(of_parse_args_on_subcmdline);
+#endif

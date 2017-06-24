@@ -1,0 +1,53 @@
+#
+# factory sensor drivers configuration
+#
+config ADSP_SENSORS_CORE
+         bool "sensors_core"
+         depends on I2C
+config ADSP_FACTORY
+	tristate "MSM ADSP factory driver"
+	default n
+	help
+	  Provides access to ADSP user space.
+
+config MPU6500_FACTORY
+	tristate "factory test for adsp - mpu6500"
+	default n
+	depends on I2C
+	help
+	  mpu6500 file for factory test in adsp.
+
+config MPU6515_FACTORY
+	tristate "factory test for adsp - mpu6515"
+	default n
+	depends on I2C
+	help
+	  mpu6515 file for factory test in adsp.
+
+config HSCDTD008A_FACTORY
+	tristate "factory test for adsp - hscdtd008a"
+	default n
+	depends on I2C
+	help
+	  hscdtd008a file for factory test in adsp.
+
+config GP2AP30_FACTORY
+	tristate "factory test for adsp - gp2ap30"
+	default n
+	depends on I2C
+	help
+	  gp2ap30 file for factory test in adsp.
+
+config BMA250_FACTORY
+	tristate "factory test for adsp - bma250"
+	default n
+	depends on I2C
+	help
+	  bma250 file for factory test in adsp.
+
+config YAS532_FACTORY
+	tristate "factory test for adsp - yas532"
+	default n
+	depends on I2C
+	help
+	  yas532 file for factory test in adsp.

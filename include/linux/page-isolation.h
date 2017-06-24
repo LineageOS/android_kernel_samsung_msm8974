@@ -1,6 +1,10 @@
 #ifndef __LINUX_PAGEISOLATION_H
 #define __LINUX_PAGEISOLATION_H
 
+int move_freepages(struct zone *zone,
+			  struct page *start_page, struct page *end_page,
+			  int migratetype);
+
 /*
  * Changes migrate type in [start_pfn, end_pfn) to be MIGRATE_ISOLATE.
  * If specified range includes migrate types other than MOVABLE or CMA,

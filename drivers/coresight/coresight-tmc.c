@@ -1507,6 +1507,8 @@ static int tmc_etr_byte_cntr_init(struct platform_device *pdev,
 		goto err;
 	}
 
+	init_waitqueue_head(&drvdata->wq);
+
 	ret = devm_request_irq(&pdev->dev, drvdata->byte_cntr_irq,
 			tmc_etr_byte_cntr_irq,
 			IRQF_TRIGGER_RISING | IRQF_SHARED,
@@ -1516,7 +1518,6 @@ static int tmc_etr_byte_cntr_init(struct platform_device *pdev,
 		goto err;
 	}
 
-	init_waitqueue_head(&drvdata->wq);
 	node_size += strlen(node_name);
 
 	drvdata->byte_cntr_node = devm_kzalloc(&pdev->dev,

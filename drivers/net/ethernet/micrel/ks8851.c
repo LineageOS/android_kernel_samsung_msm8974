@@ -1466,8 +1466,13 @@ static int __devinit ks8851_init_hw(struct spi_device *spi,
 		goto fail_gpio;
 	}
 
-	regulator_enable(ks->vdd_io);
-	regulator_enable(ks->vdd_phy);
+	ret = regulator_enable(ks->vdd_io);
+	if(ret)
+		goto fail_gpio;
+
+	ret = regulator_enable(ks->vdd_phy);
+	if(ret)
+		goto fail_regulator;
 
 	/* Wait for atleast 10ms after turning on regulator */
 	usleep_range(10000, 11000);
@@ -1476,7 +1481,8 @@ static int __devinit ks8851_init_hw(struct spi_device *spi,
 		gpio_direction_output(ks->rst_gpio, 1);
 
 	return 0;
-
+fail_regulator:
+	regulator_disable(ks->vdd_io);
 fail_gpio:
 	if (gpio_is_valid(ks->rst_gpio))
 		gpio_free(ks->rst_gpio);

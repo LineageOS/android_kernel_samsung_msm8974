@@ -26,6 +26,7 @@ static struct wakeup_source *autosleep_ws;
 static void try_to_suspend(struct work_struct *work)
 {
 	unsigned int initial_count, final_count;
+	int error = 0;
 
 	if (!pm_get_wakeup_count(&initial_count, true))
 		goto out;
@@ -44,9 +45,14 @@ static void try_to_suspend(struct work_struct *work)
 	if (autosleep_state >= PM_SUSPEND_MAX)
 		hibernate();
 	else
-		pm_suspend(autosleep_state);
+		error = pm_suspend(autosleep_state);
 
 	mutex_unlock(&autosleep_lock);
+
+#ifdef CONFIG_SEC_PM
+	if (error)
+		goto out;
+#endif
 
 	if (!pm_get_wakeup_count(&final_count, false))
 		goto out;
@@ -59,6 +65,13 @@ static void try_to_suspend(struct work_struct *work)
 		schedule_timeout_uninterruptible(HZ / 2);
 
  out:
+#ifdef CONFIG_SEC_PM
+	if (error) {
+		pr_info("PM: suspend returned(%d)\n", error);
+		schedule_timeout_uninterruptible(HZ / 2);
+	}
+#endif
+
 	queue_up_suspend_work();
 }
 
@@ -100,6 +113,10 @@ int pm_autosleep_set_state(suspend_state_t state)
 	autosleep_state = state;
 
 	__pm_relax(autosleep_ws);
+
+#ifdef CONFIG_SEC_PM_DEBUG
+	wakeup_sources_stats_active();
+#endif
 
 	if (state > PM_SUSPEND_ON) {
 		pm_wakep_autosleep_enabled(true);

@@ -1,0 +1,7 @@
+
+# ST Microelectronics driver configuration
+#
+
+config TOUCHSCREEN_FTS_S
+	tristate "STMicroelectronics touchscreen driver"
+	depends on I2C

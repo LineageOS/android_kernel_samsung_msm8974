@@ -120,14 +120,31 @@ ENTRY(cpu_v7_do_resume)
 	mcr	p15, 0, r4, c13, c0, 0	@ FCSE/PID
 	mcr	p15, 0, r5, c13, c0, 3	@ User r/o thread ID
 	ldmia	r0, {r6 - r11}
+#ifndef CONFIG_TIMA_RKP_EMUL_CP15_INSTR
 	mcr	p15, 0, r6, c3, c0, 0	@ Domain ID
+#endif
 #ifndef CONFIG_ARM_LPAE
 	ALT_SMP(orr	r1, r1, #TTB_FLAGS_SMP)
 	ALT_UP(orr	r1, r1, #TTB_FLAGS_UP)
 #endif
+#ifndef	CONFIG_TIMA_RKP_EMUL_CP15_INSTR
 	mcr	p15, 0, r1, c2, c0, 0	@ TTB 0
+#endif
 	mcr	p15, 0, r7, c2, c0, 1	@ TTB 1
+#ifndef	CONFIG_TIMA_RKP_EMUL_CP15_INSTR
 	mcr	p15, 0, r11, c2, c0, 2	@ TTB control register
+#endif
+
+#ifdef CONFIG_TIMA_RKP_EMUL_CP15_INSTR
+	mov	r4, r0
+	ldr	r0, =0x3f806221
+	smc	#1
+	mov	r0, r4
+	/* Flush TLB */
+	mcr    p15, 0, r0, c8, c3, 0
+	dsb
+#endif
+
 	mrc	p15, 0, r4, c1, c0, 1	@ Read Auxiliary control register
 	teq	r4, r9			@ Is it already set?
 	mcrne	p15, 0, r9, c1, c0, 1	@ No, so write it

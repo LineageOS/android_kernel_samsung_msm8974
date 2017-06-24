@@ -126,10 +126,15 @@ static inline void mdss_mdp_intr_done(int index)
 irqreturn_t mdss_mdp_isr(int irq, void *ptr)
 {
 	struct mdss_data_type *mdata = ptr;
-	u32 isr, mask, hist_isr, hist_mask;
+	u32 isr, hist_isr, hist_mask;
+	u32 mask = 0;
 
 
 	isr = MDSS_MDP_REG_READ(MDSS_MDP_REG_INTR_STATUS);
+
+#if 0//defined (CONFIG_FB_MSM_MDSS_DSI_DBG)
+	xlog(__func__, 0, isr, mask, 0, 0, 0);
+#endif
 
 	if (isr == 0)
 		goto mdp_isr_done;
@@ -497,7 +502,7 @@ int mdss_mdp_put_img(struct mdss_mdp_img_data *data)
 		pr_debug("pmem buf=0x%x\n", data->addr);
 		data->srcp_file = NULL;
 	} else if (!IS_ERR_OR_NULL(data->srcp_ihdl)) {
-		pr_debug("ion hdl=%p buf=0x%x\n", data->srcp_ihdl, data->addr);
+		pr_debug("ion hdl=%pK buf=0x%x\n", data->srcp_ihdl, data->addr);
 		if (!iclient) {
 			pr_err("invalid ion client\n");
 			return -ENOMEM;
@@ -617,7 +622,7 @@ int mdss_mdp_get_img(struct msmfb_data *img, struct mdss_mdp_img_data *data)
 		data->addr += img->offset;
 		data->len -= img->offset;
 
-		pr_debug("mem=%d ihdl=%p buf=0x%x len=0x%x\n", img->memory_id,
+		pr_debug("mem=%d ihdl=%pK buf=0x%x len=0x%x\n", img->memory_id,
 			 data->srcp_ihdl, data->addr, data->len);
 	} else {
 		mdss_mdp_put_img(data);

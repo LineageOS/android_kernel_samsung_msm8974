@@ -559,6 +559,61 @@ int main(int ac, char **av)
 				"***\n"), defconfig_file);
 			exit(1);
 		}
+                name = getenv("KCONFIG_SELINUX");
+                printf("KCONFIG_SELINUX(%s)\n", name);
+                if (name) {
+                        if (conf_read_simple(name, S_DEF_USER, false)) {
+                                printf(_("***\n"
+                                        "*** Can't find selinux configuration \"%s\"!\n"
+                                        "***\n"), name);
+                                exit(1);
+                        }
+                }
+                name = getenv("KCONFIG_LOG_SELINUX");
+                printf("KCONFIG_LOG_SELINUX(%s)\n", name);
+                if (name) {
+                        if (conf_read_simple(name, S_DEF_USER, false)) {
+                                printf(_("***\n"
+                                        "*** Can't find selinux log configuration \"%s\"!\n"
+                                        "***\n"), name);
+                                exit(1);
+                        }
+                }
+                name = getenv("KCONFIG_TIMA");
+                printf("KCONFIG_TIMA(%s)\n", name);
+                if (name) {
+                        if (conf_read_simple(name, S_DEF_USER, false)) {
+                                printf(_("***\n"
+                                        "*** Can't find tima log configuration \"%s\"!\n"
+                                        "***\n"), name);
+                                exit(1);
+                        }
+                }
+		name = getenv("KCONFIG_VARIANT");
+		printf("KCONFIG_VARIANT(%s)\n", name);
+		if (name) {
+			if (conf_read_simple(name, S_DEF_USER, false)) {
+				printf(_("***\n"
+					"*** Can't find variant configuration \"%s\"!\n"
+					"***\n"), name);
+				exit(1);
+			}
+		} else {
+			printf(_("***\n"
+				"***  You must specify VARIANT_DEFCONFIG !\n"
+				"***\n"));
+		exit(1);
+		}
+		name = getenv("KCONFIG_DEBUG");
+		printf("KCONFIG_DEBUG(%s)\n", name);
+		if (name) {
+			if (conf_read_simple(name, S_DEF_USER, false)) {
+				printf(_("***\n"
+					"*** Can't find debug configuration \"%s\"!\n"
+					"***\n"), name);
+				exit(1);
+			}
+		}
 		break;
 	case savedefconfig:
 	case silentoldconfig:
@@ -575,7 +630,7 @@ int main(int ac, char **av)
 	case randconfig:
 		name = getenv("KCONFIG_ALLCONFIG");
 		if (name && !stat(name, &tmpstat)) {
-			conf_read_simple(name, S_DEF_USER);
+			conf_read_simple(name, S_DEF_USER, true);
 			break;
 		}
 		switch (input_mode) {
@@ -587,9 +642,9 @@ int main(int ac, char **av)
 		default: break;
 		}
 		if (!stat(name, &tmpstat))
-			conf_read_simple(name, S_DEF_USER);
+			conf_read_simple(name, S_DEF_USER, true);
 		else if (!stat("all.config", &tmpstat))
-			conf_read_simple("all.config", S_DEF_USER);
+			conf_read_simple("all.config", S_DEF_USER, true);
 		break;
 	default:
 		break;

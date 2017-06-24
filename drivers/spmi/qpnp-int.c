@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -27,6 +27,7 @@
 #include <linux/slab.h>
 #include <linux/printk.h>
 #include <linux/ratelimit.h>
+#include <linux/wakeup_reason.h>
 
 #include <asm/irq.h>
 #include <asm/mach/irq.h>
@@ -36,6 +37,19 @@
 #define QPNPINT_NR_IRQS		(16 * 256 * 8)
 /* This value is guaranteed not to be valid for private data */
 #define QPNPINT_INVALID_DATA	0x80000000
+
+#ifdef CONFIG_SEC_PM_DEBUG
+enum {
+	MSM_QPNP_INT_DBG_DISABLED = 0,
+	MSM_QPNP_INT_DBG_SHOW_IRQ = BIT(0),
+};
+
+int msm_qpnp_int_debug_mask = MSM_QPNP_INT_DBG_DISABLED;
+
+module_param_named(
+	debug_mask, msm_qpnp_int_debug_mask, int, S_IRUGO | S_IWUSR | S_IWGRP
+);
+#endif
 
 enum qpnpint_regs {
 	QPNPINT_REG_RT_STS		= 0x10,
@@ -54,6 +68,7 @@ struct q_perip_data {
 	uint8_t pol_low;    /* bitmap */
 	uint8_t int_en;     /* bitmap */
 	uint8_t use_count;
+	spinlock_t lock;
 };
 
 struct q_irq_data {
@@ -206,7 +221,7 @@ static void qpnpint_irq_mask(struct irq_data *d)
 	struct q_chip_data *chip_d = irq_d->chip_d;
 	struct q_perip_data *per_d = irq_d->per_d;
 	int rc;
-	uint8_t prev_int_en = per_d->int_en;
+	uint8_t prev_int_en;
 
 	pr_debug("hwirq %lu irq: %d\n", d->hwirq, d->irq);
 
@@ -217,6 +232,8 @@ static void qpnpint_irq_mask(struct irq_data *d)
 		return;
 	}
 
+	spin_lock(&per_d->lock);
+	prev_int_en = per_d->int_en;
 	per_d->int_en &= ~irq_d->mask_shift;
 
 	if (prev_int_en && !(per_d->int_en)) {
@@ -226,6 +243,7 @@ static void qpnpint_irq_mask(struct irq_data *d)
 		 */
 		qpnpint_arbiter_op(d, irq_d, chip_d->cb->mask);
 	}
+	spin_unlock(&per_d->lock);
 
 	rc = qpnpint_spmi_write(irq_d, QPNPINT_REG_EN_CLR,
 					(u8 *)&irq_d->mask_shift, 1);
@@ -252,7 +270,7 @@ static void qpnpint_irq_unmask(struct irq_data *d)
 	struct q_perip_data *per_d = irq_d->per_d;
 	int rc;
 	uint8_t buf[2];
-	uint8_t prev_int_en = per_d->int_en;
+	uint8_t prev_int_en;
 
 	pr_debug("hwirq %lu irq: %d\n", d->hwirq, d->irq);
 
@@ -263,6 +281,8 @@ static void qpnpint_irq_unmask(struct irq_data *d)
 		return;
 	}
 
+	spin_lock(&per_d->lock);
+	prev_int_en = per_d->int_en;
 	per_d->int_en |= irq_d->mask_shift;
 	if (!prev_int_en && per_d->int_en) {
 		/*
@@ -272,6 +292,7 @@ static void qpnpint_irq_unmask(struct irq_data *d)
 		 */
 		qpnpint_arbiter_op(d, irq_d, chip_d->cb->unmask);
 	}
+	spin_unlock(&per_d->lock);
 
 	/* Check the current state of the interrupt enable bit. */
 	rc = qpnpint_spmi_read(irq_d, QPNPINT_REG_EN_SET, buf, 1);
@@ -430,6 +451,7 @@ static struct q_irq_data *qpnpint_alloc_irq_data(
 			rc = -ENOMEM;
 			goto alloc_fail;
 		}
+		spin_lock_init(&per_d->lock);
 		rc = radix_tree_preload(GFP_KERNEL);
 		if (rc)
 			goto alloc_fail;
@@ -624,6 +646,22 @@ static int __qpnpint_handle_irq(struct spmi_controller *spmi_ctrl,
 	domain = chip_lookup[busno]->domain;
 	irq = irq_radix_revmap_lookup(domain, hwirq);
 
+#ifdef CONFIG_SEC_PM_DEBUG
+	if (msm_qpnp_int_debug_mask & MSM_QPNP_INT_DBG_SHOW_IRQ) {
+		struct irq_desc *desc;
+		const char *name = "null";
+
+		desc = irq_to_desc(irq);
+		if (desc == NULL)
+			name = "stray irq";
+		else if (desc->action && desc->action->name)
+			name = desc->action->name;
+
+		pr_info("%d triggered [0x%01x, 0x%02x,0x%01x] %s\n",
+				irq, spec->slave, spec->per, spec->irq, name);
+	}
+#endif
+
 	if (show) {
 		struct irq_desc *desc;
 		const char *name = "null";
@@ -634,8 +672,12 @@ static int __qpnpint_handle_irq(struct spmi_controller *spmi_ctrl,
 		else if (desc->action && desc->action->name)
 			name = desc->action->name;
 
-		pr_warn("%d triggered [0x%01x, 0x%02x,0x%01x] %s\n",
+		pr_info("%d triggered [0x%01x, 0x%02x,0x%01x] %s\n",
 				irq, spec->slave, spec->per, spec->irq, name);
+#ifdef CONFIG_SEC_PM_DEBUG
+		log_wakeup_reason(irq);
+		update_wakeup_reason_stats(irq);
+#endif
 	} else {
 		generic_handle_irq(irq);
 	}

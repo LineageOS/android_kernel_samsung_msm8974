@@ -2031,7 +2031,7 @@ config ARM_FLUSH_CONSOLE_ON_RESTART
 
 config CP_ACCESS
 	tristate "CP register access tool"
-	default m
+	default n
 	help
 	  Provide support for Coprocessor register access using /sys
 	  interface. Read and write to CP registers from userspace
@@ -2041,6 +2041,8 @@ config CP_ACCESS
 	  If unsure, say N.
 
 endmenu
+
+source "arch/arm/mvp/Kconfig"
 
 menu "Boot options"
 

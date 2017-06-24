@@ -196,10 +196,18 @@ static void wcd9xxx_disable_clock_block(struct wcd9xxx_resmgr *resmgr)
 	/* Disable clock */
 	if (resmgr->codec_type != WCD9XXX_CDC_TYPE_HELICON) {
 		snd_soc_update_bits(codec, WCD9XXX_A_CLK_BUFF_EN2, 0x04, 0x00);
+#if defined(CONFIG_MACH_VIENNA)
+		usleep_range(100, 100);
+#else
 		usleep_range(50, 50);
+#endif
 		snd_soc_update_bits(codec, WCD9XXX_A_CLK_BUFF_EN2, 0x02, 0x02);
 		snd_soc_update_bits(codec, WCD9XXX_A_CLK_BUFF_EN1, 0x05, 0x00);
+#if defined(CONFIG_MACH_VIENNA)
+		usleep_range(100, 100);
+#else
 		usleep_range(50, 50);
+#endif	
 	}
 	/* Notify */
 	if (resmgr->clk_type == WCD9XXX_CLK_RCO) {
@@ -402,7 +410,11 @@ int wcd9xxx_resmgr_enable_config_mode(struct wcd9xxx_resmgr *resmgr, int enable)
 		snd_soc_update_bits(codec, WCD9XXX_A_RC_OSC_TEST, 0x80, 0x80);
 		usleep_range(10, 10);
 		snd_soc_update_bits(codec, WCD9XXX_A_RC_OSC_TEST, 0x80, 0);
+#if defined(CONFIG_MACH_VIENNA)
+		usleep_range(20000, 20000);
+#else
 		usleep_range(10000, 10000);
+#endif
 		if (resmgr->codec_type != WCD9XXX_CDC_TYPE_HELICON)
 			snd_soc_update_bits(codec, WCD9XXX_A_CLK_BUFF_EN1,
 					0x08, 0x08);

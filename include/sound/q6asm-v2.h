@@ -403,6 +403,14 @@ int q6asm_media_format_block(struct audio_client *ac, uint32_t format);
 /* Send the meta data to remove initial and trailing silence */
 int q6asm_send_meta_data(struct audio_client *ac, uint32_t initial_samples,
 		uint32_t trailing_samples);
+int q6asm_set_sa(struct audio_client *ac,int *param);
+int q6asm_set_vsp(struct audio_client *ac,int *param);
+int q6asm_set_dha(struct audio_client *ac,int *param);
+int q6asm_set_lrsm(struct audio_client *ac,int *param);
+int q6asm_set_sa_ep(struct audio_client *ac,int *param);
+int q6asm_get_sa_ep(struct audio_client *ac);
+
+int q6asm_set_msp(struct audio_client *ac, long *param);
 
 /* Send the stream meta data to remove initial and trailing silence */
 int q6asm_stream_send_meta_data(struct audio_client *ac, uint32_t stream_id,

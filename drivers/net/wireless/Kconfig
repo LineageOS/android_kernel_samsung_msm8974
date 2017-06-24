@@ -324,9 +324,20 @@ config WCNSS_REGISTER_DUMP_ON_BITE
 	 register access failures. So this feature is to enable/disable the
 	 register dump on WCNSS WDOG bite.
 
+config WCNSS_IRIS_REGISTER_DUMP
+	bool "Enable/disable WCNSS IRIS register dump when there is a WCNSS bite"
+	depends on WCNSS_CORE_PRONTO
+	help
+	 When Apps recieves a WDOG bite from WCNSS, collecting a register dump
+	 of WCNSS is helpful to root cause the failure. WCNSS may not be
+	 properly clocked in some WCNSS bite cases, and that may cause unclocked
+	 register access failures. So this feature is to enable/disable the
+	 register dump on WCNSS WDOG bite.
+
 source "drivers/net/wireless/ath/Kconfig"
 source "drivers/net/wireless/b43/Kconfig"
 source "drivers/net/wireless/b43legacy/Kconfig"
+source "drivers/net/wireless/bcmdhd/Kconfig"
 source "drivers/net/wireless/bcmdhd/Kconfig"
 source "drivers/net/wireless/brcm80211/Kconfig"
 source "drivers/net/wireless/hostap/Kconfig"
@@ -343,5 +354,6 @@ source "drivers/net/wireless/wl1251/Kconfig"
 source "drivers/net/wireless/wl12xx/Kconfig"
 source "drivers/net/wireless/zd1211rw/Kconfig"
 source "drivers/net/wireless/mwifiex/Kconfig"
+source "drivers/net/wireless/mwlan_aarp/Kconfig"
 
 endif # WLAN

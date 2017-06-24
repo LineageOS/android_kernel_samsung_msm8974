@@ -735,7 +735,7 @@ static void print_other_cpu_stall(struct rcu_state *rsp)
 	int cpu;
 	long delta;
 	unsigned long flags;
-	int ndetected;
+	int ndetected = 0;
 	struct rcu_node *rnp = rcu_get_root(rsp);
 
 	/* Only let one CPU complain about others per time interval. */

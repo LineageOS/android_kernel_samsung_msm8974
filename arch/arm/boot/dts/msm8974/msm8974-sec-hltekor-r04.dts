@@ -1,0 +1,122 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+/include/ "msm8974-v2.0-1-sec.dtsi"
+/include/ "msm8974-sec-hlte-r04.dtsi"
+/include/ "msm8974-tdmb-hlte-r00.dtsi"
+
+/ {
+	model = "Samsung HLTE rev0.4";
+	compatible = "qcom,msm8974-cdp", "qcom,msm8974", "qcom,cdp";
+	/* qcom,msm-id = <126 1 0>; */
+	qcom,msm-id = <0x7E015201 4 0>,
+				<0xB8015201 4 0>;
+	/* [31:24] chip-id, [23:16] platform-id, [15:8] national code, [7:0] operator
+		revision, reserved */
+};
+
+&soc {
+	msm-bimc@0xfc380000 {
+		mas-ampss-m0 {
+			cell-id = <1>;
+			label = "mas-ampss-m0";
+			qcom,masterp = <0>;
+			qcom,tier = <2>;
+			qcom,hw-sel = "BIMC";
+			qcom,mode = "Limiter";
+			qcom,qport = <0>;
+			qcom,ws = <10000>;
+			qcom,mas-hw-id = <0>;
+			qcom,prio-rd = <0>;
+			qcom,prio-wr = <0>;
+			qcom,mode-thresh = "Fixed";
+			qcom,thresh = <2000000>;
+			qcom,dual-conf;
+			qcom,bimc,bw = <300000>;
+			qcom,bimc,gp = <5000>;
+			qcom,bimc,thmp = <50>;
+		};
+		mas-ampss-m1 {
+			cell-id = <2>;
+			label = "mas-ampss-m1";
+			qcom,masterp = <1>;
+			qcom,tier = <2>;
+			qcom,hw-sel = "BIMC";
+			qcom,mode = "Limiter";
+			qcom,qport = <1>;
+			qcom,ws = <10000>;
+			qcom,mas-hw-id = <0>;
+			qcom,prio-rd = <0>;
+			qcom,prio-wr = <0>;
+			qcom,mode-thresh = "Fixed";
+			qcom,thresh = <2000000>;
+			qcom,dual-conf;
+			qcom,bimc,bw = <300000>;
+			qcom,bimc,gp = <5000>;
+			qcom,bimc,thmp = <50>;
+		};
+	};
+
+	qcom,cpubw {
+		compatible = "qcom,cpubw";
+		qcom,cpu-mem-ports = <1 512>, <2 512>;
+		qcom,bw-tbl =
+			<  572 /*  75 MHz */ >,
+			< 1144 /* 150 MHz */ >,
+			< 1525 /* 200 MHz */ >,
+			< 2342 /* 307 MHz */ >,
+			< 3509 /* 460 MHz */ >,
+			< 4684 /* 614 MHz */ >,
+			< 6103 /* 800 MHz */ >,
+			< 7102 /* 931 MHz */ >;
+	};
+
+	qcom,kraitbw-l2pm {
+		compatible = "qcom,kraitbw-l2pm";
+		interrupts = <0 1 1>;
+		qcom,bytes-per-beat = <8>;
+	};
+
+	qcom,msm-cpufreq@0 {
+		reg = <0 4>;
+		compatible = "qcom,msm-cpufreq";
+		qcom,cpufreq-table =
+			<  300000  300000  572 >,
+			<  422400  422400 1144 >,
+			<  652800  499200 1525 >,
+			<  729600  576000 2342 >,
+			<  883200  576000 2342 >,
+			<  960000  960000 3509 >,
+			< 1036800 1036800 3509 >,
+			< 1190400 1036800 3509 >,
+			< 1267200 1267200 4684 >,
+			< 1497600 1497600 4684 >,
+			< 1574400 1574400 6103 >,
+			< 1728000 1651200 6103 >,
+			< 1958400 1728000 7102 >,
+			< 2265600 1728000 7102 >,
+			< 2457600 1728000 7102 >;
+	};
+
+        qcom,msm-rng@f9bff000 {
+		compatible = "qcom,msm-rng";
+		reg = <0xf9bff000 0x200>;
+		qcom,msm-bus,name = "msm-rng-noc";
+		qcom,msm-bus,num-cases = <2>;
+		qcom,msm-bus,num-paths = <1>;
+		qcom,msm-bus,vectors-KBps =
+				<88 618 0 0>,
+				<88 618 0 800>;
+        };
+};

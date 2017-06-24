@@ -80,6 +80,7 @@ unlock:
 	return err;
 }
 
+#ifndef CONFIG_CRYPTO_DRBG
 static int chainiv_givencrypt_first(struct skcipher_givcrypt_request *req)
 {
 	struct crypto_ablkcipher *geniv = skcipher_givcrypt_reqtfm(req);
@@ -103,13 +104,27 @@ unlock:
 
 	return chainiv_givencrypt(req);
 }
+#endif
 
+#ifdef CONFIG_CRYPTO_DRBG
+static int chainiv_init_common(struct crypto_tfm *tfm, char iv[])
+{
+	struct crypto_ablkcipher *geniv = __crypto_ablkcipher_cast(tfm);
+
+	tfm->crt_ablkcipher.reqsize = sizeof(struct ablkcipher_request);
+
+	crypto_rng_get_bytes(crypto_default_rng, iv,
+						crypto_ablkcipher_ivsize(geniv));
+	return skcipher_geniv_init(tfm);
+}
+#else
 static int chainiv_init_common(struct crypto_tfm *tfm)
 {
 	tfm->crt_ablkcipher.reqsize = sizeof(struct ablkcipher_request);
 
 	return skcipher_geniv_init(tfm);
 }
+#endif
 
 static int chainiv_init(struct crypto_tfm *tfm)
 {
@@ -117,7 +132,11 @@ static int chainiv_init(struct crypto_tfm *tfm)
 
 	spin_lock_init(&ctx->lock);
 
+#ifdef CONFIG_CRYPTO_DRBG
+	return chainiv_init_common(tfm, ctx->iv);
+#else
 	return chainiv_init_common(tfm);
+#endif
 }
 
 static int async_chainiv_schedule_work(struct async_chainiv_ctx *ctx)
@@ -205,6 +224,7 @@ postpone:
 	return async_chainiv_postpone_request(req);
 }
 
+#ifndef CONFIG_CRYPTO_DRBG
 static int async_chainiv_givencrypt_first(struct skcipher_givcrypt_request *req)
 {
 	struct crypto_ablkcipher *geniv = skcipher_givcrypt_reqtfm(req);
@@ -231,6 +251,7 @@ unlock:
 out:
 	return async_chainiv_givencrypt(req);
 }
+#endif
 
 static void async_chainiv_do_postponed(struct work_struct *work)
 {
@@ -270,7 +291,11 @@ static int async_chainiv_init(struct crypto_tfm *tfm)
 	crypto_init_queue(&ctx->queue, 100);
 	INIT_WORK(&ctx->postponed, async_chainiv_do_postponed);
 
+#ifdef CONFIG_CRYPTO_DRBG
+	return chainiv_init_common(tfm, ctx->iv);
+#else
 	return chainiv_init_common(tfm);
+#endif
 }
 
 static void async_chainiv_exit(struct crypto_tfm *tfm)
@@ -303,7 +328,11 @@ static struct crypto_instance *chainiv_alloc(struct rtattr **tb)
 	if (IS_ERR(inst))
 		goto put_rng;
 
+#ifdef CONFIG_CRYPTO_DRBG
+	inst->alg.cra_ablkcipher.givencrypt = chainiv_givencrypt;
+#else
 	inst->alg.cra_ablkcipher.givencrypt = chainiv_givencrypt_first;
+#endif
 
 	inst->alg.cra_init = chainiv_init;
 	inst->alg.cra_exit = skcipher_geniv_exit;
@@ -313,9 +342,12 @@ static struct crypto_instance *chainiv_alloc(struct rtattr **tb)
 	if (!crypto_requires_sync(algt->type, algt->mask)) {
 		inst->alg.cra_flags |= CRYPTO_ALG_ASYNC;
 
+#ifdef CONFIG_CRYPTO_DRBG
+		inst->alg.cra_ablkcipher.givencrypt = async_chainiv_givencrypt;
+#else
 		inst->alg.cra_ablkcipher.givencrypt =
 			async_chainiv_givencrypt_first;
-
+#endif
 		inst->alg.cra_init = async_chainiv_init;
 		inst->alg.cra_exit = async_chainiv_exit;
 

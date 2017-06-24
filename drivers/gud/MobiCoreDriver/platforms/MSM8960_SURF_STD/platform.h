@@ -36,14 +36,20 @@ static inline int smc_fastcall(void *fc_generic, size_t size)
 }
 
 /* Enable mobicore mem traces */
+#if defined(DEBUG)
 #define MC_MEM_TRACES
+#endif
 
 /* Enable the use of vm_unamp instead of the deprecated do_munmap
  * and other 3.7 features
  */
+#ifndef CONFIG_ARCH_MSM8960
 #define MC_VM_UNMAP
+#endif
 
-/* Enable Power Management for Crypto Engine */
+#if defined(CONFIG_ARCH_MSM8974) || defined(CONFIG_ARCH_MSM8226)
+/* Perform clock enable/disable */
 #define MC_CRYPTO_CLOCK_MANAGEMENT
+#endif
 
 #endif /* _MC_PLATFORM_H_ */

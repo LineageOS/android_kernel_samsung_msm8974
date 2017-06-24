@@ -17,62 +17,6 @@ DEFINE_MSM_MUTEX(ov9724_mut);
 
 static struct msm_sensor_ctrl_t ov9724_s_ctrl;
 
-static struct msm_sensor_power_setting ov9724_power_setting[] = {
-	{
-		.seq_type = SENSOR_VREG,
-		.seq_val = CAM_VANA,
-		.config_val = 0,
-		.delay = 0,
-	},
-	{
-		.seq_type = SENSOR_VREG,
-		.seq_val = CAM_VIO,
-		.config_val = 0,
-		.delay = 0,
-	},
-	{
-		.seq_type = SENSOR_VREG,
-		.seq_val = CAM_VDIG,
-		.config_val = 0,
-		.delay = 0,
-	},
-	{
-		.seq_type = SENSOR_GPIO,
-		.seq_val = SENSOR_GPIO_RESET,
-		.config_val = GPIO_OUT_LOW,
-		.delay = 5,
-	},
-	{
-		.seq_type = SENSOR_GPIO,
-		.seq_val = SENSOR_GPIO_RESET,
-		.config_val = GPIO_OUT_HIGH,
-		.delay = 5,
-	},
-	{
-		.seq_type = SENSOR_GPIO,
-		.seq_val = SENSOR_GPIO_STANDBY,
-		.config_val = GPIO_OUT_LOW,
-		.delay = 5,
-	},
-	{
-		.seq_type = SENSOR_GPIO,
-		.seq_val = SENSOR_GPIO_STANDBY,
-		.config_val = GPIO_OUT_HIGH,
-		.delay = 10,
-	},
-	{
-		.seq_type = SENSOR_CLK,
-		.seq_val = SENSOR_CAM_MCLK,
-		.config_val = 24000000,
-		.delay = 10,
-	},
-	{
-		.seq_type = SENSOR_I2C_MUX,
-		.seq_val = 0,
-		.config_val = 0,
-		.delay = 0,
-	},
-};
 
 static struct v4l2_subdev_info ov9724_subdev_info[] = {
 	{
@@ -84,48 +28,45 @@ static struct v4l2_subdev_info ov9724_subdev_info[] = {
 };
 
 static int32_t msm_ov9724_i2c_probe(struct i2c_client *client,
-	const struct i2c_device_id *id)
+				    const struct i2c_device_id *id)
 {
 	return msm_sensor_i2c_probe(client, id, &ov9724_s_ctrl);
 }
-
 static const struct i2c_device_id ov9724_i2c_id[] = {
-	{OV9724_SENSOR_NAME, (kernel_ulong_t)&ov9724_s_ctrl},
+	{ OV9724_SENSOR_NAME, (kernel_ulong_t)&ov9724_s_ctrl },
 	{ }
 };
 
 static struct i2c_driver ov9724_i2c_driver = {
-	.id_table = ov9724_i2c_id,
-	.probe  = msm_ov9724_i2c_probe,
-	.driver = {
-		.name = OV9724_SENSOR_NAME,
+	.id_table	= ov9724_i2c_id,
+	.probe		= msm_ov9724_i2c_probe,
+	.driver		= {
+		.name	= OV9724_SENSOR_NAME,
 	},
 };
 
 static struct msm_camera_i2c_client ov9724_sensor_i2c_client = {
-	.addr_type = MSM_CAMERA_I2C_WORD_ADDR,
+	.addr_type	= MSM_CAMERA_I2C_WORD_ADDR,
 };
 
 static struct msm_sensor_ctrl_t ov9724_s_ctrl = {
-	.sensor_i2c_client = &ov9724_sensor_i2c_client,
-	.power_setting_array.power_setting = ov9724_power_setting,
-	.power_setting_array.size = ARRAY_SIZE(ov9724_power_setting),
-	.msm_sensor_mutex = &ov9724_mut,
-	.sensor_v4l2_subdev_info = ov9724_subdev_info,
-	.sensor_v4l2_subdev_info_size = ARRAY_SIZE(ov9724_subdev_info),
+	.sensor_i2c_client		= &ov9724_sensor_i2c_client,
+	.msm_sensor_mutex		= &ov9724_mut,
+	.sensor_v4l2_subdev_info	= ov9724_subdev_info,
+	.sensor_v4l2_subdev_info_size	= ARRAY_SIZE(ov9724_subdev_info),
 };
 
 static const struct of_device_id ov9724_dt_match[] = {
-	{.compatible = "qcom,ov9724", .data = &ov9724_s_ctrl},
+	{ .compatible = "qcom,ov9724", .data = &ov9724_s_ctrl },
 	{}
 };
 
 MODULE_DEVICE_TABLE(of, ov9724_dt_match);
 
 static struct platform_driver ov9724_platform_driver = {
-	.driver = {
-		.name = "qcom,ov9724",
-		.owner = THIS_MODULE,
+	.driver			= {
+		.name		= "qcom,ov9724",
+		.owner		= THIS_MODULE,
 		.of_match_table = ov9724_dt_match,
 	},
 };
@@ -145,23 +86,24 @@ static int __init ov9724_init_module(void)
 	int32_t rc = 0;
 
 	rc = platform_driver_probe(&ov9724_platform_driver,
-		ov9724_platform_probe);
-	if (!rc)
+				   ov9724_platform_probe);
+	if (!rc) {
+		pr_info("%s: probe success\n", __func__);
 		return rc;
-	return i2c_add_driver(&ov9724_i2c_driver);
-}
+		return i2c_add_driver(&ov9724_i2c_driver);
+	}
 
-static void __exit ov9724_exit_module(void)
-{
-	if (ov9724_s_ctrl.pdev) {
-		msm_sensor_free_sensor_data(&ov9724_s_ctrl);
-		platform_driver_unregister(&ov9724_platform_driver);
-	} else
-		i2c_del_driver(&ov9724_i2c_driver);
-	return;
-}
+	static void __exit ov9724_exit_module(void)
+	{
+		if (ov9724_s_ctrl.pdev) {
+			msm_sensor_free_sensor_data(&ov9724_s_ctrl);
+			platform_driver_unregister(&ov9724_platform_driver);
+		} else
+			i2c_del_driver(&ov9724_i2c_driver);
+		return;
+	}
 
-module_init(ov9724_init_module);
-module_exit(ov9724_exit_module);
-MODULE_DESCRIPTION("ov9724");
-MODULE_LICENSE("GPL v2");
+	module_init(ov9724_init_module);
+	module_exit(ov9724_exit_module);
+	MODULE_DESCRIPTION("ov9724");
+	MODULE_LICENSE("GPL v2");

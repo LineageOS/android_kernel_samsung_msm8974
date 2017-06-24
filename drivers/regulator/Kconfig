@@ -215,6 +215,50 @@ config REGULATOR_MAX8998
 	  via I2C bus. The provided regulator is suitable for S3C6410
 	  and S5PC1XX chips to control VCC_CORE and VCC_USIM voltages.
 
+config REGULATOR_MAX77826
+	tristate "Maxim 77826 regulator"
+	depends on I2C
+	help
+	  This driver provides support for the voltage regulators of the MAX77826.
+	  The MAX77826 is a companion power management IC for the smart phones.
+	  The Max77826 handles LDO and BUCK control.
+
+config REGULATOR_MAX77803
+	tristate "Maxim 777803 regulator"
+	depends on MFD_MAX77803
+	help
+	   This driver provides support for the voltage regulators of the
+ 	   MAX77803 PMIC
+	   The MAX77803 is a companion power management IC for the smart phones
+	   The Maxim Max 77803 handles PMIC, MUIC, and the flash LED control.
+
+config REGULATOR_MAX77804K
+	tristate "Maxim 777804K regulator"
+	depends on MFD_MAX77804K
+	help
+	   This driver provides support for the voltage regulators of the
+	   MAX77804K PMIC
+	   The MAX77804K is a companion power management IC for the smart phones
+	   The Maxim Max 77804K handles PMIC, MUIC, and the flash LED control.
+
+config REGULATOR_MAX77823
+        tristate "Maxim 777823 regulator"
+        depends on MFD_MAX77823
+        help
+           This driver provides support for the voltage regulators of the
+           MAX77823 safeout
+           The MAX77823 is a companion power management IC for the smart phones
+           The Maxim Max 77823 handles PMIC, MUIC, and the flash LED control.
+
+config REGULATOR_MAX77888
+	tristate "Maxim 777888 regulator"
+	depends on MFD_MAX77888
+	help
+	  This driver provides support for the voltage regulators of the
+	  MAX77888 PMIC
+	  The MAX77888 is a companion power management IC for the smart phones
+	  The Maxim Max 77888 handles PMIC, MUIC, and the flash LED control.
+
 config REGULATOR_ONSEMI_NCP6335D
 	tristate "OnSemi NCP6335D regulator support"
 	depends on I2C

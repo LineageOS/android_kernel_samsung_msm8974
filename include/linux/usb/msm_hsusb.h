@@ -25,6 +25,9 @@
 #include <linux/wakelock.h>
 #include <linux/pm_qos.h>
 #include <linux/hrtimer.h>
+#ifdef CONFIG_USB_HOST_NOTIFY
+#include <linux/host_notify.h>
+#endif
 #include <linux/power_supply.h>
 #include <linux/cdev.h>
 /*
@@ -264,6 +267,9 @@ struct msm_otg_platform_data {
 	unsigned int mpm_dmshv_int;
 	bool mhl_enable;
 	bool disable_reset_on_disconnect;
+#ifdef CONFIG_USB_HOST_NOTIFY
+	int ovp_ctrl_gpio;
+#endif
 	bool pnoc_errata_fix;
 	bool enable_lpm_on_dev_suspend;
 	bool core_clk_always_on_workaround;
@@ -422,6 +428,10 @@ struct msm_otg {
 	unsigned mA_port;
 	struct timer_list id_timer;
 	unsigned long caps;
+#ifdef CONFIG_USB_HOST_NOTIFY
+	struct delayed_work late_power_work;
+	int smartdock;
+#endif
 	struct msm_xo_voter *xo_handle;
 	uint32_t bus_perf_client;
 	bool mhl_enabled;

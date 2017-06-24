@@ -79,7 +79,7 @@
 #define clear_bit_pos(x, y)  (atomic_set(&x, (atomic_read(&x) & (~(1 << y)))))
 #define test_bit_pos(x, y) ((atomic_read(&x)) & (1 << y))
 
-static int enable_ocmem_audio_voice = 1;
+static int enable_ocmem_audio_voice;
 module_param(enable_ocmem_audio_voice, int,
 			S_IRUGO | S_IWUSR | S_IWGRP);
 MODULE_PARM_DESC(enable_ocmem_audio_voice, "control OCMEM usage for audio/voice");

@@ -374,15 +374,16 @@ static int apq8074_liquid_init_docking(struct snd_soc_dapm_context *dapm)
 
 		apq8074_liquid_dock_dev->dapm = dapm;
 
+		INIT_WORK(
+			&apq8074_liquid_dock_dev->irq_work,
+			apq8074_liquid_docking_irq_work);
+
 		ret = request_irq(apq8074_liquid_dock_dev->dock_plug_irq,
 				  apq8074_liquid_docking_irq_handler,
 				  dock_plug_irq_flags,
 				  "liquid_dock_plug_irq",
 				  apq8074_liquid_dock_dev);
 
-		INIT_WORK(
-			&apq8074_liquid_dock_dev->irq_work,
-			apq8074_liquid_docking_irq_work);
 	}
 
 	return 0;

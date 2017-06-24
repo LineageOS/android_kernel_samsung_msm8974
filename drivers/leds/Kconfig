@@ -502,6 +502,20 @@ config LEDS_OT200
 	  This option enables support for the LEDs on the Bachmann OT200.
 	  Say Y to enable LEDs on the Bachmann OT200.
 
+config LEDS_AN30259A
+	tristate "LED support for AN30259A I2C chip"
+	depends on LEDS_CLASS
+	depends on I2C
+	help
+	  This option enables support for LEDs connected to the AN30259A
+	  LED driver chip accessed via the I2C bus.
+
+config LEDS_SEC_BACKLIGHT
+	tristate "common LCD Backlight driver for SEC"
+	depends on LEDS_CLASS
+	help
+	  This option enables support for the LCD backlight on SEC device.
+
 config LEDS_TRIGGERS
 	bool "LED Trigger support"
 	depends on LEDS_CLASS
@@ -574,6 +588,50 @@ config LEDS_TRIGGER_SLEEP
 	depends on LEDS_TRIGGERS && HAS_EARLYSUSPEND
 	help
 	  This turns LEDs on when the screen is off but the cpu still running.
+
+config LEDS_MAX77803
+	bool "LED support for the MAX77803"
+	depends on LEDS_CLASS
+	depends on MFD_MAX77803
+	default n
+	help
+	  This option enables support for the LEDs
+
+config LEDS_MAX77804K
+	bool "LED support for the MAX77804K"
+	depends on LEDS_CLASS
+	depends on MFD_MAX77804K
+	default n
+	help
+	  This option enables support for the LEDs
+	  Now camera_class is exceptioned
+	  by sanghoon.lee.
+
+config LEDS_MAX77888
+	bool "LED support for the MAX77888"
+	depends on LEDS_CLASS
+	depends on MFD_MAX77888
+	default n
+	help
+	  This option enables support for the LEDs
+	  Now camera_class is exceptioned
+
+config LEDS_MAX77828
+	bool "LED support for the MAX77828"
+	depends on LEDS_CLASS
+	depends on MFD_MAX77828
+	default n
+	help
+	  This option enables support for the LEDs
+
+config LEDS_KTD2026
+	tristate "LED driver for KTD2026 LED"
+	depends on I2C
+	  help
+	  This option enables support for RGB LED driver
+	  accessed via the I2C bus.
+	  KTD2026 is a fully programmable, constant current
+	  three channel LED driver with flexible control interface.
 
 comment "iptables trigger is under Netfilter config (LED target)"
 	depends on LEDS_TRIGGERS

@@ -1,0 +1,8 @@
+config FELICA
+	bool "FeliCa Driver"
+	default n
+
+config NFC_FELICA
+	bool "NFC FeliCa Driver"
+	default n
+

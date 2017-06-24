@@ -117,7 +117,7 @@ unsigned int sk_run_filter(const struct sk_buff *skb,
 	void *ptr;
 	u32 A = 0;			/* Accumulator */
 	u32 X = 0;			/* Index Register */
-	u32 mem[BPF_MEMWORDS];		/* Scratch Memory Store */
+	u32 mem[BPF_MEMWORDS] = {0};		/* Scratch Memory Store */
 	u32 tmp;
 	int k;
 

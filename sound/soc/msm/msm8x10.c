@@ -50,10 +50,21 @@ static int msm_btsco_ch = 1;
 static int msm_proxy_rx_ch = 2;
 static struct platform_device *spdev;
 static int ext_spk_amp_gpio = -1;
+#if defined (CONFIG_EXT_MAINMIC_BIAS)
+static int ext_main_micbias_gpio = -1;
+#endif
+#if defined (CONFIG_EXT_SUBMIC_BIAS)
+static int ext_sub_micbias_gpio = -1;
+#endif
 
 /* pointers for digital codec register mappings */
 static void __iomem *pcbcr;
 static void __iomem *prcgr;
+
+//balaji.k: Enabling the MIC Bias Voltage of Earmic
+#ifdef CONFIG_SAMSUNG_JACK
+static struct snd_soc_jack hs_jack;
+#endif
 
 static int msm_sec_mi2s_rx_ch = 1;
 static int msm_pri_mi2s_tx_ch = 1;
@@ -157,13 +168,28 @@ static int msm8x10_mclk_event(struct snd_soc_dapm_widget *w,
 static int msm_ext_spkramp_event(struct snd_soc_dapm_widget *w,
 			      struct snd_kcontrol *kcontrol, int event);
 static void msm8x10_enable_ext_spk_power_amp(u32 on);
+#if defined (CONFIG_EXT_MAINMIC_BIAS)
+static int msm_ext_mainmic_event(struct snd_soc_dapm_widget *w,
+			     struct snd_kcontrol *kcontrol, int event);
+#endif
+#if defined (CONFIG_EXT_SUBMIC_BIAS)
+static int msm_ext_submic_event(struct snd_soc_dapm_widget *w,
+			     struct snd_kcontrol *kcontrol, int event);
+#endif
 
 static const struct snd_soc_dapm_widget msm8x10_dapm_widgets[] = {
 
 	SND_SOC_DAPM_SUPPLY("MCLK",  SND_SOC_NOPM, 0, 0,
 	msm8x10_mclk_event, SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
 	SND_SOC_DAPM_SPK("Lineout amp", msm_ext_spkramp_event),
+#if defined (CONFIG_EXT_MAINMIC_BIAS)
+	SND_SOC_DAPM_MIC("Handset Mic", msm_ext_mainmic_event),
+#else
 	SND_SOC_DAPM_MIC("Handset Mic", NULL),
+#endif
+#if defined (CONFIG_EXT_SUBMIC_BIAS)
+	SND_SOC_DAPM_MIC("Sub Mic", msm_ext_submic_event),
+#endif
 	SND_SOC_DAPM_MIC("Headset Mic", NULL),
 	SND_SOC_DAPM_MIC("Secondary Mic", NULL),
 	SND_SOC_DAPM_MIC("Digital Mic1", NULL),
@@ -186,6 +212,69 @@ static int msm8x10_ext_spk_power_amp_init(void)
 	}
 	return 0;
 }
+
+#if defined (CONFIG_MACH_MS04TFN) || defined(CONFIG_SEC_HEAT_PROJECT)
+static int msm8x10_ext_micbias_init(void)
+{
+	int ret = 0;
+#if defined (CONFIG_EXT_MAINMIC_BIAS)
+	ext_main_micbias_gpio = of_get_named_gpio(spdev->dev.of_node,
+		"qcom,ext-main-micbias-gpio", 0);
+	if (ext_main_micbias_gpio >= 0) {
+		ret = gpio_request(ext_main_micbias_gpio, "ext_main_micbias_gpio");
+		if (ret) {
+			pr_err("%s: gpio_request failed for ext_main_micbias_gpio.\n",
+				__func__);
+			return -EINVAL;
+		}
+		gpio_direction_output(ext_main_micbias_gpio, 0);
+	}
+#endif
+#if defined (CONFIG_EXT_SUBMIC_BIAS)
+		ext_sub_micbias_gpio = of_get_named_gpio(spdev->dev.of_node,
+			"qcom,ext-sub-micbias-gpio", 0);
+		if (ext_sub_micbias_gpio >= 0) {
+			ret = gpio_request(ext_sub_micbias_gpio, "ext_sub_micbias_gpio");
+			if (ret) {
+				pr_err("%s: gpio_request failed for ext_sub_micbias_gpio.\n",
+					__func__);
+				return -EINVAL;
+			}
+			gpio_direction_output(ext_sub_micbias_gpio, 0);
+		}
+#endif
+	return 0;
+}
+#endif
+
+#if defined (CONFIG_EXT_MAINMIC_BIAS)
+static int msm_ext_mainmic_event(struct snd_soc_dapm_widget *w,
+			     struct snd_kcontrol *kcontrol, int event)
+{
+	pr_info("%s()\n", __func__);
+	if (ext_main_micbias_gpio >= 0) {
+		if (SND_SOC_DAPM_EVENT_ON(event))
+			gpio_direction_output(ext_main_micbias_gpio, 1);
+		else
+			gpio_direction_output(ext_main_micbias_gpio, 0);
+	}
+	return 0;
+}
+#endif
+#if defined (CONFIG_EXT_SUBMIC_BIAS)
+static int msm_ext_submic_event(struct snd_soc_dapm_widget *w,
+			     struct snd_kcontrol *kcontrol, int event)
+{
+	pr_info("%s()\n", __func__);
+	if (ext_sub_micbias_gpio >= 0) {
+		if (SND_SOC_DAPM_EVENT_ON(event))
+			gpio_direction_output(ext_sub_micbias_gpio, 1);
+		else
+			gpio_direction_output(ext_sub_micbias_gpio, 0);
+	}
+	return 0;
+}
+#endif
 
 static int msm_ext_spkramp_event(struct snd_soc_dapm_widget *w,
 			     struct snd_kcontrol *kcontrol, int event)
@@ -530,6 +619,9 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 
 	pr_debug("%s(),dev_name%s\n", __func__, dev_name(cpu_dai->dev));
 	msm8x10_ext_spk_power_amp_init();
+#if defined (CONFIG_MACH_MS04TFN) || defined(CONFIG_SEC_HEAT_PROJECT)
+	msm8x10_ext_micbias_init();
+#endif
 
 	mbhc_cfg.calibration = def_msm8x10_wcd_mbhc_cal();
 	if (mbhc_cfg.calibration) {
@@ -548,6 +640,21 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 
 	snd_soc_dapm_enable_pin(dapm, "Lineout amp");
 	snd_soc_dapm_sync(dapm);
+
+#ifdef CONFIG_SAMSUNG_JACK
+//balaji.k: Need to remove this code in future
+
+// Below lines has been added only because in need to codec ptr in order to enable
+//MIC BIAS2 dapm widget of Codec
+
+	ret = snd_soc_jack_new(codec, "Headset Jack",
+							(SND_JACK_HEADSET | SND_JACK_OC_HPHL | SND_JACK_OC_HPHR),
+							&hs_jack);
+	if (ret) {
+		pr_err("failed to create new jack\n");
+		return ret;
+	}
+#endif
 
 	ret = snd_soc_add_codec_controls(codec, msm_snd_controls,
 					 ARRAY_SIZE(msm_snd_controls));
@@ -639,6 +746,47 @@ static void *def_msm8x10_wcd_mbhc_cal(void)
 
 	return msm8x10_wcd_cal;
 }
+
+#ifdef CONFIG_SAMSUNG_JACK
+static struct snd_soc_jack hs_jack;
+
+void msm8x10_enable_ear_micbias(bool state)
+{
+	int nRetVal = 0;
+	struct snd_soc_jack *jack = &hs_jack;
+	struct snd_soc_codec *codec;
+	struct snd_soc_dapm_context *dapm;
+	char *str
+#ifdef CONFIG_EXT_EARMIC_BIAS
+		= "Headset Mic";
+#else
+		= "MIC BIAS Internal2";
+#endif
+
+	printk("%s : str: %s\n", __func__, str);
+
+	if (jack->codec == NULL) { /* audrx_init not yet called */
+		pr_err("%s codec==NULL\n", __func__);
+		return;
+	}
+	codec = jack->codec;
+	dapm = &codec->dapm;
+
+	mutex_lock(&dapm->codec->mutex);
+
+	if (state == 1) {
+		nRetVal = snd_soc_dapm_force_enable_pin(dapm, str);
+		pr_info("%s enable the codec  pin : %d with state :%d\n", __func__, nRetVal, state);
+	} else{
+		nRetVal = snd_soc_dapm_disable_pin(dapm, str);
+		pr_info("%s disable the codec  pin : %d with state :%d\n", __func__, nRetVal, state);
+	}
+	snd_soc_dapm_sync(dapm);
+
+	mutex_unlock(&dapm->codec->mutex);
+}
+EXPORT_SYMBOL(msm8x10_enable_ear_micbias);
+#endif
 
 static int msm_proxy_rx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 					struct snd_pcm_hw_params *params)

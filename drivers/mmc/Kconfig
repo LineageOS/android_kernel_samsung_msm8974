@@ -27,6 +27,11 @@ config MMC_PERF_PROFILING
 	  If you say Y here, support will be added for collecting
 	  performance numbers at the MMC Queue and Host layers.
 
+config MMC_SUPPORT_STLOG
+	bool "Enable storage log"
+	depends on MMC && PROC_STLOG
+	default y
+
 if MMC
 
 source "drivers/mmc/core/Kconfig"

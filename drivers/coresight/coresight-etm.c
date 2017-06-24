@@ -36,6 +36,13 @@
 
 #include "coresight-priv.h"
 
+#if defined(CONFIG_CORESIGHT_ETM_DEFAULT_ENABLE) || \
+	defined(CONFIG_CORESIGHT_ETM_PCSAVE_DEFAULT_ENABLE)
+#ifdef CONFIG_SEC_DEBUG
+#include <mach/sec_debug.h>
+#endif
+#endif
+
 #define etm_writel_mm(drvdata, val, off)  \
 			__raw_writel((val), drvdata->base + off)
 #define etm_readl_mm(drvdata, off)        \
@@ -2238,6 +2245,20 @@ static int __devinit etm_probe(struct platform_device *pdev)
 	}
 
 	dev_info(dev, "ETM initialized\n");
+
+#if defined(CONFIG_CORESIGHT_ETM_DEFAULT_ENABLE) || \
+	defined(CONFIG_CORESIGHT_ETM_PCSAVE_DEFAULT_ENABLE)
+#ifdef CONFIG_SEC_DEBUG
+	if (kernel_sec_get_debug_level() == KERNEL_SEC_DEBUG_LEVEL_LOW)	{
+#ifdef CONFIG_CORESIGHT_ETM_DEFAULT_ENABLE
+		boot_enable = 0;
+#endif
+#ifdef CONFIG_CORESIGHT_ETM_PCSAVE_DEFAULT_ENABLE
+		boot_pcsave_enable = 0;
+#endif
+	}
+#endif
+#endif
 
 	if (boot_enable) {
 		coresight_enable(drvdata->csdev);

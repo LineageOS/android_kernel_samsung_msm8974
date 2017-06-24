@@ -31,6 +31,10 @@
 
 #include "usb.h"
 
+#ifdef CONFIG_USB_HOST_NOTIFY
+#include "sec-dock.h"
+#endif
+
 #if defined(CONFIG_USB_PEHCI_HCD) || defined(CONFIG_USB_PEHCI_HCD_MODULE)
 #include <linux/usb/hcd.h>
 #include <linux/usb/ch11.h>
@@ -1361,8 +1365,9 @@ static int hub_probe(struct usb_interface *intf, const struct usb_device_id *id)
 	desc = intf->cur_altsetting;
 	hdev = interface_to_usbdev(intf);
 
-	/* Hubs have proper suspend/resume support. */
-	usb_enable_autosuspend(hdev);
+	if (!hdev->parent)
+		/* Hubs have proper suspend/resume support. */
+		usb_enable_autosuspend(hdev);
 
 	if (hdev->level == MAX_TOPO_LEVEL) {
 		dev_err(&intf->dev,
@@ -1715,6 +1720,10 @@ void usb_disconnect(struct usb_device **pdev)
 	dev_info(&udev->dev, "USB disconnect, device number %d\n",
 			udev->devnum);
 
+#ifdef CONFIG_USB_HOST_NOTIFY
+	call_battery_notify(udev, 0);
+#endif
+
 #ifdef CONFIG_USB_OTG
 	if (udev->bus->hnp_support && udev->portnum == udev->bus->otg_port) {
 		cancel_delayed_work_sync(&udev->bus->hnp_polling);
@@ -2038,6 +2047,12 @@ int usb_new_device(struct usb_device *udev)
 	/* Tell the world! */
 	announce_device(udev);
 
+#ifdef CONFIG_USB_HOST_NOTIFY
+#if defined(CONFIG_MUIC_MAX77693_SUPPORT_OTG_AUDIO_DOCK)
+	call_audiodock_notify(udev);
+#endif
+	call_battery_notify(udev, 1);
+#endif
 	device_enable_async_suspend(&udev->dev);
 
 	/*

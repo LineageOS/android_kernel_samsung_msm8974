@@ -220,6 +220,31 @@ config GPIO_GE_FPGA
 
 comment "I2C GPIO expanders:"
 
+config GPIO_MC5587
+	bool "MC5587 GPIO expander"
+	depends on I2C
+	help
+	  GPIO driver for MC5587 I2C-based GPIO expander.
+
+config GPIO_PCAL6416A
+	bool "PCAL6416A GPIO expander"
+	depends on I2C
+	help
+	  GPIO driver for PCAL6416A I2C-based GPIO expander.
+
+config GPIO_MC5587_IRQ
+	bool "Interrupt controller support for MC5587"
+	depends on GPIO_MC5587=y
+	help
+	  Say yes here to enable the mc5587 to be used as an interrupt
+	  controller. It requires the driver to be built in the kernel.
+
+config GPIO_PCAL6416A
+	bool "PCAL6416A GPIO expander"
+	depends on I2C
+	help
+	  GPIO driver for PCAL6416A I2C-based GPIO expander.
+
 config GPIO_MAX7300
 	tristate "Maxim MAX7300 GPIO expander"
 	depends on I2C
@@ -574,4 +599,7 @@ config GPIO_QPNP_PIN_DEBUG
 	help
 	  Say 'y' here to include debug support for the Qualcomm
 	  QPNP gpio driver.
+
+config SEC_GPIO_DVS
+	tristate "setting Samsung GPIO debugging and verification system"
 endif

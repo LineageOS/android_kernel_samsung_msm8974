@@ -35,7 +35,8 @@
 #define ANDROID_ALARM_PRINT_FLOW (1U << 6)
 
 static int debug_mask = ANDROID_ALARM_PRINT_ERROR | \
-			ANDROID_ALARM_PRINT_INIT_STATUS;
+			ANDROID_ALARM_PRINT_INIT_STATUS | \
+			ANDROID_ALARM_PRINT_SUSPEND;
 module_param_named(debug_mask, debug_mask, int, S_IRUGO | S_IWUSR | S_IWGRP);
 
 #define pr_alarm(debug_level_mask, args...) \
@@ -71,6 +72,7 @@ static struct platform_device *alarm_platform_dev;
 struct alarm_queue alarms[ANDROID_ALARM_TYPE_COUNT];
 static bool suspended;
 static long power_on_alarm;
+struct alarm *wakeup_alarm;
 
 static int set_alarm_time_to_rtc(const long);
 
@@ -122,6 +124,9 @@ static void update_timer_locked(struct alarm_queue *base, bool head_removed)
 		wake_lock_timeout(&alarm_rtc_wake_lock, 1 * HZ);
 		return;
 	}
+
+	if (is_wakeup)
+		wakeup_alarm = alarm;
 
 	hrtimer_try_to_cancel(&base->timer);
 	base->timer.node.expires = ktime_add(base->delta, alarm->expires);
@@ -286,6 +291,15 @@ int alarm_set_rtc(struct timespec new_time)
 		rtc_new_rtc_time.tm_mday,
 		rtc_new_rtc_time.tm_year + 1900);
 
+#ifdef CONFIG_RTC_AUTO_PWRON
+	pr_info("%s : set rtc %ld %ld - rtc %02d:%02d:%02d %02d/%02d/%04d\n", __func__,
+		new_time.tv_sec, new_time.tv_nsec,
+		rtc_new_rtc_time.tm_hour, rtc_new_rtc_time.tm_min,
+		rtc_new_rtc_time.tm_sec, rtc_new_rtc_time.tm_mon + 1,
+		rtc_new_rtc_time.tm_mday,
+		rtc_new_rtc_time.tm_year + 1900);
+#endif
+
 	mutex_lock(&alarm_setrtc_mutex);
 	spin_lock_irqsave(&alarm_slock, flags);
 	wake_lock(&alarm_rtc_wake_lock);
@@ -326,6 +340,107 @@ err:
 	return ret;
 }
 
+#ifdef CONFIG_RTC_AUTO_PWRON
+extern int rtc_set_bootalarm(struct rtc_device *rtc, struct rtc_wkalrm *alarm);
+// 0|1234|56|78|90|12
+// 1|2010|01|01|00|00
+//en yyyy mm dd hh mm
+#define BOOTALM_BIT_EN		 0
+#define BOOTALM_BIT_YEAR	 1
+#define BOOTALM_BIT_MONTH	 5
+#define BOOTALM_BIT_DAY 	 7
+#define BOOTALM_BIT_HOUR	 9
+#define BOOTALM_BIT_MIN 	11
+#define BOOTALM_BIT_TOTAL	13
+
+int alarm_set_alarm(char* alarm_data)
+{
+	struct rtc_wkalrm alm;
+	int ret;
+	char buf_ptr[BOOTALM_BIT_TOTAL+1];
+	struct rtc_time 	rtc_tm;
+	unsigned long		rtc_sec;
+	unsigned long		rtc_alarm_time;
+	struct timespec 	rtc_delta;
+	struct timespec 	wall_time;
+	ktime_t 			wall_ktm;
+	struct rtc_time 	wall_tm;
+
+	if (!alarm_rtc_dev) {
+		pr_alarm(ERROR,
+			"alarm_set_alarm: no RTC, time will be lost on reboot\n");
+		return -1;
+	}
+
+	strlcpy(buf_ptr, alarm_data, BOOTALM_BIT_TOTAL+1);	
+
+	alm.time.tm_sec = 0;
+	alm.time.tm_min  =	(buf_ptr[BOOTALM_BIT_MIN]	 -'0') * 10
+					  + (buf_ptr[BOOTALM_BIT_MIN+1]  -'0');
+	alm.time.tm_hour =	(buf_ptr[BOOTALM_BIT_HOUR]	 -'0') * 10
+					  + (buf_ptr[BOOTALM_BIT_HOUR+1] -'0');
+	alm.time.tm_mday =	(buf_ptr[BOOTALM_BIT_DAY]	 -'0') * 10
+					  + (buf_ptr[BOOTALM_BIT_DAY+1]  -'0');
+	alm.time.tm_mon  =	(buf_ptr[BOOTALM_BIT_MONTH]  -'0') * 10
+					  + (buf_ptr[BOOTALM_BIT_MONTH+1]-'0');
+	alm.time.tm_year =	(buf_ptr[BOOTALM_BIT_YEAR]	 -'0') * 1000
+					  + (buf_ptr[BOOTALM_BIT_YEAR+1] -'0') * 100
+					  + (buf_ptr[BOOTALM_BIT_YEAR+2] -'0') * 10
+					  + (buf_ptr[BOOTALM_BIT_YEAR+3] -'0');
+
+	alm.enabled = (*buf_ptr == '1');
+
+	pr_info("[SAPA] %s : %s => tm(%d %04d-%02d-%02d %02d:%02d:%02d)\n",
+			__func__, buf_ptr, alm.enabled,
+			alm.time.tm_year, alm.time.tm_mon, alm.time.tm_mday,
+			alm.time.tm_hour, alm.time.tm_min, alm.time.tm_sec);
+
+	if ( alm.enabled ) {
+		/* If time daemon is exist */
+
+		alm.time.tm_mon -= 1;
+		alm.time.tm_year -= 1900;
+
+		/* read current time */
+		rtc_read_time(alarm_rtc_dev, &rtc_tm);
+		rtc_tm_to_time(&rtc_tm, &rtc_sec);
+		pr_info("[SAPA] rtc  %4d-%02d-%02d %02d:%02d:%02d -> %lu\n",
+			rtc_tm.tm_year, rtc_tm.tm_mon, rtc_tm.tm_mday,
+			rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec, rtc_sec);
+
+		/* read kernel time */
+		getnstimeofday(&wall_time);
+		wall_ktm = timespec_to_ktime(wall_time);
+		wall_tm = rtc_ktime_to_tm(wall_ktm);
+		pr_info("[SAPA] wall %4d-%02d-%02d %02d:%02d:%02d -> %lu\n",
+			wall_tm.tm_year, wall_tm.tm_mon, wall_tm.tm_mday,
+			wall_tm.tm_hour, wall_tm.tm_min, wall_tm.tm_sec, wall_time.tv_sec);
+
+		/* calculate offset */
+		set_normalized_timespec(&rtc_delta,
+					wall_time.tv_sec - rtc_sec,
+					wall_time.tv_nsec);
+
+		/* convert user requested SAPA time to second type */
+		rtc_tm_to_time(&alm.time, &rtc_alarm_time);
+
+		/* convert to RTC time with user requested SAPA time and offset */
+		rtc_alarm_time -= rtc_delta.tv_sec;
+		rtc_time_to_tm(rtc_alarm_time, &alm.time);
+		pr_info("[SAPA] arlm %4d-%02d-%02d %02d:%02d:%02d -> %lu\n",
+			alm.time.tm_year, alm.time.tm_mon, alm.time.tm_mday,
+			alm.time.tm_hour, alm.time.tm_min, alm.time.tm_sec, rtc_alarm_time);
+
+	}
+	ret = rtc_set_bootalarm(alarm_rtc_dev, &alm);
+	if (ret < 0) {
+		pr_alarm(ERROR, "alarm_set_alarm: "
+			"Failed to set ALARM, time will be lost on reboot\n");
+		return -2;
+	}
+	return 0;
+}
+#endif
 
 void
 alarm_update_timedelta(struct timespec tmp_time, struct timespec new_time)
@@ -478,7 +593,8 @@ static int alarm_suspend(struct platform_device *pdev, pm_message_t state)
 		rtc_read_time(alarm_rtc_dev, &rtc_current_rtc_time);
 		rtc_tm_to_time(&rtc_current_rtc_time, &rtc_current_time);
 		pr_alarm(SUSPEND,
-			"rtc alarm set at %ld, now %ld, rtc delta %ld.%09ld\n",
+			"rtc alarm set func %pF at %ld, now %ld, rtc delta %ld.%09ld\n",
+			wakeup_alarm->function,
 			rtc_alarm_time, rtc_current_time,
 			rtc_delta.tv_sec, rtc_delta.tv_nsec);
 		if (rtc_current_time + 1 >= rtc_alarm_time) {

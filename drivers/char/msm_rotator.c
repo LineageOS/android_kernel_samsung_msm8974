@@ -305,8 +305,11 @@ static void disable_rot_clks(void)
 
 static void msm_rotator_rot_clk_work_f(struct work_struct *work)
 {
+	if(msm_rotator_dev->processing == 1)
+		pr_err("%s(): msm_rotator is now on processing\n", __func__);
+
 	if (mutex_trylock(&msm_rotator_dev->rotator_lock)) {
-		if (msm_rotator_dev->rot_clk_state == CLK_EN) {
+		if ((msm_rotator_dev->rot_clk_state == CLK_EN) && (msm_rotator_dev->processing == 0)) {
 			disable_rot_clks();
 			msm_rotator_dev->rot_clk_state = CLK_DIS;
 		} else if (msm_rotator_dev->rot_clk_state == CLK_SUSPEND)

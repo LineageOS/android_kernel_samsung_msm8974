@@ -714,7 +714,7 @@ int mmc_add_host(struct mmc_host *host)
 	err = pm_runtime_set_active(&host->class_dev);
 	if (err)
 		pr_err("%s: %s: failed setting runtime active: err: %d\n",
-		       mmc_hostname(host), __func__, err);
+				mmc_hostname(host), __func__, err);
 	else if (mmc_use_core_runtime_pm(host))
 		pm_runtime_enable(&host->class_dev);
 

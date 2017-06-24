@@ -821,12 +821,14 @@ xt_replace_table(struct xt_table *table,
 
 	/* Do the substitution. */
 	local_bh_disable();
+	get_writer(&(table->private_lock));
 	private = table->private;
 
 	/* Check inside lock: is the old number correct? */
 	if (num_counters != private->number) {
 		pr_debug("num_counters != table->private->number (%u/%u)\n",
 			 num_counters, private->number);
+		put_writer(&(table->private_lock));
 		local_bh_enable();
 		*error = -EAGAIN;
 		return NULL;
@@ -846,6 +848,7 @@ xt_replace_table(struct xt_table *table,
 	 * resynchronization happens because of the locking done
 	 * during the get_counters() routine.
 	 */
+	put_writer(&(table->private_lock));
 	local_bh_enable();
 
 #ifdef CONFIG_AUDIT
@@ -894,6 +897,8 @@ struct xt_table *xt_register_table(struct net *net,
 			goto unlock;
 		}
 	}
+	/* I could not find better place to init the lock */
+	atomic_set(&(table->private_lock), 0);
 
 	/* Simplifies replace_table code. */
 	table->private = bootstrap;

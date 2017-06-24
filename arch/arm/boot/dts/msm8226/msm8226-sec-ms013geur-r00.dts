@@ -1,0 +1,68 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/* qcom,msm-id =<DT_INFO  SS_BOARD_HARDWARE_REV  QC_SOC_REVISION>
+ * All these three fields are unsigned 32 bit integers
+ * DT_INFO = [31:24] chip-id, [23:16] platform-id, [15:8] national code, [7:0] operator revision[ reserved]
+ * SS_BOARD_HARDWARE_REV = Samsung specific hardware Revision
+ * QC_SOC_REVISION = Qcomm SOC Version of MTP Board
+ * Please refer to .../lk/platform/msm_shared/dev_tree.c also
+ */
+
+/dts-v1/;
+/include/ "msm8226-v2.dtsi"
+/include/ "msm8226-sec-ms013geur-r00.dtsi"
+
+/ {
+	model = "[SM-G7102]QC MSM 8226v2 MTP";
+	compatible = "qcom,msm8226-mtp", "qcom,msm8226", "qcom,mtp";
+	qcom,msm-id = <0x9E00FF01 2 0x20000>,
+			  <0x9108FF01 2 0x20000>,
+		      <0x9E08FF01 2 0x20000>,
+		      <0x9F08FF01 2 0x20000>,
+		      <0xC608FF01 2 0x20000>,
+		      <0xC708FF01 2 0x20000>;
+};
+
+&soc {
+    i2c@f9924000 { /* BLSP1 QUP2 */
+		accelerometer@18 {
+			compatible = "bma254";
+			reg = <0x18>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <64 0>;
+			bma254,i2c-pull-up = <1>;
+			bma254,vdd = "8226_l19";
+			bma254,vdd-io = "8226_lvs1";
+			bma254,irq-gpio = <&msmgpio 64 0x1>;
+			bma254,used_chip = "BMA25X_ENABLED";
+			bma254,position = <1>;
+		};
+	};
+
+	earjack {
+		/*Override GPIO properties*/
+		qcom,earjack-detect-gpio = <&msmgpio 69 0>;
+		qcom,earjack-sendend-gpio = <&msmgpio 35 0>;
+
+		/*Override det and btn zone ADC Values*/
+		det-zones-list = <&det_zones 3 10000 10 0>,
+						<&det_zones 690 10000 10 0>,
+						<&det_zones 691 10000 10 1>,
+						<&det_zones 9999 10000 10 1>;
+		but-zones-list = <&but_zones 0 0 213>,
+						<&but_zones 1 214 310>,
+						<&but_zones 2 310  9999>;
+		mpp-channel-scaling = <8 1 3>;
+	};
+};
+

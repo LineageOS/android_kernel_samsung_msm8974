@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -34,20 +34,12 @@
 #define ISPIF_VFE_m_INTF_CMD_0(m)                (0x0004 + ISPIF_VFE(m))
 #define ISPIF_VFE_m_INTF_CMD_1(m)                (0x0030 + ISPIF_VFE(m))
 #define ISPIF_VFE_m_PIX_INTF_n_CID_MASK(m, n)    (0x0010 + ISPIF_VFE(m) + 4*(n))
-#define ISPIF_VFE_m_RDI_INTF_n_CID_MASK(m, n)    (0x0014 + ISPIF_VFE(m) + \
-							((n > 0) ? (0x20) : 0) \
-							+ 8*(n))
+#define ISPIF_VFE_m_RDI_INTF_n_CID_MASK(m, n)    (0x0014 + ISPIF_VFE(m) + 4*(n))
 #define ISPIF_VFE_m_PIX_OUTPUT_n_MISR(m, n)      (0x0290 + ISPIF_VFE(m) + 4*(n))
-#define ISPIF_VFE_m_RDI_OUTPUT_n_MISR_0(m, n)    (0x001C + ISPIF_VFE(m) + \
-							((n > 0) ? (0x24) : 0) \
-							+ 0xc*(n))
-#define ISPIF_VFE_m_RDI_OUTPUT_n_MISR_1(m, n)    (0x0020 + ISPIF_VFE(m) + \
-							((n > 0) ? (0x24) : 0) \
-							+ 0xc*(n))
+#define ISPIF_VFE_m_RDI_OUTPUT_n_MISR_0(m, n)    (0x0298 + ISPIF_VFE(m) + 8*(n))
+#define ISPIF_VFE_m_RDI_OUTPUT_n_MISR_1(m, n)    (0x029C + ISPIF_VFE(m) + 8*(n))
 #define ISPIF_VFE_m_PIX_INTF_n_STATUS(m, n)      (0x0024 + ISPIF_VFE(m) + 4*(n))
-#define ISPIF_VFE_m_RDI_INTF_n_STATUS(m, n)      (0x0028 + ISPIF_VFE(m) + \
-							((n > 0) ? (0x34) : 0) \
-							+ 8*(n))
+#define ISPIF_VFE_m_RDI_INTF_n_STATUS(m, n)      (0x0028 + ISPIF_VFE(m) + 4*(n))
 
 /* Defines for compatibility with newer ISPIF versions */
 #define ISPIF_RST_CMD_1_ADDR                     (0x0000)
@@ -100,16 +92,15 @@
 /* irq_mask_2 */
 #define RAW_INTF_2_OVERFLOW_IRQ            BIT(12)
 
-#define ISPIF_IRQ_STATUS_MASK           0x0A493249
-#define ISPIF_IRQ_STATUS_1_MASK         0x02493249
-#define ISPIF_IRQ_STATUS_2_MASK         0x00001249
+#define ISPIF_IRQ_STATUS_MASK           0x08000001//0x0A493249
+#define ISPIF_IRQ_STATUS_1_MASK         0x0//0x02493249
+#define ISPIF_IRQ_STATUS_2_MASK         0x0//0x00001249
 
-#define ISPIF_IRQ_STATUS_PIX_SOF_MASK     0x000249
+#define ISPIF_IRQ_STATUS_PIX_SOF_MASK     0x0//0x000249
 #define ISPIF_IRQ_STATUS_RDI0_SOF_MASK    0x492000
 #define ISPIF_IRQ_STATUS_RDI1_SOF_MASK    0x492000
 #define ISPIF_IRQ_STATUS_RDI2_SOF_MASK    0x000249
 
 #define ISPIF_IRQ_GLOBAL_CLEAR_CMD        0x000001
 
-#define ISPIF_STOP_INTF_IMMEDIATELY              0xAAAAAAAA
 #endif /* __MSM_ISPIF_HWREG_V1_H__ */

@@ -354,8 +354,16 @@ static int uinput_setup_device(struct uinput_device *udev, const char __user *bu
 	int			i;
 	int			retval;
 
+#ifdef CONFIG_INPUT_EXPANDED_ABS
+	if (count != sizeof(struct uinput_user_dev))
+		printk(KERN_INFO "%s: size is different\n", UINPUT_NAME);
+
+	if (count > sizeof(struct uinput_user_dev))
+		return -EINVAL;
+#else
 	if (count != sizeof(struct uinput_user_dev))
 		return -EINVAL;
+#endif
 
 	if (!udev->dev) {
 		retval = uinput_allocate_device(udev);

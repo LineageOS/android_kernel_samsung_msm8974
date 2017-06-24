@@ -41,15 +41,39 @@ static void change_pte_range(struct mm_struct *mm, pmd_t *pmd,
 {
 	pte_t *pte, oldpte;
 	spinlock_t *ptl;
-
+#ifdef CONFIG_TIMA_RKP_L2_GROUP
+        unsigned long tima_l2group_flag = 0;
+        tima_l2group_entry_t *tima_l2group_buffer1 = NULL;
+        tima_l2group_entry_t *tima_l2group_buffer2 = NULL;
+        unsigned long tima_l2group_numb_entries = ((end-addr) >> PAGE_SHIFT);
+        unsigned long tima_l2group_buffer_index = 0;
+#endif
 	pte = pte_offset_map_lock(mm, pmd, addr, &ptl);
 	arch_enter_lazy_mmu_mode();
+#ifdef CONFIG_TIMA_RKP_L2_GROUP
+        /*
+         * Lazy mmu mode for tima:
+         */
+        init_tima_rkp_group_buffers(tima_l2group_numb_entries, pte,
+				&tima_l2group_flag, &tima_l2group_buffer_index,
+				&tima_l2group_buffer1, &tima_l2group_buffer2);
+#endif /* CONFIG_TIMA_RKP_L2_GROUP */
 	do {
 		oldpte = *pte;
 		if (pte_present(oldpte)) {
 			pte_t ptent;
 
+#ifdef CONFIG_TIMA_RKP_L2_GROUP
+			/* 
+			 * skip the pte_clear here. Instead just 
+			 * dereference the pte pointer and get the 
+			 * pte value. tima_l2group_ptep_modify_prot_commit
+			 * will write the same pte anyway.
+			 */
+			ptent = *pte;
+#else
 			ptent = ptep_modify_prot_start(mm, addr, pte);
+#endif
 			ptent = pte_modify(ptent, newprot);
 
 			/*
@@ -58,8 +82,15 @@ static void change_pte_range(struct mm_struct *mm, pmd_t *pmd,
 			 */
 			if (dirty_accountable && pte_dirty(ptent))
 				ptent = pte_mkwrite(ptent);
-
+#ifdef CONFIG_TIMA_RKP_L2_GROUP
+			tima_l2group_ptep_modify_prot_commit(mm, addr,
+					pte, ptent, tima_l2group_buffer1,
+					tima_l2group_buffer2,
+					&tima_l2group_buffer_index,
+					tima_l2group_flag);
+#else
 			ptep_modify_prot_commit(mm, addr, pte, ptent);
+#endif
 		} else if (IS_ENABLED(CONFIG_MIGRATION) && !pte_file(oldpte)) {
 			swp_entry_t entry = pte_to_swp_entry(oldpte);
 
@@ -74,6 +105,20 @@ static void change_pte_range(struct mm_struct *mm, pmd_t *pmd,
 			}
 		}
 	} while (pte++, addr += PAGE_SIZE, addr != end);
+#ifdef CONFIG_TIMA_RKP_L2_GROUP
+	if (tima_l2group_flag) {
+		/* First: Flush the cache of the buffer to be read by the TZ side
+		 */
+		if(tima_l2group_buffer1)
+			flush_dcache_page(virt_to_page(tima_l2group_buffer1));
+		if(tima_l2group_buffer2)
+			flush_dcache_page(virt_to_page(tima_l2group_buffer2));
+		/* Second: Pass the buffer pointers and length to TIMA to commit the changes
+		 */
+		write_tima_rkp_group_buffers(tima_l2group_buffer_index,
+			&tima_l2group_buffer1, &tima_l2group_buffer2);
+	}
+#endif
 	arch_leave_lazy_mmu_mode();
 	pte_unmap_unlock(pte - 1, ptl);
 }

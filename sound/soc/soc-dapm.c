@@ -945,6 +945,64 @@ static int dapm_get_playback_paths(struct snd_soc_dapm_context *dapm,
 	return paths;
 }
 
+int snd_soc_dapm_codec_dai_get_playback_connected_widgets(struct snd_soc_dai *dai,
+		struct snd_soc_dapm_widget_list **list)
+{
+	struct snd_soc_dapm_widget *w;
+	struct snd_soc_dapm_widget *widget;
+	struct snd_soc_dapm_widget_list *wlist;
+	struct snd_soc_codec *codec = dai->codec;
+	struct snd_soc_card *card = dai->card;
+	const char *stream_name;
+	int paths;
+
+	stream_name = dai->driver->playback.stream_name;
+
+	list_for_each_entry(w, &card->widgets, list)
+	{
+		if (!w->sname || (w->dapm != &codec->dapm))
+			continue;
+
+		dev_dbg(dai->dev, "%s(): widget = %s. widget stream name = %s.\n",
+			__func__, w->name, w->sname);
+		if (!strstr(w->sname, stream_name)) {
+			dev_dbg(dai->dev, "%s(): NOT Found AIF widget with sname %s.\n"
+				" current AIF widget with stream name = %s.\n",
+				__func__, stream_name, w->sname);
+			continue;
+		}
+
+		dev_dbg(dai->dev, "%s(): Found AIF widget with stream name = %s.\n",
+				__func__, w->sname);
+		break;
+	}
+
+	wlist = kzalloc(sizeof(struct snd_soc_dapm_widget_list) +
+			sizeof(struct snd_soc_dapm_widget *), GFP_KERNEL);
+	if (wlist == NULL) {
+		dev_err(codec->dev, "%s(): can't allocate widget list for %s\n",
+				__func__,w->name);
+		return -ENOMEM;
+	}
+
+	memset(&card->dapm_stats, 0, sizeof(card->dapm_stats));
+
+	list_for_each_entry(widget, &card->widgets, list) {
+		widget->power_checked = false;
+		widget->inputs = -1;
+		widget->outputs = -1;
+	}
+
+	/* get number of valid DAI paths and their widgets */
+	paths = dapm_get_playback_paths(&card->dapm, w, &wlist);
+	dapm_clear_walk(&card->dapm);
+	dev_dbg(dai->dev, "%s(): found %d audio playback paths for codec dai: %s\n",
+			__func__, paths, dai->name);
+
+	*list = wlist;
+	return paths;
+}
+
 static int dapm_get_capture_paths(struct snd_soc_dapm_context *dapm,
 		struct snd_soc_dapm_widget *root,
 		struct snd_soc_dapm_widget_list **list)
@@ -1904,10 +1962,10 @@ static int soc_dapm_mux_update_power(struct snd_soc_dapm_widget *widget,
 	}
 
 	if (found) {
-		dapm_mark_dirty(widget, "mux change");
-		dapm_power_widgets(widget->dapm,
-			   SND_SOC_DAPM_STREAM_NOP);
-	}
+	  		dapm_mark_dirty(widget, "mux change");
+			dapm_power_widgets(widget->dapm,
+					   SND_SOC_DAPM_STREAM_NOP);
+		}
 
 	return found;
 }
@@ -1954,7 +2012,6 @@ static int soc_dapm_mixer_update_power(struct snd_soc_dapm_widget *widget,
 		dapm_mark_dirty(widget, "mixer update");
 		dapm_power_widgets(widget->dapm, SND_SOC_DAPM_STREAM_NOP);
 	}
-
 	return found;
 }
 

@@ -70,4 +70,8 @@ int qpnp_pon_wd_config(bool enable)
 }
 #endif
 
+#ifdef CONFIG_SEC_PM
+int qpnp_pon_set_wd_timer(u8 s1_timer, u8 s2_timer, u8 reset_type);
+#endif
+
 #endif

@@ -154,6 +154,18 @@ int groups_search(const struct group_info *group_info, gid_t grp)
 }
 
 /**
+ * set_groups_sorted - Change a group subscription in a set of credentials
+ *  <at> new: The newly prepared set of credentials to alter
+ *  <at> group_info: The group list to install; must be sorted
+ */
+static void set_groups_sorted(struct cred *new, struct group_info *group_info)
+{
+	put_group_info(new->group_info);
+	get_group_info(group_info);
+	new->group_info = group_info;
+}
+
+/**
  * set_groups - Change a group subscription in a set of credentials
  * @new: The newly prepared set of credentials to alter
  * @group_info: The group list to install
@@ -163,10 +175,8 @@ int groups_search(const struct group_info *group_info, gid_t grp)
  */
 int set_groups(struct cred *new, struct group_info *group_info)
 {
-	put_group_info(new->group_info);
 	groups_sort(group_info);
-	get_group_info(group_info);
-	new->group_info = group_info;
+	set_groups_sorted(new, group_info);
 	return 0;
 }
 

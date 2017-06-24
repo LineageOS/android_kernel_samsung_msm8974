@@ -215,6 +215,10 @@
 
 #include <linux/sched.h>
 
+#ifdef CONFIG_TIMA_RKP_LAZY_MMU
+extern void flush_tlb_l2_page(pmd_t *pmd);
+#endif
+
 struct cpu_tlb_fns {
 	void (*flush_user_range)(unsigned long, unsigned long, struct vm_area_struct *);
 	void (*flush_kern_range)(unsigned long, unsigned long);

@@ -1,6 +1,6 @@
 /* arch/arm/mach-msm/smp2p_test_common.h
  *
- * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2014,2016 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -36,8 +36,7 @@
 	int a_tmp = (a); \
 	int b_tmp = (b); \
 	if (!((a_tmp)cmp(b_tmp))) { \
-		seq_printf(s, \
-			"%s:%d Fail: " #a "(%d) " #cmp " " #b "(%d)\n", \
+		seq_printf(s, "%s:%d Fail: " #a "(%d) " #cmp " " #b "(%d)\n", \
 				__func__, __LINE__, \
 				a_tmp, b_tmp); \
 		failed = 1; \

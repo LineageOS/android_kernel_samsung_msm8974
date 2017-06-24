@@ -76,6 +76,7 @@ static u32 mdss_mdp_smp_mmb_reserve(struct mdss_mdp_pipe_smp_map *smp_map,
 	if (i != 0 && n != i && !force_alloc) {
 		pr_debug("Can't change mmb config, num_blks: %d alloc: %d\n",
 			n, i);
+		pr_debug("Can't change mmb configuration in set call\n");
 		return 0;
 	}
 
@@ -340,7 +341,7 @@ int mdss_mdp_smp_reserve(struct mdss_mdp_pipe *pipe)
 	}
 
 	if (reserved < num_blks) {
-		pr_debug("insufficient MMB blocks\n");
+		pr_err("insufficient MMB blocks\n");
 		for (; i >= 0; i--)
 			mdss_mdp_smp_mmb_free(pipe->smp_map[i].reserved,
 				false);
@@ -698,6 +699,42 @@ static void mdss_mdp_pipe_free(struct kref *kref)
 	pipe->mfd = NULL;
 	memset(&pipe->scale, 0, sizeof(struct mdp_scale_data));
 }
+static bool mdss_mdp_check_pipe_in_use(struct mdss_mdp_pipe *pipe)
+{
+	int i;
+	u32 mixercfg, stage_off_mask = BIT(0) | BIT(1) | BIT(2);
+	bool in_use = false;
+	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
+	struct mdss_mdp_ctl *ctl;
+	struct mdss_mdp_mixer *mixer;
+
+	if (pipe->num == MDSS_MDP_SSPP_VIG3 ||
+	    pipe->num == MDSS_MDP_SSPP_RGB3)
+		stage_off_mask = stage_off_mask << ((3 * pipe->num) + 2);
+	else
+		stage_off_mask = stage_off_mask << (3 * pipe->num);
+
+	mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_ON, false);
+	for (i = 0; i < mdata->nctl; i++) {
+		ctl = mdata->ctl_off + i;
+		if (!ctl || !ctl->ref_cnt)
+			continue;
+
+		mixer = ctl->mixer_left;
+		if (mixer && mixer->rotator_mode)
+			continue;
+
+		mixercfg = mdss_mdp_get_mixercfg(mixer);
+		if ((mixercfg & stage_off_mask) && ctl->play_cnt) {
+			pr_err("BUG. pipe%d is active. mcfg:0x%x mask:0x%x\n",
+				pipe->num, mixercfg, stage_off_mask);
+			BUG();
+		}
+	}
+	mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_OFF, false);
+
+	return in_use;
+}
 
 static int mdss_mdp_is_pipe_idle(struct mdss_mdp_pipe *pipe,
 	bool ignore_force_on)
@@ -760,13 +797,15 @@ exit:
  */
 int mdss_mdp_pipe_fetch_halt(struct mdss_mdp_pipe *pipe)
 {
-	bool is_idle;
+	bool is_idle, in_use = false;
 	int rc = 0;
 	u32 reg_val, idle_mask, status;
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
 
 	is_idle = mdss_mdp_is_pipe_idle(pipe, true);
-	if (!is_idle) {
+	if (!is_idle)
+		in_use = mdss_mdp_check_pipe_in_use(pipe);
+	if (!is_idle && !in_use) {
 		pr_err("%pS: pipe%d is not idle. xin_id=%d\n",
 			__builtin_return_address(0), pipe->num, pipe->xin_id);
 
@@ -878,8 +917,6 @@ error:
 	return rc;
 }
 
-
-
 static int mdss_mdp_image_setup(struct mdss_mdp_pipe *pipe,
 					struct mdss_mdp_data *data)
 {
@@ -944,7 +981,11 @@ static int mdss_mdp_image_setup(struct mdss_mdp_pipe *pipe,
 	src_size = (src.h << 16) | src.w;
 	src_xy = (src.y << 16) | src.x;
 	dst_size = (dst.h << 16) | dst.w;
+#if defined(CONFIG_MDSS_UD_FLIP)
+	dst_xy = (((pipe->mixer->height - pipe->dst.y - pipe->dst.h) << 16) | pipe->dst.x);
+#else
 	dst_xy = (dst.y << 16) | dst.x;
+#endif
 
 	ystride0 =  (pipe->src_planes.ystride[0]) |
 			(pipe->src_planes.ystride[1] << 16);

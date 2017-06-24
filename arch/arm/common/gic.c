@@ -39,6 +39,7 @@
 #include <linux/percpu.h>
 #include <linux/slab.h>
 #include <linux/syscore_ops.h>
+#include <linux/wakeup_reason.h>
 
 #include <asm/irq.h>
 #include <asm/exception.h>
@@ -257,8 +258,10 @@ static void gic_show_resume_irq(struct gic_chip_data *gic)
 	for (i = find_first_bit(pending, gic->max_irq);
 	     i < gic->max_irq;
 	     i = find_next_bit(pending, gic->max_irq, i+1)) {
-		pr_warning("%s: %d triggered", __func__,
-					i + gic->irq_offset);
+#ifdef CONFIG_SEC_PM_DEBUG
+		log_wakeup_reason(i + gic->irq_offset);
+		update_wakeup_reason_stats(i + gic->irq_offset);
+#endif
 	}
 }
 
@@ -1219,3 +1222,48 @@ void gic_configure_and_raise(unsigned int irq, unsigned int cpu)
 
 	raw_spin_unlock_irqrestore(&irq_controller_lock, flags);
 }
+
+#if defined (CONFIG_MACH_AFYONLTE_TMO) || defined(CONFIG_MACH_ATLANTICLTE_ATT) || defined(CONFIG_MACH_ATLANTIC3GEUR_OPEN)
+void gic_dump_register_set(void)
+{
+	struct gic_chip_data *gic_global = &gic_data[0];
+	void __iomem *qgic_base;
+
+	pr_err("%s Dump QGIC registers\n", __func__);
+	qgic_base = gic_data_dist_base(gic_global) + GIC_DIST_ENABLE_SET;
+	pr_err("GIC_DIST_ENABLE_SET 0x%x 0x%x 0x%x 0x%x\n\t 0x%x 0x%x 0x%x 0x%x",
+			__raw_readl(qgic_base + 0x0), __raw_readl(qgic_base + 0x4),
+			__raw_readl(qgic_base + 0x8), __raw_readl(qgic_base + 0xC),
+			__raw_readl(qgic_base + 0x10), __raw_readl(qgic_base + 0x14),
+			__raw_readl(qgic_base + 0x18), __raw_readl(qgic_base + 0x1C));
+
+	qgic_base = gic_data_dist_base(gic_global) + GIC_DIST_ENABLE_CLEAR;
+	pr_err("GIC_DIST_ENABLE_CLEAR 0x%x 0x%x 0x%x 0x%x\n\t 0x%x 0x%x 0x%x 0x%x",
+			__raw_readl(qgic_base + 0x0), __raw_readl(qgic_base + 0x4),
+			__raw_readl(qgic_base + 0x8), __raw_readl(qgic_base + 0xC),
+			__raw_readl(qgic_base + 0x10), __raw_readl(qgic_base + 0x14),
+			__raw_readl(qgic_base + 0x18), __raw_readl(qgic_base + 0x1C));
+
+	qgic_base = gic_data_dist_base(gic_global) + GIC_DIST_PENDING_SET;
+	pr_err("GIC_DIST_PENDING_SET 0x%x 0x%x 0x%x 0x%x\n\t 0x%x 0x%x 0x%x 0x%x",
+			__raw_readl(qgic_base + 0x0), __raw_readl(qgic_base + 0x4),
+			__raw_readl(qgic_base + 0x8), __raw_readl(qgic_base + 0xC),
+			__raw_readl(qgic_base + 0x10), __raw_readl(qgic_base + 0x14),
+			__raw_readl(qgic_base + 0x18), __raw_readl(qgic_base + 0x1C));
+
+	qgic_base = gic_data_dist_base(gic_global) + GIC_DIST_PENDING_CLEAR;
+	pr_err("GIC_DIST_PENDING_CLEAR 0x%x 0x%x 0x%x 0x%x\n\t 0x%x 0x%x 0x%x 0x%x",
+			__raw_readl(qgic_base + 0x0), __raw_readl(qgic_base + 0x4),
+			__raw_readl(qgic_base + 0x8), __raw_readl(qgic_base + 0xC),
+			__raw_readl(qgic_base + 0x10), __raw_readl(qgic_base + 0x14),
+			__raw_readl(qgic_base + 0x18), __raw_readl(qgic_base + 0x1C));
+
+	qgic_base = gic_data_dist_base(gic_global) + GIC_DIST_ACTIVE_BIT;
+	pr_err("GIC_DIST_ACTIVE_BIT 0x%x 0x%x 0x%x 0x%x\n\t 0x%x 0x%x 0x%x 0x%x",
+			__raw_readl(qgic_base + 0x0), __raw_readl(qgic_base + 0x4),
+			__raw_readl(qgic_base + 0x8), __raw_readl(qgic_base + 0xC),
+			__raw_readl(qgic_base + 0x10), __raw_readl(qgic_base + 0x14),
+			__raw_readl(qgic_base + 0x18), __raw_readl(qgic_base + 0x1C));
+	pr_err("%s Dump QGIC registers done\n", __func__);
+}
+#endif

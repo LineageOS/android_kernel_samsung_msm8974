@@ -38,6 +38,7 @@ config NFC_WILINK
 	  Say Y here to compile support for Texas Instrument's NFC WiLink driver
 	  into the kernel or say M to compile it as module.
 
+source "drivers/nfc/secnfc/Kconfig"
 endmenu
 
 config NFC_QNCI

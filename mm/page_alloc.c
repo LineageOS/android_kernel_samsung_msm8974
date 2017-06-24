@@ -113,6 +113,18 @@ unsigned long total_unmovable_pages __read_mostly;
 int percpu_pagelist_fraction;
 gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;
 
+static unsigned int boot_mode = 0;
+static int __init setup_bootmode(char *str)
+{
+	if (get_option(&str, &boot_mode)) {
+		printk("%s: boot_mode is %u\n", __func__, boot_mode);
+		return 0;
+	}
+
+	return -EINVAL;
+}
+early_param("androidboot.boot_recovery", setup_bootmode);
+
 #ifdef CONFIG_PM_SLEEP
 /*
  * The following functions are used by the suspend/hibernate code to temporarily
@@ -175,9 +187,9 @@ int sysctl_lowmem_reserve_ratio[MAX_NR_ZONES-1] = {
 	 256,
 #endif
 #ifdef CONFIG_HIGHMEM
-	 32,
+	 96,
 #endif
-	 32,
+	 96,
 };
 
 EXPORT_SYMBOL(totalram_pages);
@@ -657,9 +669,6 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 	int migratetype = 0;
 	int batch_free = 0;
 	int to_free = count;
-	int free = 0;
-	int cma_free = 0;
-	int mt = 0;
 
 	spin_lock(&zone->lock);
 	zone->pages_scanned = 0;
@@ -687,25 +696,22 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 			batch_free = to_free;
 
 		do {
-			page = list_entry(list->prev, struct page, lru);
-			mt = get_pageblock_migratetype(page);
-			if (likely(mt != MIGRATE_ISOLATE))
-				mt = page_private(page);
+			int mt; /* migratetype of the to-be-freed page */
 
+			page = list_entry(list->prev, struct page, lru);
 			/* must delete as __free_one_page list manipulates */
 			list_del(&page->lru);
+			mt = get_freepage_migratetype(page);
 			/* MIGRATE_MOVABLE list may include MIGRATE_RESERVEs */
 			__free_one_page(page, zone, 0, mt);
 			trace_mm_page_pcpu_drain(page, 0, mt);
-			if (likely(mt != MIGRATE_ISOLATE)) {
-				free++;
+			if (likely(get_pageblock_migratetype(page) != MIGRATE_ISOLATE)) {
+				__mod_zone_page_state(zone, NR_FREE_PAGES, 1);
 				if (is_migrate_cma(mt))
-					cma_free++;
+					__mod_zone_page_state(zone, NR_FREE_CMA_PAGES, 1);
 			}
 		} while (--to_free && --batch_free && !list_empty(list));
 	}
-	__mod_zone_page_state(zone, NR_FREE_PAGES, free);
-	__mod_zone_page_state(zone, NR_FREE_CMA_PAGES, cma_free);
 	spin_unlock(&zone->lock);
 }
 
@@ -751,6 +757,7 @@ static void __free_pages_ok(struct page *page, unsigned int order)
 {
 	unsigned long flags;
 	int wasMlocked = __TestClearPageMlocked(page);
+	int migratetype;
 
 	if (!free_pages_prepare(page, order))
 		return;
@@ -759,8 +766,9 @@ static void __free_pages_ok(struct page *page, unsigned int order)
 	if (unlikely(wasMlocked))
 		free_page_mlock(page);
 	__count_vm_events(PGFREE, 1 << order);
-	free_one_page(page_zone(page), page, order,
-					get_pageblock_migratetype(page));
+	migratetype = get_pageblock_migratetype(page);
+	set_freepage_migratetype(page, migratetype);
+	free_one_page(page_zone(page), page, order, migratetype);
 	local_irq_restore(flags);
 }
 
@@ -798,6 +806,9 @@ void __init init_cma_reserved_pageblock(struct page *page)
 	do {
 		__ClearPageReserved(p);
 		set_page_count(p, 0);
+#if defined(CONFIG_CMA_PAGE_COUNTING)
+		SetPageCMA(p);
+#endif
 	} while (++p, --i);
 
 	set_page_refcounted(page);
@@ -959,7 +970,7 @@ int *get_migratetype_fallbacks(int mtype)
  * Note that start_page and end_pages are not aligned on a pageblock
  * boundary. If alignment is required, use move_freepages_block()
  */
-static int move_freepages(struct zone *zone,
+int move_freepages(struct zone *zone,
 			  struct page *start_page, struct page *end_page,
 			  int migratetype)
 {
@@ -995,6 +1006,7 @@ static int move_freepages(struct zone *zone,
 		order = page_order(page);
 		list_move(&page->lru,
 			  &zone->free_area[order].free_list[migratetype]);
+		set_freepage_migratetype(page, migratetype);
 		page += 1 << order;
 		pages_moved += 1 << order;
 	}
@@ -1076,6 +1088,8 @@ __rmqueue_fallback(struct zone *zone, int order, int start_migratetype)
 			if (!is_migrate_cma(migratetype) &&
 			    (unlikely(current_order >= pageblock_order / 2) ||
 			     start_migratetype == MIGRATE_RECLAIMABLE ||
+			     start_migratetype == MIGRATE_UNMOVABLE ||
+			     start_migratetype == MIGRATE_MOVABLE ||
 			     page_group_by_mobility_disabled)) {
 				int pages;
 				pages = move_freepages_block(zone, page,
@@ -1083,6 +1097,7 @@ __rmqueue_fallback(struct zone *zone, int order, int start_migratetype)
 
 				/* Claim the whole block if over half of it is free */
 				if (pages >= (1 << (pageblock_order-1)) ||
+						start_migratetype == MIGRATE_MOVABLE ||
 						page_group_by_mobility_disabled)
 					set_pageblock_migratetype(page,
 								start_migratetype);
@@ -1214,7 +1229,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 			if (!is_migrate_cma(mt) && mt != MIGRATE_ISOLATE)
 				mt = migratetype;
 		}
-		set_page_private(page, mt);
+		set_freepage_migratetype(page, mt);
 		list = &page->lru;
 		if (is_migrate_cma(mt))
 			__mod_zone_page_state(zone, NR_FREE_CMA_PAGES,
@@ -1378,11 +1393,22 @@ void free_hot_cold_page(struct page *page, int cold)
 	int migratetype;
 	int wasMlocked = __TestClearPageMlocked(page);
 
+#ifdef CONFIG_SCFS_LOWER_PAGECACHE_INVALIDATION
+	/*
+	   struct scfs_sb_info *sbi;
+
+	   if (PageScfslower(page) || PageNocache(page)) {
+	   sbi = SCFS_S(page->mapping->host->i_sb);
+	   sbi->scfs_lowerpage_reclaim_count++;
+	   }
+	 */
+#endif
+
 	if (!free_pages_prepare(page, 0))
 		return;
 
 	migratetype = get_pageblock_migratetype(page);
-	set_page_private(page, migratetype);
+	set_freepage_migratetype(page, migratetype);
 	local_irq_save(flags);
 	if (unlikely(wasMlocked))
 		free_page_mlock(page);
@@ -2383,6 +2409,61 @@ gfp_to_alloc_flags(gfp_t gfp_mask)
 	return alloc_flags;
 }
 
+#if defined(CONFIG_SEC_SLOWPATH)
+unsigned int oomk_state; /* 0 none, bit_0 time's up, bit_1 OOMK */
+
+struct slowpath_pressure {
+	unsigned int total_jiffies;
+	struct mutex slow_lock;
+} slowpath;
+
+/* slowtime - milliseconds time spend int __alloc_pages_slowpath() */
+static void slowpath_pressure(unsigned int slowtime)
+{
+	mutex_lock(&slowpath.slow_lock);
+	if (unlikely(slowpath.total_jiffies + slowtime >= UINT_MAX))
+		slowpath.total_jiffies = UINT_MAX;
+	else
+		slowpath.total_jiffies += slowtime;
+	mutex_unlock(&slowpath.slow_lock);
+}
+
+unsigned int get_and_reset_timeup(void)
+{
+	bool val = 0;
+
+	val = oomk_state;
+	oomk_state = 0;
+	pr_debug("%s: timeup %u\n", __func__, val);
+
+	return val;
+}
+
+unsigned int get_and_reset_slowtime(void)
+{
+	static bool first_read = false;
+	unsigned int slowtime = 0;
+
+	slowtime = slowpath.total_jiffies;
+	if (unlikely(first_read == false)) {
+		first_read = true;
+		slowtime = 0;
+	}
+	slowpath.total_jiffies = 0;
+	pr_debug("%s: slowtime %u\n", __func__, slowtime);
+
+	return slowtime;
+}
+
+static int __init slowpath_init(void)
+{
+	mutex_init(&slowpath.slow_lock);
+	return 0;
+}
+
+module_init(slowpath_init)
+#endif
+
 static inline struct page *
 __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
 	struct zonelist *zonelist, enum zone_type high_zoneidx,
@@ -2397,6 +2478,12 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
 	bool sync_migration = false;
 	bool deferred_compaction = false;
 	bool contended_compaction = false;
+#ifdef CONFIG_SEC_OOM_KILLER
+	unsigned long oom_invoke_timeout = jiffies + HZ/32;
+#endif
+#ifdef CONFIG_SEC_SLOWPATH
+	unsigned long slowpath_time = jiffies;
+#endif
 
 	/*
 	 * In the slowpath, we sanity check order to avoid ever trying to
@@ -2508,7 +2595,13 @@ rebalance:
 	 * If we failed to make any progress reclaiming, then we are
 	 * running out of options and have to consider going OOM
 	 */
-	if (!did_some_progress) {
+#ifdef CONFIG_SEC_OOM_KILLER
+#define SHOULD_CONSIDER_OOM (!did_some_progress \
+		|| time_after(jiffies, oom_invoke_timeout)) && boot_mode != 1
+#else
+#define SHOULD_CONSIDER_OOM !did_some_progress && boot_mode != 1
+#endif
+	if (SHOULD_CONSIDER_OOM) {
 		if ((gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY)) {
 			if (oom_killer_disabled)
 				goto nopage;
@@ -2516,6 +2609,16 @@ rebalance:
 			if ((current->flags & PF_DUMPCORE) &&
 			    !(gfp_mask & __GFP_NOFAIL))
 				goto nopage;
+#ifdef CONFIG_SEC_OOM_KILLER
+			if (did_some_progress) {
+				pr_info("time's up : calling "
+					"__alloc_pages_may_oom(o:%d, gfp:0x%x)\n", order, gfp_mask);
+#if defined(CONFIG_SEC_SLOWPATH)
+				oomk_state |= 0x01;
+#endif
+			}
+#endif
+
 			page = __alloc_pages_may_oom(gfp_mask, order,
 					zonelist, high_zoneidx,
 					nodemask, preferred_zone,
@@ -2541,6 +2644,9 @@ rebalance:
 					goto nopage;
 			}
 
+#ifdef CONFIG_SEC_OOM_KILLER
+			oom_invoke_timeout = jiffies + HZ/32;
+#endif
 			goto restart;
 		}
 	}
@@ -2572,10 +2678,20 @@ rebalance:
 
 nopage:
 	warn_alloc_failed(gfp_mask, order, NULL);
+#if defined(CONFIG_SEC_SLOWPATH)
+	slowpath_time = jiffies - slowpath_time;
+	if (wait && slowpath_time)
+		slowpath_pressure(slowpath_time);
+#endif
 	return page;
 got_pg:
 	if (kmemcheck_enabled)
 		kmemcheck_pagealloc_alloc(page, order, gfp_mask);
+#if defined(CONFIG_SEC_SLOWPATH)
+	slowpath_time = jiffies - slowpath_time;
+	if (wait && slowpath_time)
+		slowpath_pressure(slowpath_time);
+#endif
 	return page;
 
 }
@@ -2645,6 +2761,7 @@ out:
 	 */
 	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
 		goto retry_cpuset;
+
 
 	return page;
 }
@@ -2934,7 +3051,12 @@ void show_free_areas(unsigned int filter)
 		" dirty:%lu writeback:%lu unstable:%lu\n"
 		" free:%lu slab_reclaimable:%lu slab_unreclaimable:%lu\n"
 		" mapped:%lu shmem:%lu pagetables:%lu bounce:%lu\n"
-		" free_cma:%lu\n",
+#if defined(CONFIG_CMA_PAGE_COUNTING)
+		" free_cma:%lu cma_active_anon:%lu cma_inactive_anon:%lu\n"
+		" cma_active_file:%lu cma_inactive_file:%lu\n",
+#else
+		" free cma:%lu\n",
+#endif
 		global_page_state(NR_ACTIVE_ANON),
 		global_page_state(NR_INACTIVE_ANON),
 		global_page_state(NR_ISOLATED_ANON),
@@ -2952,7 +3074,15 @@ void show_free_areas(unsigned int filter)
 		global_page_state(NR_SHMEM),
 		global_page_state(NR_PAGETABLE),
 		global_page_state(NR_BOUNCE),
+#if defined(CONFIG_CMA_PAGE_COUNTING)
+		global_page_state(NR_FREE_CMA_PAGES),
+		global_page_state(NR_CMA_ACTIVE_ANON),
+		global_page_state(NR_CMA_INACTIVE_ANON),
+		global_page_state(NR_CMA_ACTIVE_FILE),
+		global_page_state(NR_CMA_INACTIVE_FILE));
+#else
 		global_page_state(NR_FREE_CMA_PAGES));
+#endif
 
 	for_each_populated_zone(zone) {
 		int i;
@@ -5294,6 +5424,9 @@ void setup_per_zone_wmarks(void)
  */
 static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 {
+#ifdef CONFIG_FIX_INACTIVE_RATIO
+	zone->inactive_ratio = 1;
+#else
 	unsigned int gb, ratio;
 
 	/* Zone size in gigabytes */
@@ -5304,6 +5437,7 @@ static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 		ratio = 1;
 
 	zone->inactive_ratio = ratio;
+#endif
 }
 
 static void __meminit setup_per_zone_inactive_ratio(void)
@@ -6053,8 +6187,6 @@ __offline_isolated_pages(unsigned long start_pfn, unsigned long end_pfn)
 		list_del(&page->lru);
 		rmv_page_order(page);
 		zone->free_area[order].nr_free--;
-		__mod_zone_page_state(zone, NR_FREE_PAGES,
-				      - (1UL << order));
 		for (i = 0; i < (1 << order); i++)
 			SetPageReserved((page+i));
 		pfn += (1 << order);
@@ -6120,7 +6252,11 @@ static struct trace_print_flags pageflag_names[] = {
 	{1UL << PG_hwpoison,		"hwpoison"	},
 #endif
 	{1UL << PG_readahead,           "PG_readahead"  },
-	{-1UL,				NULL		},
+
+#ifdef CONFIG_SCFS_LOWER_PAGECACHE_INVALIDATION
+	{1UL << PG_scfslower, "scfslower"},
+	{1UL << PG_nocache,"nocache"},
+#endif
 };
 
 static void dump_page_flags(unsigned long flags)

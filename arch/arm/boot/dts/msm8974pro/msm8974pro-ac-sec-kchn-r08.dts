@@ -1,0 +1,185 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+/include/ "msm8974pro-sec.dtsi"
+/include/ "msm8974pro-max77804k-klte_chn_cmcc_r07.dtsi"
+/include/ "msm8974pro-ac-sec-k-r07.dtsi"
+
+/ {
+	model = "SAMSUNG KCHN PROJECT REV08";
+	compatible = "qcom,msm8974-mtp", "qcom,msm8974", "qcom,mtp";
+	/*QCOM BOARD REV TYPE...*/
+	/*qcom,msm-id = <194 8 0x10000>;*/
+	/*SEC BOARD REV TYPE...*/
+        qcom,msm-id = <0xC208FF01 8 0x10000>;
+        /* [31:24] chip-id, [23:16] platform-id, [15:8] national code, [7:0] operator revision, reserved */
+};
+
+&pma8084_vadc {
+	chan@23 {
+		label = "mpp4_div3";
+		reg = <0x23>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <1>; /* 1:3 scaling */
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <0>;
+		qcom,hw-settle-time = <0>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@73 {
+		label = "msm_therm";
+		reg = <0x73>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@75 {
+		label = "pa_therm0";
+		reg = <0x75>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@77 {
+		label = "pa_therm1";
+		reg = <0x77>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@78 {
+		label = "quiet_therm";
+		reg = <0x78>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+};
+
+&pma8084_adc_tm {
+	chan@73 {
+		label = "msm_therm";
+		reg = <0x73>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x48>;
+		qcom,thermal-node;
+	};
+
+	chan@75 {
+		label = "pa_therm0";
+		reg = <0x75>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x68>;
+		qcom,thermal-node;
+	};
+
+	chan@77 {
+		label = "pa_therm1";
+		reg = <0x77>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x70>;
+		qcom,thermal-node;
+	};
+
+	chan@78 {
+		label = "quiet_therm";
+		reg = <0x78>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x78>;
+		qcom,thermal-node;
+	};
+};
+
+&usb3 {
+	interrupt-names = "irq", "otg_irq", "hs_phy_irq", "pmic_id_irq";
+	interrupt-parent = <&usb3>;
+	interrupts = <0 1>;
+	#interrupt-cells = <1>;
+	interrupt-map-mask = <0x0 0xffffffff>;
+	interrupt-map = <0x0 0 &intc 0 133 0
+			 0x0 1 &spmi_bus 0x0 0x0 0x9 0x0>;
+	interrupt-names = "hs_phy_irq", "pmic_id_irq";
+	/*qcom,misc-ref = <&pm8941_misc>;*/
+};
+
+&soc {
+	i2c@17 {
+		cell-index = <17>;
+		compatible = "i2c-gpio";
+
+		gpios = <&msmgpio 60 0
+			&msmgpio 61 0
+			>;
+
+		i2c-gpio,delay-us = <2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		an30259a@30 {
+			compatible = "an30259a,led";
+			reg = <0x30>;
+		};
+		expander_gpios: pcal6416a@20 {
+			compatible = "pcal6416a,gpio-expander";
+	                gpio-controller;
+	                #gpio-cells = <2>;
+			reg = <0x20>;
+			pcal6416a,gpio_start = <300>;
+			pcal6416a,ngpio = <16>;
+			pcal6416a,reset-gpio = <&msmgpio 145 0x00>;
+			pcal6416a,support_initialize = <1>;
+			/* config, 15 ~ 0, 1bit configure[1:input, 0:output]*/
+			pcal6416a,config = <0xA0B0>;	/* 1010 0000 1011 0000 */
+			/* data_out, 15 ~ 0, 1bit configure[1:high, 0:low]*/
+			pcal6416a,data_out = <0x0008>;	/* 0000 0000 0000 1001  */
+			/* pull_reg, 31 ~ 0, 2bit configure[00:no_pull, 01:pull_down, 10:pull_up, 11:not used]*/
+			pcal6416a,pull_reg = <0x00040401>; /* 00 00 00 00 / 00 00 01 00 /  00 00 01 00 / 00 00 00 00 */
+		};
+	};
+};

@@ -23,6 +23,7 @@
 #include <linux/spinlock.h>
 #include <linux/uhid.h>
 #include <linux/wait.h>
+#include <linux/fb.h>
 
 #define UHID_NAME	"uhid"
 #define UHID_BUFSIZE	32
@@ -51,6 +52,8 @@ struct uhid_device {
 };
 
 static struct miscdevice uhid_misc;
+
+bool lcd_is_on = true;
 
 static void uhid_queue(struct uhid_device *uhid, struct uhid_event *ev)
 {
@@ -122,15 +125,45 @@ static int uhid_hid_input(struct input_dev *input, unsigned int type,
 	struct uhid_device *uhid = hid->driver_data;
 	unsigned long flags;
 	struct uhid_event *ev;
+	struct hid_field *field;
+	struct hid_report *report;
+	int offset;
 
 	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
 	if (!ev)
 		return -ENOMEM;
 
-	ev->type = UHID_OUTPUT_EV;
-	ev->u.output_ev.type = type;
-	ev->u.output_ev.code = code;
-	ev->u.output_ev.value = value;
+	switch (type) {
+	case EV_LED:
+		if(!lcd_is_on){
+			dbg_hid("uhid_hid_input lcd is off, don't report LED event\n");
+			kfree(ev);
+			return -1;
+		}
+		offset = hidinput_find_field(hid, type, code, &field);
+		if (offset == -1) {
+			hid_warn(input, "event field not found\n");
+			kfree(ev);
+			return -1;
+		}
+
+		hid_set_field(field, offset, value);
+
+		report = field->report;
+
+		ev->type = UHID_OUTPUT;
+		ev->u.output.rtype = UHID_OUTPUT_REPORT;
+		hid_output_report(report, ev->u.output.data);
+		ev->u.output.size = ((report->size - 1) >> 3) + 1 +
+							(report->id > 0);
+		break;
+
+	default:
+		ev->type = UHID_OUTPUT_EV;
+		ev->u.output_ev.type = type;
+		ev->u.output_ev.code = code;
+		ev->u.output_ev.value = value;
+	}
 
 	spin_lock_irqsave(&uhid->qlock, flags);
 	uhid_queue(uhid, ev);
@@ -138,6 +171,34 @@ static int uhid_hid_input(struct input_dev *input, unsigned int type,
 
 	return 0;
 }
+
+static int fb_state_change(struct notifier_block *nb,
+    unsigned long val, void *data)
+{
+	struct fb_event *evdata = data;
+	unsigned int blank;
+    dbg_hid("fb_state_change");
+	if (val != FB_EVENT_BLANK)
+		return 0;
+
+	blank = *(int *)evdata->data;
+
+	switch (blank) {
+	case FB_BLANK_POWERDOWN:
+		lcd_is_on = false;
+		break;
+	case FB_BLANK_UNBLANK:
+		lcd_is_on = true;
+		break;
+	default:
+		break;
+	}
+
+	return NOTIFY_OK;
+}
+static struct notifier_block fb_block = {
+	.notifier_call = fb_state_change,
+};
 
 static int uhid_hid_parse(struct hid_device *hid)
 {
@@ -557,11 +618,13 @@ static struct miscdevice uhid_misc = {
 
 static int __init uhid_init(void)
 {
+	fb_register_client(&fb_block);
 	return misc_register(&uhid_misc);
 }
 
 static void __exit uhid_exit(void)
 {
+	fb_unregister_client(&fb_block);
 	misc_deregister(&uhid_misc);
 }
 

@@ -413,7 +413,51 @@ int rtc_initialize_alarm(struct rtc_device *rtc, struct rtc_wkalrm *alarm)
 }
 EXPORT_SYMBOL_GPL(rtc_initialize_alarm);
 
+#ifdef CONFIG_RTC_AUTO_PWRON
+int rtc_set_bootalarm(struct rtc_device *rtc, struct rtc_wkalrm *alarm)
+{
+    	int err;
 
+/*	err = mutex_lock_interruptible(&rtc->ops_lock); */
+/*	if (err) */
+/*		return err; */
+
+	if (!rtc->ops) {
+		dev_err(&rtc->dev, "ops not exist\n");
+		err = -ENODEV;
+	} else if (!rtc->ops->set_bootalarm) {
+		dev_err(&rtc->dev, "bootalarm func not exist\n");
+		err = -EINVAL;
+	} else
+		err = rtc->ops->set_bootalarm(rtc->dev.parent, alarm);
+	pr_info("[SAPA] %s\n",__func__);
+/*	mutex_unlock(&rtc->ops_lock); */
+	return err;
+}
+EXPORT_SYMBOL_GPL(rtc_set_bootalarm);
+
+int rtc_get_bootalarm(struct rtc_device *rtc, struct rtc_wkalrm *alarm)
+{
+ 	int err;
+ 
+/*	err = mutex_lock_interruptible(&rtc->ops_lock); */
+/*	if (err) */
+/*		return err; */
+
+	if (!rtc->ops) {
+		dev_err(&rtc->dev, "ops not exist\n");
+		err = -ENODEV;
+	} else if (!rtc->ops->read_bootalarm) {
+		dev_err(&rtc->dev, "bootalarm func not exist\n");
+		err = -EINVAL;
+	} else
+		err = rtc->ops->read_bootalarm(rtc->dev.parent, alarm);
+	pr_info("[SAPA] %s\n",__func__);
+/*	mutex_unlock(&rtc->ops_lock); */
+	return err;
+}
+EXPORT_SYMBOL_GPL(rtc_get_bootalarm);
+#endif /* CONFIG_AUTO_PWRON */
 
 int rtc_alarm_irq_enable(struct rtc_device *rtc, unsigned int enabled)
 {

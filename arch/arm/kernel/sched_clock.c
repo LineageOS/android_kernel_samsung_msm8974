@@ -14,6 +14,10 @@
 #include <linux/timer.h>
 
 #include <asm/sched_clock.h>
+#ifdef CONFIG_SEC_DEBUG
+#include <mach/sec_debug.h>
+extern void sec_debug_save_last_ns(unsigned long long last_ns);
+#endif
 
 struct clock_data {
 	u64 epoch_ns;
@@ -158,6 +162,12 @@ void __init setup_sched_clock(u32 (*read)(void), int bits, unsigned long rate)
 unsigned long long notrace sched_clock(void)
 {
 	u32 cyc = read_sched_clock();
+#ifdef CONFIG_SEC_DEBUG
+	u64 local = cyc_to_sched_clock(cyc, sched_clock_mask);
+	sec_debug_save_last_ns(local);
+	return local;
+#endif
+
 	return cyc_to_sched_clock(cyc, sched_clock_mask);
 }
 

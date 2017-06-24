@@ -13,6 +13,9 @@
 #include <linux/delay.h>
 #include <linux/export.h>
 #include <linux/bug.h>
+#ifdef CONFIG_MACH_ATLANTICLTE_ATT
+#include <mach/msm_watchdog_v2.h>
+#endif
 
 void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 			  struct lock_class_key *key)
@@ -50,6 +53,11 @@ void __rwlock_init(rwlock_t *lock, const char *name,
 
 EXPORT_SYMBOL(__rwlock_init);
 
+#ifdef CONFIG_SEC_DEBUG_SPINLOCK_PANIC
+#define DBG_HRT_MAX 10
+raw_spinlock_t debug_hrtimer_spinlock[DBG_HRT_MAX];
+#endif
+
 static void spin_dump(raw_spinlock_t *lock, const char *msg)
 {
 	struct task_struct *owner = NULL;
@@ -65,8 +73,16 @@ static void spin_dump(raw_spinlock_t *lock, const char *msg)
 		owner ? owner->comm : "<none>",
 		owner ? task_pid_nr(owner) : -1,
 		lock->owner_cpu);
-	BUG_ON(PANIC_CORRUPTION);
+#ifdef CONFIG_MACH_ATLANTICLTE_ATT
+		msm_cause_bite();
+		dump_stack();
+#else
+#ifdef CONFIG_SEC_DEBUG_SPINLOCK_PANIC
+		panic("spinlock bug");
+#else
 	dump_stack();
+#endif
+#endif
 }
 
 static void spin_bug(raw_spinlock_t *lock, const char *msg)
@@ -105,6 +121,7 @@ static inline void debug_spin_unlock(raw_spinlock_t *lock)
 	lock->owner_cpu = -1;
 }
 
+#if 0
 static void __spin_lock_debug(raw_spinlock_t *lock)
 {
 	u64 i;
@@ -131,12 +148,17 @@ static void __spin_lock_debug(raw_spinlock_t *lock)
 	 */
 	arch_spin_lock(&lock->raw_lock);
 }
+#endif
 
 void do_raw_spin_lock(raw_spinlock_t *lock)
 {
 	debug_spin_lock_before(lock);
+#if 0 /* Temporarily comment out for testing hrtimer spinlock issue */
 	if (unlikely(!arch_spin_trylock(&lock->raw_lock)))
 		__spin_lock_debug(lock);
+#else
+	arch_spin_lock(&lock->raw_lock);
+#endif
 	debug_spin_lock_after(lock);
 }
 

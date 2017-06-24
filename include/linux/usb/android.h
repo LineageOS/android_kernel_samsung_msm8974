@@ -26,6 +26,9 @@ struct android_usb_platform_data {
 	u32 swfi_latency;
 	u8 usb_core_id;
 	bool cdrom;
+#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
+	u8 nluns;
+#endif
 	bool internal_ums;
 	char streaming_func[MAX_STREAMING_FUNCS][FUNC_NAME_LEN];
 	int  streaming_func_count;
