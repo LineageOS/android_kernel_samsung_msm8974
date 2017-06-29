@@ -269,6 +269,9 @@ static int f2fs_write_meta_pages(struct address_space *mapping,
 	struct blk_plug plug;
 	long diff, written;
 
+	if (unlikely(is_sbi_flag_set(sbi, SBI_POR_DOING)))
+		goto skip_write;
+
 	/* collect a number of dirty meta pages and write together */
 	if (wbc->for_kupdate ||
 		get_pages(sbi, F2FS_DIRTY_META) < nr_pages_to_skip(sbi, META))
