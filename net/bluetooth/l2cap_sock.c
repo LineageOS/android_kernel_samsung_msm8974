@@ -132,7 +132,8 @@ static int l2cap_sock_bind(struct socket *sock, struct sockaddr *addr, int alen)
 
 	BT_DBG("sk %p", sk);
 
-	if (!addr || addr->sa_family != AF_BLUETOOTH)
+	if (!addr || alen < offsetofend(struct sockaddr, sa_family) ||
+	    addr->sa_family != AF_BLUETOOTH)
 		return -EINVAL;
 
 	memset(&la, 0, sizeof(la));
@@ -200,7 +201,7 @@ static int l2cap_sock_connect(struct socket *sock, struct sockaddr *addr, int al
 	BT_DBG("sk %p type %d mode %d state %d", sk, sk->sk_type,
 		l2cap_pi(sk)->mode, sk->sk_state);
 
-	if (!addr || alen < sizeof(addr->sa_family) ||
+	if (!addr || alen < offsetofend(struct sockaddr, sa_family) ||
 		addr->sa_family != AF_BLUETOOTH)
 		return -EINVAL;
 
