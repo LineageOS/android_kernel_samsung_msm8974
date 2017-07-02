@@ -136,6 +136,11 @@ static void venus_hfi_sim_modify_cmd_packet(u8 *packet)
 
 	sys_init = (struct hfi_cmd_sys_session_init_packet *)packet;
 	sess = (struct hal_session *) sys_init->session_id;
+	if (!sess) {
+		dprintk(VIDC_DBG, "%s :Invalid session id : %x\n",
+				__func__, sys_init->session_id);
+		return;
+	}
 	switch (sys_init->packet_type) {
 	case HFI_CMD_SESSION_EMPTY_BUFFER:
 		if (sess->is_decoder) {
@@ -1977,7 +1982,6 @@ static int venus_hfi_core_init(void *device)
 	VENUS_SET_STATE(dev, VENUS_STATE_INIT);
 
 	dev->intr_status = 0;
-	INIT_LIST_HEAD(&dev->sess_head);
 	venus_hfi_set_registers(dev);
 
 	if (!dev->hal_client) {
@@ -2496,19 +2500,19 @@ static int venus_hfi_session_abort(void *session)
 static int venus_hfi_session_clean(void *session)
 {
 	struct hal_session *sess_close;
+	struct venus_hfi_device *device;
 	if (!session) {
 		dprintk(VIDC_ERR, "Invalid Params %s", __func__);
 		return -EINVAL;
 	}
 	sess_close = session;
+	device = sess_close->device;
 	dprintk(VIDC_DBG, "deleted the session: 0x%p",
 			sess_close);
-	mutex_lock(&((struct venus_hfi_device *)
-			sess_close->device)->session_lock);
+	mutex_lock(&device->session_lock);
 	list_del(&sess_close->list);
-	mutex_unlock(&((struct venus_hfi_device *)
-			sess_close->device)->session_lock);
 	kfree(sess_close);
+	mutex_unlock(&device->session_lock);
 	return 0;
 }
 
@@ -3923,6 +3927,7 @@ static void *venus_hfi_add_device(u32 device_id,
 	mutex_init(&hdevice->session_lock);
 	mutex_init(&hdevice->clk_pwr_lock);
 
+	INIT_LIST_HEAD(&hdevice->sess_head);
 	if (hal_ctxt.dev_count == 0)
 		INIT_LIST_HEAD(&hal_ctxt.dev_head);
 

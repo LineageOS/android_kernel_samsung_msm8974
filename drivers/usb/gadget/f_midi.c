@@ -995,6 +995,12 @@ int f_midi_bind_config(struct usb_configuration *c,
 	config->device = midi->rmidi->device;
 	}
 
+
+	if (config) {
+		config->card = midi->rmidi->card->number;
+		config->device = midi->rmidi->device;
+	}
+
 	return 0;
 
 setup_fail:

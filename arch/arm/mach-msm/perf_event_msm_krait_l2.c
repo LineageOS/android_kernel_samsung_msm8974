@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2013,2016 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -424,7 +424,6 @@ static int msm_l2_test_set_ev_constraint(struct perf_event *event)
 	int err = 0;
 	u64 bitmap_t;
 	u32 shift_idx;
-
 	if (evt_prefix == L2_TRACECTR_PREFIX)
 		return err;
 	/*

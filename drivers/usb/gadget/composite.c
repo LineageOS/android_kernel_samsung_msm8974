@@ -705,6 +705,11 @@ static int set_config(struct usb_composite_dev *cdev,
 				union power_supply_propval value;
 				int main_type = POWER_SUPPLY_TYPE_USB_DCP;
 
+				if (!f->ss_descriptors) {
+					pr_err("%s(): No SS desc for function:%s\n",
+								__func__, f->name);
+					return -EINVAL;
+				}
 				descriptors = f->ss_descriptors;
 				if (!psy) {
 					pr_err("%s: fail to get %s psy\n", __func__, PSY_CHG_NAME);
