@@ -228,7 +228,6 @@ static int __recover_dot_dentries(struct inode *dir, nid_t pino)
 		return 0;
 	}
 
-	err = dquot_initialize(dir);
 	if (err)
 		return err;
 
