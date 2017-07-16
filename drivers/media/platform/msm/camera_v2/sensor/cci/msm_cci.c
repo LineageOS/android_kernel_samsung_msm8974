@@ -330,12 +330,14 @@ static int32_t msm_cci_i2c_read(struct v4l2_subdev *sd,
 	if (c_ctrl->cci_info->retries > CCI_I2C_READ_MAX_RETRIES) {
 		pr_err("%s:%d More than max retries\n", __func__,
 			__LINE__);
+		rc = -EINVAL;
 		goto ERROR;
 	}
 
 	if (read_cfg->data == NULL) {
 		pr_err("%s:%d Data ptr is NULL\n", __func__,
 			__LINE__);
+		rc = -EINVAL;
 		goto ERROR;
 	}
 
@@ -361,6 +363,7 @@ static int32_t msm_cci_i2c_read(struct v4l2_subdev *sd,
 
 	if (read_cfg->addr_type >= MSM_CAMERA_I2C_ADDR_TYPE_MAX) {
 		CDBG("%s failed line %d\n", __func__, __LINE__);
+		rc = -EINVAL;
 		goto ERROR;
 	}
 
@@ -550,6 +553,7 @@ static int32_t msm_cci_i2c_write(struct v4l2_subdev *sd,
 	if (c_ctrl->cci_info->retries > CCI_I2C_READ_MAX_RETRIES) {
 		pr_err("%s:%d More than max retries\n", __func__,
 			__LINE__);
+		rc = -EINVAL;
 		goto ERROR;
 	}
 
