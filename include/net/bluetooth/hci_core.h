@@ -1033,6 +1033,7 @@ void hci_send_to_sock(struct hci_dev *hdev, struct sk_buff *skb,
 int mgmt_control(struct sock *sk, struct msghdr *msg, size_t len);
 int mgmt_index_added(u16 index);
 int mgmt_index_removed(u16 index);
+int mgmt_set_powered_failed(u16 index, int err);
 int mgmt_powered(u16 index, u8 powered);
 int mgmt_discoverable(u16 index, u8 discoverable);
 int mgmt_connectable(u16 index, u8 connectable);

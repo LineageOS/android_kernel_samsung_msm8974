@@ -2846,6 +2846,27 @@ int mgmt_powered(u16 index, u8 powered)
 	return ret;
 }
 
+int mgmt_set_powered_failed(u16 index, int err)
+{
+	struct pending_cmd *cmd;
+	u8 status;
+
+	cmd = mgmt_pending_find(MGMT_OP_SET_POWERED, index);
+	if (!cmd)
+		return -ENOENT;
+
+	if (err == -ERFKILL)
+		status = MGMT_STATUS_RFKILLED;
+	else
+		status = MGMT_STATUS_FAILED;
+
+	err = cmd_status(cmd->sk, index, MGMT_OP_SET_POWERED, status);
+
+	mgmt_pending_remove(cmd);
+
+	return err;
+}
+
 int mgmt_discoverable(u16 index, u8 discoverable)
 {
 	struct mgmt_mode ev;

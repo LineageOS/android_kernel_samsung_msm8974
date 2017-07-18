@@ -23,6 +23,9 @@
 
 #define MGMT_INDEX_NONE			0xFFFF
 
+#define MGMT_STATUS_FAILED		0x03
+#define MGMT_STATUS_RFKILLED		0x12
+
 struct mgmt_hdr {
 	__le16 opcode;
 	__le16 index;

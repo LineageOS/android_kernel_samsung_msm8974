@@ -120,7 +120,7 @@ static __u8 *lg_report_fixup(struct hid_device *hdev, __u8 *rdesc,
 	}
 	if ((quirks & LG_RDESC_REL_ABS) && *rsize >= 51 &&
 			rdesc[32] == 0x81 && rdesc[33] == 0x06 &&
-			rdesc[49] == 0x81 && rdesc[50] == 0x06) {
+			rdesc[49] == 0x81 && rdesc[51] == 0x06) {
 		hid_info(hdev,
 			 "fixing up rel/abs in Logitech report descriptor\n");
 		rdesc[33] = rdesc[50] = 0x02;
