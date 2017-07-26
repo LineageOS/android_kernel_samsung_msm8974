@@ -987,7 +987,7 @@ static ssize_t tmc_read(struct file *file, char __user *data, size_t len,
 	dev_dbg(drvdata->dev, "%s: %d bytes copied, %d bytes left\n",
 		__func__, len, (int) (drvdata->size - *ppos));
 
-	mutex_lock(&drvdata->usb_lock);
+	mutex_unlock(&drvdata->usb_lock);
 	return len;
 }
 
