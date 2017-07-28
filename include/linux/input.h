@@ -204,6 +204,8 @@ struct input_keymap_entry {
 #define SYN_CONFIG		1
 #define SYN_MT_REPORT		2
 #define SYN_DROPPED		3
+#define SYN_TIME_SEC		4
+#define SYN_TIME_NSEC		5
 
 /*
  * Keys and buttons
@@ -470,10 +472,14 @@ struct input_keymap_entry {
 #define KEY_VIDEO_NEXT		241	/* drive next video source */
 #define KEY_VIDEO_PREV		242	/* drive previous video source */
 #define KEY_BRIGHTNESS_CYCLE	243	/* brightness up, after max is min */
-#define KEY_BRIGHTNESS_ZERO	244	/* brightness off, use ambient */
+#define KEY_BRIGHTNESS_AUTO	244	/* Set Auto Brightness: manual
+					  brightness control is off,
+					  rely on ambient */
+#define KEY_BRIGHTNESS_ZERO	KEY_BRIGHTNESS_AUTO
 #define KEY_DISPLAY_OFF		245	/* display device to off state */
 
-#define KEY_WIMAX		246
+#define KEY_WWAN		246	/* Wireless WAN (LTE, UMTS, GSM, etc.) */
+#define KEY_WIMAX		KEY_WWAN
 #define KEY_RFKILL		247	/* Key that controls all radios */
 
 #define KEY_MICMUTE		248	/* Mute / unmute the microphone */
@@ -525,11 +531,15 @@ struct input_keymap_entry {
 #define BTN_DEAD		0x12f
 
 #define BTN_GAMEPAD		0x130
-#define BTN_A			0x130
-#define BTN_B			0x131
+#define BTN_SOUTH		0x130
+#define BTN_A			BTN_SOUTH
+#define BTN_EAST		0x131
+#define BTN_B			BTN_EAST
 #define BTN_C			0x132
-#define BTN_X			0x133
-#define BTN_Y			0x134
+#define BTN_NORTH		0x133
+#define BTN_X			BTN_NORTH
+#define BTN_WEST		0x134
+#define BTN_Y			BTN_WEST
 #define BTN_Z			0x135
 #define BTN_TL			0x136
 #define BTN_TR			0x137
@@ -643,6 +653,7 @@ struct input_keymap_entry {
 #define KEY_ADDRESSBOOK		0x1ad	/* AL Contacts/Address Book */
 #define KEY_MESSENGER		0x1ae	/* AL Instant Messaging */
 #define KEY_DISPLAYTOGGLE	0x1af	/* Turn display (LCD) on and off */
+#define KEY_BRIGHTNESS_TOGGLE	KEY_DISPLAYTOGGLE
 #define KEY_SPELLCHECK		0x1b0   /* AL Spell Check */
 #define KEY_LOGOFF		0x1b1   /* AL Logoff */
 
@@ -735,6 +746,23 @@ struct input_keymap_entry {
 #if defined(CONFIG_SAMSUNG_JACK_VOICE_BTN)
 #define KEY_VOICECOMMAND		0x246 /* voice command*/
 #endif
+#define BTN_DPAD_UP		0x250
+#define BTN_DPAD_DOWN		0x251
+#define BTN_DPAD_LEFT		0x252
+#define BTN_DPAD_RIGHT		0x253
+
+#define KEY_ALS_TOGGLE		0x260	/* Ambient light sensor */
+
+#define KEY_BUTTONCONFIG		0x270	/* AL Button Configuration */
+#define KEY_TASKMANAGER		0x271	/* AL Task/Project Manager */
+#define KEY_JOURNAL		0x272	/* AL Log/Journal/Timecard */
+#define KEY_CONTROLPANEL		0x273	/* AL Control Panel */
+#define KEY_APPSELECT		0x274	/* AL Select Task/Application */
+#define KEY_SCREENSAVER		0x275	/* AL Screen Saver */
+#define KEY_VOICECOMMAND		0x276	/* Listening Voice Command */
+
+#define KEY_BRIGHTNESS_MIN		0x280	/* Set Brightness to Minimum */
+#define KEY_BRIGHTNESS_MAX		0x281	/* Set Brightness to Maximum */
 
 #define BTN_TRIGGER_HAPPY		0x2c0
 #define BTN_TRIGGER_HAPPY1		0x2c0
@@ -916,6 +944,7 @@ struct input_keymap_entry {
 #define SW_RIGHT_HAND	0x18	/* set = right hand*/
 #define SW_BOTH_HAND	0x19	/* set = both hand*/
 #define SW_W1			0x1A  /* set = w1_slave */
+#define SW_MUTE_DEVICE		0x1b  /* set = device disabled */
 
 #define SW_MAX			0x20
 #define SW_CNT			(SW_MAX+1)

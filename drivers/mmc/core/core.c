@@ -52,7 +52,6 @@
 #define ST_LOG(fmt,...)
 #endif
 
-#define CREATE_TRACE_POINTS
 #include <trace/events/mmc.h>
 
 static void mmc_clk_scaling(struct mmc_host *host, bool from_wq);
@@ -273,6 +272,7 @@ void mmc_request_done(struct mmc_host *host, struct mmc_request *mrq)
 			pr_debug("%s:     %d bytes transferred: %d\n",
 				mmc_hostname(host),
 				mrq->data->bytes_xfered, mrq->data->error);
+			trace_mmc_blk_rw_end(cmd->opcode, cmd->arg, mrq->data);
 		}
 
 		if (mrq->stop) {
@@ -926,6 +926,9 @@ struct mmc_async_req *mmc_start_req(struct mmc_host *host,
 
 	/* Prepare a new request */
 	if (areq) {
+		trace_mmc_blk_rw_start(areq->mrq->cmd->opcode,
+				       areq->mrq->cmd->arg,
+				       areq->mrq->data);
 		/*
 		 * start waiting here for possible interrupt
 		 * because mmc_pre_req() taking long time
@@ -2310,9 +2313,14 @@ static int mmc_do_erase(struct mmc_card *card, unsigned int from,
 	struct mmc_command cmd = {0};
 	unsigned int qty = 0;
 	unsigned long timeout;
+	unsigned int fr, nr;
 	int err;
 
 	u32 *resp = card->raw_csd;
+
+	fr = from;
+	nr = to - from + 1;
+	trace_mmc_blk_erase_start(arg, fr, nr);
 
 	/* For WriteProtection */
 	if (UNSTUFF_BITS(resp, 12, 2)) {
@@ -2431,6 +2439,8 @@ static int mmc_do_erase(struct mmc_card *card, unsigned int from,
 	} while (!(cmd.resp[0] & R1_READY_FOR_DATA) ||
 		 (R1_CURRENT_STATE(cmd.resp[0]) == R1_STATE_PRG));
 out:
+
+	trace_mmc_blk_erase_end(arg, fr, nr);
 	return err;
 }
 

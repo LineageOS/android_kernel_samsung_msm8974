@@ -28,6 +28,14 @@ config CPU_FREQ_LIMIT_USERSPACE
 	  /sys/power/cpufreq_max_limit
 	  /sys/power/cpufreq_table
 
+config HAS_WAKELOCK
+	bool
+	default y
+
+config WAKELOCK
+	bool
+	default y
+
 config HIBERNATE_CALLBACKS
 	bool
 

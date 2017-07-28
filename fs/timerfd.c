@@ -106,8 +106,9 @@ static bool timerfd_canceled(struct timerfd_ctx *ctx)
 
 static void timerfd_setup_cancel(struct timerfd_ctx *ctx, int flags)
 {
-	if (ctx->clockid == CLOCK_REALTIME && (flags & TFD_TIMER_ABSTIME) &&
-	    (flags & TFD_TIMER_CANCEL_ON_SET)) {
+	if ((ctx->clockid == CLOCK_REALTIME ||
+	     ctx->clockid == CLOCK_REALTIME_ALARM) &&
+	    (flags & TFD_TIMER_ABSTIME) && (flags & TFD_TIMER_CANCEL_ON_SET)) {
 		if (!ctx->might_cancel) {
 			ctx->might_cancel = true;
 			spin_lock(&cancel_lock);
@@ -260,7 +261,10 @@ SYSCALL_DEFINE2(timerfd_create, int, clockid, int, flags)
 
 	if ((flags & ~TFD_CREATE_FLAGS) ||
 	    (clockid != CLOCK_MONOTONIC &&
-	     clockid != CLOCK_REALTIME))
+	     clockid != CLOCK_REALTIME &&
+	     clockid != CLOCK_REALTIME_ALARM &&
+	     clockid != CLOCK_BOOTTIME &&
+	     clockid != CLOCK_BOOTTIME_ALARM))
 		return -EINVAL;
 
 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);

@@ -30,11 +30,14 @@
  *
  */
 
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/oom.h>
 #include <linux/sched.h>
+#include <linux/swap.h>
 #include <linux/rcupdate.h>
 #include <linux/notifier.h>
 #include <linux/mutex.h>
@@ -85,7 +88,7 @@ static unsigned long lowmem_deathpending_timeout;
 #define lowmem_print(level, x...)			\
 	do {						\
 		if (lowmem_debug_level >= (level))	\
-			printk(x);			\
+			pr_info(x);			\
 	} while (0)
 #if defined(CONFIG_SEC_DEBUG_LMK_MEMINFO)
 static void dump_tasks_info(void)
@@ -157,6 +160,7 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	int tasksize;
 	int i;
 	int min_score_adj = OOM_SCORE_ADJ_MAX + 1;
+	int minfree = 0;
 	int selected_tasksize = 0;
 	int selected_oom_score_adj;
 #ifdef CONFIG_SAMP_HOTNESS
@@ -184,7 +188,7 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 			return 0;
 	}
 
-	other_free = global_page_state(NR_FREE_PAGES);
+	other_free = global_page_state(NR_FREE_PAGES) - totalreserve_pages;
 
 	nr_cma_free = global_page_state(NR_FREE_CMA_PAGES);
 #ifdef CONFIG_ZSWAP
@@ -200,7 +204,7 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	is_active_high = (global_page_state(NR_ACTIVE_FILE) >
 				global_page_state(NR_INACTIVE_FILE)) ? 1 : 0;
 #endif
-	other_file = global_page_state(NR_FILE_PAGES) + zcache_pages();
+	other_file = global_page_state(NR_FILE_PAGES) - global_page_state(NR_SHMEM) + zcache_pages();
 
 #if defined(CONFIG_CMA_PAGE_COUNTING) && defined(CONFIG_EXCLUDE_LRU_LIVING_IN_CMA)
 	if (get_nr_swap_pages() < SSWAP_LMK_THRESHOLD && cma_page_ratio >= CMA_PAGE_RATIO
@@ -219,8 +223,8 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	if (lowmem_minfree_size < array_size)
 		array_size = lowmem_minfree_size;
 	for (i = 0; i < array_size; i++) {
-		if (other_free < lowmem_minfree[i] &&
-		    other_file < lowmem_minfree[i]) {
+		minfree = lowmem_minfree[i];
+		if (other_free < minfree && other_file < minfree) {
 			min_score_adj = lowmem_adj[i];
 			break;
 		}
@@ -584,9 +588,18 @@ static int android_oom_handler(struct notifier_block *nb,
 	}
 #else
 	if (selected) {
-		lowmem_print(1, "oom: send sigkill to %d (%s), adj %d, size %d\n",
-			     selected->pid, selected->comm,
-			     selected_oom_score_adj, selected_tasksize);
+		lowmem_print(1, "Killing '%s' (%d), adj %d,\n" \
+				"   to free %ldkB on behalf of '%s' (%d) because\n" \
+				"   cache %ldkB is below limit %ldkB for oom_score_adj %d\n" \
+				"   Free memory is %ldkB above reserved\n",
+			     selected->comm, selected->pid,
+			     selected_oom_score_adj,
+			     selected_tasksize * (long)(PAGE_SIZE / 1024),
+			     current->comm, current->pid,
+			     other_file * (long)(PAGE_SIZE / 1024),
+			     minfree * (long)(PAGE_SIZE / 1024),
+			     min_score_adj,
+			     other_free * (long)(PAGE_SIZE / 1024));
 		send_sig(SIGKILL, selected, 0);
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
 		rem -= selected_tasksize;

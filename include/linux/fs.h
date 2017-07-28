@@ -339,6 +339,8 @@ struct inodes_stat_t {
 #define FITHAW		_IOWR('X', 120, int)	/* Thaw */
 #define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
 
+#define FIDTRIM	_IOWR('f', 128, struct fstrim_range)	/* Deep discard trim */
+
 #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
 #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
 #define	FS_IOC_GETVERSION		_IOR('v', 1, long)
@@ -1885,13 +1887,13 @@ int sync_inode_metadata(struct inode *inode, int wait);
 struct file_system_type {
 	const char *name;
 	int fs_flags;
-#define FS_REQUIRES_DEV                1
-#define FS_BINARY_MOUNTDATA    2
-#define FS_HAS_SUBTYPE         4
-#define FS_USERNS_MOUNT                8       /* Can be mounted by userns root */
-#define FS_USERNS_DEV_MOUNT    16 /* A userns mount does not imply MNT_NODEV */
-#define FS_REVAL_DOT           16384   /* Check the paths ".", ".." for staleness */
-#define FS_RENAME_DOES_D_MOVE  32768   /* FS will handle d_move() during rename() internally. */
+#define FS_REQUIRES_DEV		1
+#define FS_BINARY_MOUNTDATA	2
+#define FS_HAS_SUBTYPE		4
+#define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
+#define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
+#define FS_REVAL_DOT		16384	/* Check the paths ".", ".." for staleness */
+#define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
 	struct dentry *(*mount) (struct file_system_type *, int,
 		       const char *, void *);
 	struct dentry *(*mount2) (struct vfsmount *, struct file_system_type *, int,

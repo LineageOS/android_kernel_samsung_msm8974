@@ -487,6 +487,11 @@ static inline void delete_from_swap_cache(struct page *page)
 {
 }
 
+static inline int page_swapcount(struct page *page)
+{
+	return 0;
+}
+
 static inline int swp_swapcount(swp_entry_t entry)
 {
 	return 0;

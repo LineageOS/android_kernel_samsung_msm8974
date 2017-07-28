@@ -71,7 +71,7 @@ static struct crypto_alg aes_alg = {
 		.cipher	= {
 			.cia_min_keysize	= AES_MIN_KEY_SIZE,
 			.cia_max_keysize	= AES_MAX_KEY_SIZE,
-			.cia_setkey			= aes_set_key,
+			.cia_setkey		= aes_set_key,
 			.cia_encrypt		= aes_encrypt,
 			.cia_decrypt		= aes_decrypt
 		}
