@@ -34,9 +34,33 @@ config MSMB_CAMERA_DEBUG
 	---help---
 	  Enable printk() debug for msm camera 2.0
 
-if MSMB_CAMERA
+menuconfig MSMB_CAMERA_LL
+	bool "Qualcomm MSM camera and video capture 2.0 support compatible with LL userspace libs"
+	depends on MSMB_CAMERA && SEC_H_PROJECT
+	default y
+	---help---
+	  Say Y here to enable selecting the video adapters for
+	  Qualcomm msm camera and video capture 2.0, enabling this
+	  adds support for the camera driver stack including sensor, isp
+	  and postprocessing drivers.
+
+menuconfig MSMB_CAMERA_MM
+	bool "Qualcomm MSM camera and video capture 2.0 support compatible with MM userspace libs"
+	depends on MSMB_CAMERA && SEC_K_PROJECT
+	default y
+	---help---
+	  Say Y here to enable selecting the video adapters for
+	  Qualcomm msm camera and video capture 2.0, enabling this
+	  adds support for the camera driver stack including sensor, isp
+	  and postprocessing drivers.
+
+if MSMB_CAMERA_LL
+source "drivers/media/platform/msm/camera_ll/Kconfig"
+endif # MSMB_CAMERA_LL
+
+if MSMB_CAMERA_MM
 source "drivers/media/platform/msm/camera_v2/Kconfig"
-endif # MSMB_CAMERA
+endif # MSMB_CAMERA_MM
 
 source "drivers/media/platform/msm/vidc/Kconfig"
 source "drivers/media/platform/msm/wfd/Kconfig"
