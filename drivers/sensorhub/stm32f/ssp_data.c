@@ -32,12 +32,10 @@ static void generate_data(struct ssp_data *data, struct sensor_value *sensorsdat
 						int iSensorData, u64 timestamp)
 {
 	u64 move_timestamp = data->lastTimestamp[iSensorData];
-	if ((iSensorData != STEP_DETECTOR) && (iSensorData != STEP_COUNTER)) {
-		while ((move_timestamp * 10 + data->adDelayBuf[iSensorData] * 15) < (timestamp * 10)) {
-			move_timestamp += data->adDelayBuf[iSensorData];
-			sensorsdata->timestamp = move_timestamp;
-			data->report_sensor_data[iSensorData](data, sensorsdata);
-		}
+	while ((move_timestamp * 10 + data->adDelayBuf[iSensorData] * 15) < (timestamp * 10)) {
+		move_timestamp += data->adDelayBuf[iSensorData];
+		sensorsdata->timestamp = move_timestamp;
+		data->report_sensor_data[iSensorData](data, sensorsdata);
 	}
 }
 
@@ -276,8 +274,7 @@ int parse_dataframe(struct ssp_data *data, char *pchRcvDataFrame, int iLength) {
 				if (sensortime.irq_diff > 1000000)
 					data->report_sensor_data[iSensorData](data, &sensorsdata);
 				else if ((iSensorData == PROXIMITY_SENSOR) || (iSensorData == PROXIMITY_RAW)
-						|| (iSensorData == GESTURE_SENSOR) || (iSensorData == SIG_MOTION_SENSOR)
-						|| (iSensorData == STEP_DETECTOR) || (iSensorData == STEP_COUNTER))
+						|| (iSensorData == GESTURE_SENSOR) || (iSensorData == SIG_MOTION_SENSOR))
 					data->report_sensor_data[iSensorData](data, &sensorsdata);
 				else
 					pr_err("[SSP]: %s irq_diff is under 1msec (%d)\n", __func__, iSensorData);

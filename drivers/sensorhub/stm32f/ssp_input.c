@@ -427,8 +427,8 @@ void report_prox_data(struct ssp_data *data, struct sensor_value *proxdata)
 	data->buf[PROXIMITY_SENSOR].prox[0] = proxdata->prox[0];
 	data->buf[PROXIMITY_SENSOR].prox[1] = proxdata->prox[1];
 
-	input_report_rel(data->prox_input_dev, REL_DIAL,
-		(!proxdata->prox[0]) + 1);
+	input_report_abs(data->prox_input_dev, ABS_DISTANCE,
+		(!proxdata->prox[0]));
 	input_sync(data->prox_input_dev);
 
 	wake_lock_timeout(&data->ssp_wake_lock, 3 * HZ);
@@ -1119,7 +1119,8 @@ int initialize_input_dev(struct ssp_data *data)
 #endif
 
 
-	input_set_capability(prox_input_dev, EV_REL, REL_DIAL);
+	input_set_capability(prox_input_dev, EV_ABS, ABS_DISTANCE);
+	input_set_abs_params(prox_input_dev, ABS_DISTANCE, 0, 1, 0, 0);
 
 	input_set_capability(temp_humi_input_dev, EV_REL, REL_HWHEEL);
 	input_set_capability(temp_humi_input_dev, EV_REL, REL_DIAL);
