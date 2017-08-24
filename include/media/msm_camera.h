@@ -1559,7 +1559,7 @@ enum msm_camera_i2c_reg_addr_type {
 struct msm_camera_i2c_reg_array {
 	uint16_t 	reg_addr;
 	uint16_t 	reg_data;
-#ifndef BYPASS_COMPANION 	
+#if !defined(BYPASS_COMPANION) && defined(CONFIG_MSMB_CAMERA_MM)
 	uint8_t		data_type;
 	uint32_t 	delay;	
 #endif	

@@ -65,6 +65,7 @@ enum msm_vfe_frame_skip_pattern {
 	EVERY_6FRAME,
 	EVERY_7FRAME,
 	EVERY_8FRAME,
+#ifdef CONFIG_MSMB_CAMERA_MM
 	EVERY_9FRAME,
 	EVERY_10FRAME,
 	EVERY_11FRAME,
@@ -72,6 +73,7 @@ enum msm_vfe_frame_skip_pattern {
 	EVERY_13FRAME,
 	EVERY_14FRAME,
 	EVERY_15FRAME,
+#endif
 	EVERY_16FRAME,
 	EVERY_32FRAME,
 	SKIP_ALL,
@@ -165,11 +167,15 @@ struct msm_vfe_axi_stream_cfg_cmd {
 	uint8_t num_streams;
 	uint32_t stream_handle[MAX_NUM_STREAM];
 	enum msm_vfe_axi_stream_cmd cmd;
+#ifdef CONFIG_MSMB_CAMERA_MM
 	int32_t recording_hint;
+#endif
 };
 
 enum msm_vfe_axi_stream_update_type {
+#ifdef CONFIG_MSMB_CAMERA_MM
     AXI_STREAM_UPDATE_INVALID,
+#endif
 	ENABLE_STREAM_BUF_DIVERT,
 	DISABLE_STREAM_BUF_DIVERT,
 	UPDATE_STREAM_FRAMEDROP_PATTERN,
@@ -266,7 +272,9 @@ enum msm_vfe_reg_cfg_type {
 struct msm_vfe_cfg_cmd2 {
 	uint16_t num_cfg;
 	uint16_t cmd_len;
+#ifdef CONFIG_MSMB_CAMERA_MM
 	uint32_t frame_id;
+#endif
 	void __user *cfg_data;
 	void __user *cfg_cmd;
 };
@@ -391,18 +399,25 @@ struct msm_isp_event_data {
 	struct timeval timestamp;
 	/* if pix is a src frame_id is from camif */
 	uint32_t frame_id;
+#ifdef CONFIG_MSMB_CAMERA_MM
 	enum msm_vfe_input_src input_src;
+#endif
 	union {
 		/* START_ACK, STOP_ACK */
 		struct msm_isp_stream_ack stream_ack;
 		/* REG_UPDATE_TRIGGER, bus over flow */
+#ifdef CONFIG_MSMB_CAMERA_LL
+		enum msm_vfe_input_src input_src;
+#endif
 		
 		/* stats notify */
 		struct msm_isp_stats_event stats;
 		/* IRQ_VIOLATION, STATS_OVER_FLOW, WM_OVER_FLOW */
 		uint32_t irq_status_mask;
 		struct msm_isp_buf_event buf_done;
+#ifdef CONFIG_MSMB_CAMERA_MM
     struct msm_isp_error_info error_info;
+#endif
 	} u; /* union can have max 52 bytes */
 };
 
