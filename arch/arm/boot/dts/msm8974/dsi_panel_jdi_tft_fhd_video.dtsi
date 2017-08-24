@@ -28,7 +28,6 @@
 		qcom,mdss-clk-rate=<906000000>;
 		qcom,mdss-pan-porch-values = <100 14 97 6 2 8>; /* <HBP> <HPW> <HFP> <VBP> <VPW> <VFP> */
 		qcom,mdss-pan-underflow-clr = <0xff>;
-		qcom,mdss-brightness-max-level = <0xff>;
 		qcom,mdss-pan-bl-ctrl = "bl_ctrl_dcs_cmds";
 		qcom,mdss-pan-bl-levels = <1 255>;
 		qcom,mdss-pan-dsi-mode = <0>;
@@ -43,7 +42,7 @@
 		samsung,mdss-early-lcd-on = <1>;
 		qcom,mdss-pan-dsi-data-lanes = <1 1 1 1>;
 		qcom,mdss-pan-dsi-dlane-swap = <0>;
-		qcom,mdss-pan-dsi-t-clk = <0x2d 0x04>;
+		qcom,mdss-pan-dsi-t-clk = <0x1c 0x04>;
 		qcom,mdss-pan-dsi-stream = <0>;
 		qcom,mdss-pan-dsi-mdp-tr = <0x0>;
 		qcom,mdss-pan-dsi-dma-tr = <0x04>;
@@ -64,9 +63,9 @@
 
 		qcom,panel-on-cmds = [
 					39 01 00 00 00 00 02 53 2C /* Brightness control */
+					39 01 00 00 00 00 02 35 01 /* HSYNC On*/
 					39 01 00 00 78 00 02 11 00 /* Sleep out */
 					39 01 00 00 28 00 02 29 00 /* Display on */
-					39 01 00 00 00 00 02 35 01 /* HSYNC On*/
 					];
 		qcom,on-cmds-dsi-state = "dsi_hs_mode";
 		qcom,panel-off-cmds = [

@@ -20,7 +20,6 @@
 	aliases {
 		serial0 = &blsp1_uart1;
 		spi11 = &spi_11;
-		spi2 = &spi_2;
 	};
 };
 
@@ -207,8 +206,8 @@
 		   SEC_BATTERY_FULL_CONDITION_NOTIMEFULL |
 		   SEC_BATTERY_FULL_CONDITION_VCELL */
 		battery,full_condition_type = <13>;
-		battery,full_condition_soc = <93>;
-		battery,full_condition_vcell = <4250>;
+		battery,full_condition_soc = <97>;
+		battery,full_condition_vcell = <4300>;
 
 		battery,recharge_check_count = <1>;
 		battery,recharge_condition_type = <4>; /* SEC_BATTERY_RECHARGE_CONDITION_VCELL */
@@ -281,7 +280,7 @@
 			label = "hall_flip";
 			gpios = <&pm8941_gpios 36 0>;
 			linux,input-type = <1>;
-			linux,code = <0x15>;
+			linux,code = <0x0>;
 			gpio-key,wakeup;
 			debounce-interval = <15>;
 		};
@@ -485,11 +484,6 @@
 			ssp,ap-rev=<5>;
 			qcom,temphumidity_sensor-vadc = <&pm8941_vadc>;
 		};
-	};
-
-	/* BLSP#3 */
-	i2c@f9925000 {
-		status = "disabled";
 	};
 
 	aliases {

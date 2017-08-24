@@ -20,8 +20,7 @@
 			cell-index = <0>;
 			spi-max-frequency = <50000000>;
 			qcom,eeprom-name = "fidelix";
-			qcom,eeprom-id0 = <0xf8 0x14>;
-			qcom,eeprom-id1 = <0xef 0x14>;
+			qcom,eeprom-id = <0xf8 0x14>;
 
 			qcom,cal-num-blocks = <8>;
 			qcom,cal-page0 = <0 0x0 0 0x0 0 0>;

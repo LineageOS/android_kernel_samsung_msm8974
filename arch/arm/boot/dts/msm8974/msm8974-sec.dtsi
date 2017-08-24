@@ -72,7 +72,7 @@
 	memory {
 		secure_mem: secure_region {
 			linux,contiguous-region;
-			reg = <0 0xB200000>;
+			reg = <0 0xA500000>;
 			label = "secure_mem";
 		};
 
@@ -2485,10 +2485,15 @@
 		qcom,rx-ring-size = <64>;
 	};
 
-        memory_hole: qcom,msm-mem-hole {
-                compatible = "qcom,msm-mem-hole";
-                qcom,memblock-remove = <0x6c00000 0x9600000>; /* Address and Size of Hole */
-        };
+	memory_hole: qcom,msm-mem-hole {
+		compatible = "qcom,msm-mem-hole";
+		qcom,memblock-remove = <0x6c00000 0x9600000>; /* Address and Size of Hole */
+	};
+
+	ram_console {
+		compatible = "ram_console";
+		bootinfo = <0>;
+	};
 
 	uart7: uart@f995d000 { /*BLSP #2, UART #7 */
 		compatible = "qcom,msm-hsuart-v14";

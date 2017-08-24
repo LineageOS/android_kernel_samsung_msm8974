@@ -210,7 +210,7 @@
 		   SEC_BATTERY_FULL_CONDITION_NOTIMEFULL |
 		   SEC_BATTERY_FULL_CONDITION_VCELL */
 		battery,full_condition_type = <13>;
-		battery,full_condition_soc = <93>;
+		battery,full_condition_soc = <97>;
 		battery,full_condition_vcell = <4250>;
 
 		battery,recharge_check_count = <1>;
@@ -284,7 +284,7 @@
 			label = "hall_flip";
 			gpios = <&pm8941_gpios 36 0>;
 			linux,input-type = <1>;
-			linux,code = <0x15>;
+			linux,code = <0x0>;
 			gpio-key,wakeup;
 			debounce-interval = <15>;
 		};
