@@ -21,7 +21,7 @@
 #define __SEC_BATTERY_H __FILE__
 
 #include <linux/battery/sec_charging_common.h>
-#include <linux/android_alarm.h>
+#include <linux/hrtimer.h>
 #include <linux/wakelock.h>
 #include <linux/workqueue.h>
 #include <linux/proc_fs.h>
@@ -99,13 +99,13 @@ struct sec_battery_info {
 	bool fuelgauge_in_sleep;
 
 	struct delayed_work polling_work;
-	struct alarm polling_alarm;
+	struct hrtimer polling_hrtimer;
 	ktime_t last_poll_time;
 
 	/* event set */
 	unsigned int event;
 	unsigned int event_wait;
-	struct alarm event_termination_alarm;
+	struct hrtimer event_termination_hrtimer;
 	ktime_t	last_event_time;
 
 	/* battery check */
