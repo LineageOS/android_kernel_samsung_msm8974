@@ -36,7 +36,7 @@
 #include <linux/timer.h>
 #include <linux/list.h>
 #include <linux/rtc.h>
-#include <linux/android_alarm.h>
+#include <linux/hrtimer.h>
 #include <linux/regulator/consumer.h>
 #ifdef CONFIG_SENSORS_SSP_STM
 #include <linux/spi/spi.h>

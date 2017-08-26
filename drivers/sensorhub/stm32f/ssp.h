@@ -36,7 +36,7 @@
 #include <linux/timer.h>
 #include <linux/list.h>
 #include <linux/rtc.h>
-#include <linux/android_alarm.h>
+#include <linux/hrtimer.h>
 #include <linux/regulator/consumer.h>
 #include <linux/spi/spi.h>
 

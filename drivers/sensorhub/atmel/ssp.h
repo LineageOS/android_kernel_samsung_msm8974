@@ -34,7 +34,7 @@
 #include <linux/delay.h>
 #include <linux/firmware.h>
 #include <linux/timer.h>
-#include <linux/android_alarm.h>
+#include <linux/hrtimer.h>
 #include <linux/regulator/consumer.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND

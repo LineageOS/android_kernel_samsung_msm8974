@@ -55,7 +55,7 @@ static irqreturn_t sensordata_irq_thread_fn(int iIrq, void *dev_id)
 	struct ssp_data *data = dev_id;
 	struct timespec ts;
 
-	ts = ktime_to_timespec(alarm_get_elapsed_realtime());
+	get_monotonic_boottime(&ts);
 	data->timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 
 	if(gpio_get_value(data->mcu_int1)) {
