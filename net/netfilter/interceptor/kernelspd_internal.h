@@ -13,6 +13,7 @@
 #include "ip_selector_db.h"
 #include "ipsec_boundary.h"
 
+#include <linux/uidgid.h>
 #include <linux/version.h>
 #include "implementation_defs.h"
 
@@ -44,15 +45,6 @@ extern struct IPSelectorDb spd;
 extern rwlock_t spd_lock;
 
 extern char *ipsec_boundary;
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0)
-typedef int kuid_t;
-#define INVALID_UID -1
-#define __kuid_val(val) (val)
-#define make_kuid(x, uid) (uid)
-#define uid_valid(uid) ((uid) != INVALID_UID)
-#define uid_eq(uid1, uid2) ((uid1) == (uid2))
-#endif
 
 extern kuid_t bypass_kuid;
 
