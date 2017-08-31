@@ -124,6 +124,7 @@ static bool get_dload_mode(void)
 }
 #endif
 
+#if 0
 static void enable_emergency_dload_mode(void)
 {
 	if (emergency_dload_mode_addr) {
@@ -142,6 +143,7 @@ static void enable_emergency_dload_mode(void)
 		mb();
 	}
 }
+#endif
 
 static int dload_set(const char *val, struct kernel_param *kp)
 {
@@ -170,10 +172,12 @@ void set_dload_mode(int on)
 }
 EXPORT_SYMBOL(set_dload_mode);
 
+#if 0
 static void enable_emergency_dload_mode(void)
 {
 	printk(KERN_ERR "dload mode is not enabled on target\n");
 }
+#endif
 
 static bool get_dload_mode(void)
 {
@@ -382,9 +386,11 @@ static void msm_restart_prepare(const char *cmd)
 		} else if (!strncmp(cmd, "nvrecovery", 10)) {
 			__raw_writel(0x77665515, restart_reason);
 			warm_reboot_set = 1;
+#if 0
 		} else if (!strncmp(cmd, "edl", 3)) {
 			enable_emergency_dload_mode();
 			warm_reboot_set = 1;
+#endif
 		} else if (strlen(cmd) == 0) {
 			printk(KERN_NOTICE "%s : value of cmd is NULL.\n", __func__);
 			__raw_writel(0x12345678, restart_reason);
