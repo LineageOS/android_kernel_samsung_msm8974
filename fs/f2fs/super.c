@@ -1219,7 +1219,7 @@ restore_opts:
 	return err;
 }
 
-static struct super_operations f2fs_sops = {
+static const struct super_operations f2fs_sops = {
 	.alloc_inode	= f2fs_alloc_inode,
 	.drop_inode	= f2fs_drop_inode,
 	.destroy_inode	= f2fs_destroy_inode,
