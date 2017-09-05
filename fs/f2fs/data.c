@@ -414,7 +414,7 @@ struct page *get_read_data_page(struct inode *inode, pgoff_t index,
 		.encrypted_page = NULL,
 	};
 
-	if (f2fs_encrypted_inode(inode) && S_ISREG(inode->i_mode))
+	if (f2fs_encrypted_file(inode))
 		return read_mapping_page(mapping, index, NULL);
 
 	page = f2fs_grab_cache_page(mapping, index, for_write);
@@ -984,7 +984,7 @@ struct bio *f2fs_grab_bio(struct inode *inode, block_t blkaddr,
 	struct block_device *bdev = sbi->sb->s_bdev;
 	struct bio *bio;
 
-	if (f2fs_encrypted_inode(inode) && S_ISREG(inode->i_mode)) {
+	if (f2fs_encrypted_file(inode)) {
 		ctx = fscrypt_get_ctx(inode, GFP_NOFS);
 		if (IS_ERR(ctx))
 			return ERR_CAST(ctx);
@@ -1171,7 +1171,7 @@ static int encrypt_one_page(struct f2fs_io_info *fio)
 	struct inode *inode = fio->page->mapping->host;
 	gfp_t gfp_flags = GFP_NOFS;
 
-	if (!f2fs_encrypted_inode(inode) || !S_ISREG(inode->i_mode))
+	if (!f2fs_encrypted_file(inode))
 		return 0;
 
 	/* wait for GCed encrypted page writeback */
@@ -1730,7 +1730,7 @@ repeat:
 	f2fs_wait_on_page_writeback(page, DATA, false);
 
 	/* wait for GCed encrypted page writeback */
-	if (f2fs_encrypted_inode(inode) && S_ISREG(inode->i_mode))
+	if (f2fs_encrypted_file(inode))
 		f2fs_wait_on_encrypted_page_writeback(sbi, blkaddr);
 
 	if (len == PAGE_SIZE)
