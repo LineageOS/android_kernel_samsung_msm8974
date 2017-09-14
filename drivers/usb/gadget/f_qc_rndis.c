@@ -1107,10 +1107,13 @@ rndis_qc_bind_config_vendor(struct usb_configuration *c, u8 ethaddr[ETH_ALEN],
 
 	status = usb_add_function(c, &rndis->port.func);
 	if (status) {
-		kfree(rndis);
-fail:
-		rndis_exit();
+		goto fail;
 	}
+
+fail:
+  kfree(rndis);
+  _rndis_qc = NULL;
+	rndis_exit();
 	return status;
 }
 
