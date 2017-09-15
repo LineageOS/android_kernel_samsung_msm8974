@@ -1,0 +1,16 @@
+#
+# SYNAPTICS TOUCH driver configuration
+#
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI
+	tristate "Synaptics i2c touchscreen"
+	depends on I2C
+	help
+	  This enables support for Synaptics RMI over I2C based touchscreens.
+	  use Synaptics S5000, S5050, S5700, S5707, S5708 IC.
+
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI_G
+	tristate "Synaptics i2c touchscreen"
+	depends on I2C
+	help
+	  This enables support for Synaptics RMI over I2C based touchscreens.
+	  use Synaptics IC supporting GuestThread.

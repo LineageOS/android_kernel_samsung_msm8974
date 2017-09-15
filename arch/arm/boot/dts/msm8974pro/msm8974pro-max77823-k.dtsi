@@ -1,0 +1,46 @@
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+
+	i2c@19 {
+		cell-index = <19>;
+		compatible = "i2c-gpio";
+		gpios = <&msmgpio 87 0 /* sda */
+			 &msmgpio 88 0 /* scl */
+			 >;
+		i2c-gpio,delay-us = <2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	
+		max77823@66 {
+			compatible = "maxim,max77823";
+			reg = <0x66>;
+			max77823,irq-gpio = <&pma8084_gpios 21 0x01>;
+			max77823,wakeup = <1>;
+		};
+
+		max77823-fuelgauge {
+			compatible = "samsung,max77823-fuelgauge"; 
+			fuelgauge,jig_gpio = <&pma8084_gpios 21 0x1>;
+			fuelgauge,bat_int = <&pma8084_mpps 8 0>;
+
+                        fuelgauge,capacity_max = <1000>;
+                        fuelgauge,capacity_max_margin = <50>;
+                        fuelgauge,capacity_min = <0>;
+                        fuelgauge,capacity_calculation_type = <0x17>;
+                        fuelgauge,fuel_alert_soc = <2>;
+                        /* fuelgaguge,repeated_fuelalert; */
+			qcom,sec-fuelgauge-vadc = <&pma8084_vadc>;
+		};
+	};
+};

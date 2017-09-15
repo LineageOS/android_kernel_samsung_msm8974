@@ -1,0 +1,94 @@
+SCFS (Samsung/Stackable Compression Filesystem)
+===============================================
+[ sunghwan.yoon | jm45.kim | sangwoo2.lee | inbae.lee ] @ samsung.com
+
+v. 1.0.0 [12/12/2013] : first release
+v. 1.1.0 [12/26/2013] : async read, lower page cache invalidation
+v. 1.2.0 [06/20/2014] : major performance optimization (for reads)
+                         bug fixes, error handling
+
+
+What is SCFS
+============
+
+1. Overview
+SCFS is a proprietary filesystem developed for Samsung Android devices. Akin to 
+the eCryptFS, SCFS is stackable on top of a native, "lower" filesystem, and is
+designed to provide per-cluster compression feature. Cluster size, compression
+algorithm type, and compression ratio threshold (CRT) are configurable parameters
+as mount options. (See further below for details)
+
+The current version of SCFS was developed for usage on the /system partition.
+Mounting on other devices or partitions is NOT recommended.
+
+SCFS works only with properly "formatted" partitions, either with the make_scfs
+tool, or proper SCFS writes (i.e. via cp command from an existing EXT4 partition).
+
+2. Supported features:
+
+ - regular file reads
+ - regular file append writes
+ - transparent compression/decompression
+ - variable cluster size (16KB default)
+ - various compression algorithms (LZO default)
+ - variable compression ratio threshold
+
+3. Unsupported features:
+
+ - non-append writes (i.e. random or overwrites)
+ - truncate
+ - mmap for writes
+ - bmap
+ - debugfs-style tool support
+
+4. Notes:
+
+ - Some or all of the clusters in a given file may remain uncompressed.
+ - In some cases, files may actually increase in size after compression,
+   because of SCFS metadata and/or byte alignment padding appended:
+    - A file with none of the clusters were compressed
+    - A file, compressed with saved space less than that of alignment + metadata
+ - Compression ratio threshold dictates how aggressively the cluster write routine
+   will try to compress clusters: if set to low, only the clusters that are
+   well-compressable will actually be compressed, and vice versa.
+
+
+Usage Guide
+===========
+
+1. Mounting SCFS
+
+  mount -t scfs -o [ro|rw] <lower_dir> <upper_dir>
+
+    ro,rw (default)     same as ext4		
+
+    <lower_dir>         mountpoint for the compressed system partition
+                        (/.system)
+
+    <upper_dir>         SCFS mountpoint, system partition
+                        (/system)
+
+2.  Unmounting SCFS
+
+  *** IMPORTANT ***
+  The <upper_dir> MUST BE unmounted BEFORE the <lower_dir> is unmounted:
+
+    umount /system
+    umount /.system
+
+3. Miscellaneaous interface
+
+  3.1. statfs
+
+  If f_type of struct statfs is 0x53305955 (SCFS_MAGIC), it is indicative of
+  the filesystem for a given path being SCFS.
+
+  3.2. Kernel support for SCFS
+
+  If /proc/filesystems list includes scfs, and sysfs node /sys/fs/scfs/system_type
+  exists, then SCFS is enabled in the kernel.
+
+  3.3. System partition compressed flag
+
+  Even if sysfs node /sys/fs/scfs/system_type exists, if it is read to be "ext4"
+  instead  of "scfs", the system partition is not formatted in SCFS.

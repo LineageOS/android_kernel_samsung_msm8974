@@ -1,0 +1,36 @@
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+        i2c@16{
+                cell-index = <16>;
+                compatible = "i2c-gpio";
+                gpios = <&msmgpio 23 0  /*SDA*/
+                        &msmgpio 16 0  /*SCL*/
+                        >;
+                i2c-gpio,delay-us = <2>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+                cm36651@18{
+                        compatible = "capella,cm36651";
+                        reg = <0x18>;
+                        interrupt-parent = <&msmgpio>;
+                        interupts= <65 0>;
+			    cm36651,vdd_en-gpio = <&msmgpio 110 0>;
+			    cm36651,p_out-gpio = <&msmgpio 65 0>;
+			    cm36651,prox_cal_path = "/efs/prox_cal";
+			    cm36651,vdd_2p85 = "8226_l19";
+			    cm36651,version = <1>;
+                };
+        };
+};
+

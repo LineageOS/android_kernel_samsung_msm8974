@@ -1,0 +1,73 @@
+1. core :
+	- just add some soc specific feature such as bus, subsystem, timer, qc_pmic etc....
+        - please, note that these dts are mainly updated from chip vendor patch or upate
+          and cusomer developers had better overidee the feature others dt files when you need
+          to chane it depending on sec board specific.
+
+2. others : - Mainly, add sec customer features dt files
+            - overwrite a core featre on cusomer's dt.
+            - <example> 
+		file : core/msm8974.dtsi  <== first description
+
+	        sdcc2: qcom,sdcc@f98a4000 {
+	                cell-index = <2>; /* SDC2 SD card slot */
+        	        compatible = "qcom,msm-sdcc";
+                	reg = <0xf98a4000 0x800>,
+	                        <0xf98a4800 0x100>,
+        	                <0xf9884000 0x7000>;
+	                reg-names = "core_mem", "dml_mem", "bam_mem";
+	                interrupts = <0 125 0>, <0 220 0>;
+	                interrupt-names = "core_irq", "bam_irq";
+	                vdd-supply = <&pm8941_l21>;
+	                vdd-io-supply = <&pm8941_l13>;
+
+        	        qcom,vdd-voltage-level = <2950000 2950000>;
+	                qcom,vdd-current-level = <9000 800000>;
+
+        	        qcom,vdd-io-voltage-level = <1800000 2950000>;
+	                qcom,vdd-io-current-level = <6 22000>;
+
+	                qcom,pad-pull-on = <0x0 0x3 0x3>; /* no-pull, pull-up, pull-up */
+	                qcom,pad-pull-off = <0x0 0x3 0x3>; /* no-pull, pull-up, pull-up */
+	                qcom,pad-drv-on = <0x4 0x4 0x4>; /* 10mA, 10mA, 10mA */
+        	        qcom,pad-drv-off = <0x0 0x0 0x0>; /* 2mA, 2mA, 2mA */
+
+	                qcom,clk-rates = <400000 20000000 25000000 50000000 100000000 200000000>;
+        	        qcom,sup-voltages = <2950 2950>;
+	                qcom,bus-width = <4>;
+	                qcom,xpc;
+        	        qcom,bus-speed-mode = "SDR12", "SDR25", "SDR50", "DDR50", "SDR104";
+	                qcom,current-limit = <800>;
+
+	                qcom,msm-bus,name = "sdcc2";
+        	        qcom,msm-bus,num-cases = <8>;
+	                qcom,msm-bus,num-paths = <1>;
+        	        qcom,msm-bus,vectors-KBps = <81 512 0 0>, /* No vote */
+                	                <81 512 1600 3200>,    /* 400 KB/s*/
+	                                <81 512 80000 160000>, /* 20 MB/s */
+        	             	         <81 512 100000 200000>, /* 25 MB/s */
+	                                <81 512 200000 400000>, /* 50 MB/s */
+        	                        <81 512 400000 800000>, /* 100 MB/s */
+                	                <81 512 800000 1600000>, /* 200 MB/s */
+                        	        <81 512 2048000 4096000>; /* Max. bandwidth */
+	                qcom,bus-bw-vectors-bps = <0 400000 20000000 25000000 50000000 100000000 200000000 4294967295>;
+        	        qcom,dat1-mpm-int = <44>;
+	                status = "disable";
+        };	
+
+		file : msm8974pro-ac-sec-k-r00.dtsi  <== overiding a some property of handle here.    
+                       					 		
+		&sdcc2 {
+		        #address-cells = <0>;
+		        interrupt-parent = <&sdcc2>;
+		        interrupts = <0 1 2>;
+		        #interrupt-cells = <1>;
+		        interrupt-map-mask = <0xffffffff>;
+		        interrupt-map = <0 &intc 0 125 0
+                        	1 &intc 0 220 0
+                	        2 &msmgpio 62 0x3>;
+		        interrupt-names = "core_irq", "bam_irq", "status_irq";
+		        cd-gpios = <&msmgpio 62 0x1>;
+		        status = "disabled";
+		};		
+         

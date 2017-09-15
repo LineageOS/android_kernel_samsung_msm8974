@@ -1,0 +1,37 @@
+menuconfig SEC_MODEM
+	bool "Samsung Mobile Modem Interface"
+	default n
+	---help---
+	  Samsung Modem Interface Driver.
+
+	  21u021u0
+
+config GSM_MODEM_SPRD6500
+	bool "modem chip : GSM_MODEM_SPRD6500"
+	depends on SEC_MODEM
+	default n
+
+config LINK_DEVICE_SPI
+	bool "modem driver link device SPI"
+	depends on SEC_MODEM
+	default n
+
+config WORKQUEUE_FRONT
+	bool "IPC: SPI workqueue front"
+	depends on SEC_MODEM
+	default n
+
+config SEC_DUAL_MODEM_MODE
+	bool "sec dual modem mode"
+	depends on SEC_MODEM
+	default n
+
+config SIM_SLOT_SWITCH
+	bool "SIM_SLOT_SWITCH"
+	depends on SEC_MODEM
+	default n
+
+config GSM_MODEM_GG_DUOS
+	bool "GSM_MODEM_GG_DUOS"
+	depends on SEC_MODEM
+	default n

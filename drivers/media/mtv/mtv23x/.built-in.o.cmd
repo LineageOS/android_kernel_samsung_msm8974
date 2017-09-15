@@ -1,0 +1,1 @@
+cmd_drivers/media/isdbt/mtv23x/built-in.o :=  /opt/CodeSourcery/Sourcery_G++_Lite.2009/bin/arm-none-eabi-ld -EL    -r -o drivers/media/isdbt/mtv23x/built-in.o drivers/media/isdbt/mtv23x/mtv23x.o drivers/media/isdbt/mtv23x/mtv23x_demod.o drivers/media/isdbt/mtv23x/mtv23x_rf.o drivers/media/isdbt/mtv23x/mtv23x_port.o 

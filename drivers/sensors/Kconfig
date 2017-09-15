@@ -1,0 +1,321 @@
+#
+# Sensor  drivers configuration
+#
+menuconfig SENSORS
+	bool "Sensor devices"
+	help
+	  Say Y here, and a list of sensors drivers will be displayed.
+	  Everything that didn't fit into the other categories is here. This option
+	  doesn't affect the kernel.
+
+	  If unsure, say Y.
+
+config SENSORS_BMI055
+	tristate "BMI055 Combo Sensor Driver"
+	depends on I2C
+	default n
+	help
+	  If you say yes here you get support for Bosch-Sensortec's
+	  BMI055 Acceleration & Gyroscope Sensor.
+
+config SENSORS_BMI058
+	tristate "BMI058 Combo Sensor Driver"
+	depends on I2C
+	default n
+	help
+	  If you say yes here you get support for Bosch-Sensortec's
+	  BMI058 Acceleration & Gyroscope Sensor.
+
+config SENSORS_AK8963C
+	tristate "AK8963C compass support"
+	default n
+	depends on I2C
+	help
+	  If you say yes here you get support for Asahi Kasei's
+	  orientation sensor AK8963.
+
+config SENSORS_AK09911C
+	tristate "AK09911C compass support"
+	default n
+	depends on I2C
+	help
+	  If you say yes here you get support for Asahi Kasei's
+	  orientation sensor AK09911C.
+
+config SENSORS_CM3323
+	depends on I2C
+	tristate "CM3323 driver"
+	default n
+	help
+	  Say Y here if you use cm3323.
+	  This option enables RGB sensors using
+	  Capella cm3323 device driver.
+
+	  Say N here if you do not use cm3323.
+
+config SENSORS_CM36653
+	depends on I2C
+	tristate "CM36653 driver"
+	default n
+	help
+	  Say Y here if you use cm36653.
+	  This option enables RGB sensors using
+	  Capella cm36653 device driver.
+
+	  Say N here if you do not use cm36653.
+
+config SENSORS_CM36686
+	depends on I2C
+	tristate "CM36686 driver"
+	default n
+	help
+	  This option enables proximity & light sensors using CM36686 driver.
+
+config SENSORS_CM36686_LEDA_EN_GPIO
+	depends on I2C
+	tristate "CM36686 leda_en controlled by GPIO"
+	default n
+	help
+	  This option enables leda_en controlled by GPIO using CM36686 driver.
+
+config SENSORS_GP2A030A
+	depends on I2C
+	tristate "GP2A030A Light Driver"
+	default n
+	help
+	  Say Y here if you use GP2A030A.
+	  This option enables optial sensors using
+	  Sharp GP2A030A device driver.
+
+	  Say N here if you do not use GP2A030A.
+
+config SENSORS_GP2A030A_PROX
+	depends on SENSORS_GP2A030A
+	tristate "GP2A030A Proximity Driver"
+	default n
+	help
+	  Say Y here if you use GP2A030A.
+	  This option enables optial sensors using
+	  Sharp GP2A030A device driver.
+
+	  Say N here if you do not use GP2A030A.
+
+config SENSORS_ADPD142
+	depends on I2C
+	tristate "ADI hrm sensor driver"
+	default n
+	help
+	  This option enables hrm sensors using adpd142 driver.
+
+
+config SENSORS_TMD3782S
+	depends on I2C
+	tristate "SENSORS_TMD3782S"
+	default n
+	help
+	  Say Y here if you use TAOS_TMD3782S.
+	  This option enables optial sensors using
+	  Sharp TAOS_TMD3782S device driver.
+
+config SENSORS_K2HH
+	depends on I2C
+	tristate "SENSORS_K2HH"
+	default n
+	help
+	  Say Y here if you use SENSORS_K2HH.
+	  This option enables accelerometer sensors using
+	  STMicroelectronic K2HH device driver.
+
+config SENSORS_SX9500
+	depends on I2C
+	tristate "SX9500 driver"
+	default n
+	help
+	  Say Y here if you use sx9500.
+	  This option enables grip sensors using
+	  SemTech sx9500 device driver.
+
+	  Say N here if you do not use sx9500.
+
+config SENSORS_GRIP_ADJDET
+	depends on I2C
+	tristate "GRIP sensor adj cable detect"
+	default n
+	help
+	  GRIP sensor adj cable detect
+
+config SENSORS_SX9500_REGULATOR_ONOFF
+	tristate "GRIP sensor regulator onoff function"
+	default n
+	help
+	  GRIP sensor regulator onoff
+
+config SENSORS_SX9500_INIT_TOUCH_THRESHOLD
+	int "SX9500 Grip sensor threshold for init touch"
+	depends on SENSORS_SX9500
+	default "3000"
+	help
+	  This value is the standard of init touch using
+	  SemTech sx9500 device driver.
+
+config SENSORS_SX9500_NORMAL_TOUCH_THRESHOLD
+	int "SX9500 Grip sensor threshold for normal touch"
+	depends on SENSORS_SX9500
+	default "17"
+	help
+	  This value is the standard of normal touch using
+	  SemTech sx9500 device driver.
+
+config SENSORS_BMA254
+	tristate "BMA254 acceleration sensor support"
+	depends on I2C
+	default n
+	help
+	  If you say yes here you get support for Bosch Sensortec's
+	  acceleration sensors BMA254.
+
+config SENSORS_POWERCONTROL
+	tristate "Sensors power control"
+	default n
+	help
+	  Say Y here to control power supply for drivers.
+
+config SENSORS_GP2A_VDDCONTROL
+	tristate "Sensors GP2A VDD control"
+	default n
+	help
+	  Say Y here to control power vdd supply for drivers.
+
+config BMA254_SMART_ALERT
+	depends on I2C
+	tristate "bma254 smart alert"
+	default n
+	help
+	  This option enables bma254 smart alert function.
+
+config SENSORS_GP2A002
+	tristate "GP2A002 proximity sensor support"
+	depends on I2C
+	default n
+	help
+	  If you say yes here you get support for sharp Sensortec's
+	  proximity sensors GP2A002.
+
+config SENSORS_POWER_EN
+	tristate "Sensors power control"
+	default n
+	help
+	  Say Y here to enable power supply for drivers.
+
+config SENSORS_K3DH
+	tristate "K3DH acceleration sensor support"
+	depends on I2C
+        default n
+	help
+	  Driver for STMicroelectronic K3DH accelerometer.
+
+config SENSOR_K3DH_INPUTDEV
+	bool "K3DH acceleration sensor input dev support"
+	depends on SENSORS_K3DH
+        default n
+	help
+	  Say Y here if you use K3DH.
+	  This option enables accelerometer sensor using
+	  K3DH device driver.
+
+	  Say N here if you do not use K3DH.
+
+config INPUT_MPU6500
+	bool "Invensense MPU-6500 sensor"
+	default n
+	help
+	  Say Y here if you want support for the MPU-6500 sensor
+	  device.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called MPU6500.
+
+config MPU6500_ADJUST_SMART_ALERT
+	bool "MPU6500 sensor smart alert adjustment"
+	default n
+	help
+	  Say Y here if you want to adjust smart alert for mpu6500 sensor
+
+config INPUT_MPU6500_SELFTEST
+	bool "Self-test of Invensense MPU-6500 sensor"
+	default n
+	help
+	  Say Y here if you want support for self-test of the MPU-6500 sensor
+	  device.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called MPU6500.
+
+config INPUT_MPU6500_POLLING
+	bool "Polling-mode of Invensense MPU-6500 sensor"
+	default n
+	help
+	  Say Y here if you want support for polling-mode of the MPU-6500 sensor
+	  device.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called MPU6500.
+
+config SENSORS_TMD27723
+	depends on I2C
+	tristate "TMD27723 driver"
+	default n
+	help
+	   This option enables proximity & light sensors using TMD27723 driver.
+
+config INPUT_YAS_SENSORS
+	bool "Sensors Support"
+	default n
+	help
+	  Say Y to enable Sensors support.  This allows control of supported
+	  Sensors.
+config SENSORS_BMA255
+	tristate "YAS Acceleration Sensor- BMA255"
+	depends on I2C
+	default n
+	help
+	  Say Y here if you want support for the BMA255 sensor
+	  device.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called BMA255.
+config SENSORS_CORE
+         bool "sensors_core"
+         depends on I2C
+config SENSORS_HSCDTD008A
+	depends on I2C
+	tristate "hscd alps HSCDTD008A"
+	default n
+	help
+	  This option enables hscd alps HSCDTD008A mag driver
+
+config SENSORS_CM36651
+	depends on I2C && GENERIC_GPIO
+	tristate "Capella CM3663 ambient light and proximity sensor"
+	default n
+	help
+	  This option enables proximity & light sensors using CM3663 driver.
+
+config SENSORS_MAX86900
+	tristate "MAXIM MAX86900 HRM Sensor"
+	default n
+	depends on I2C && SYSFS
+	help
+	  If you say yes here you get support for the MAX86900
+	  HRM sensor.
+	  This driver can also be built as a module.  If so, the module
+	  will be called max86900.
+
+config SENSORS_K303C
+	depends on I2C
+	tristate "ST K303C accel,magnetic combo"
+	default n
+	help
+	  This option enables st k303c accel and mag driver
+
+source "drivers/sensors/yas532/Kconfig"

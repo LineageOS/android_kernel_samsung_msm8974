@@ -1,0 +1,36 @@
+config ISDBT
+	bool "isdbt"
+	default n
+
+choice
+	depends on ISDBT
+	prompt "isdbt driver"
+	default ISDBT_FC8150
+
+	config ISDBT_FC8150
+		bool "ISDBT_FC8150"
+
+	config ISDBT_FC8300
+		bool "ISDBT_FC8300"
+		
+	config ISDBT_FC8300_SPI
+		bool "ISDBT_FC8300_SPI"	
+		
+	config ISDBT_FC8150_SPI
+		bool "ISDBT_FC8150_SPI"
+	
+	config ISDBT_FC8150_HKDI
+		bool "ISDBT_FC8150_HKDI"
+endchoice
+
+config ISDBT_SPMI
+	bool "isdbt spmi"
+	default n
+
+config ISDBT_ANT_DET
+	bool "isdbt antenna detection"
+	default n
+
+config ISDBT_F_TYPE_ANTENNA
+	bool "isdbt F type antenna"
+	default n

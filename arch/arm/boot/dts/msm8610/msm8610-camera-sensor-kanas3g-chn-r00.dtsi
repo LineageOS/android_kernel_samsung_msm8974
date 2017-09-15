@@ -1,0 +1,121 @@
+/*
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&i2c {
+/*
+	led_flash0: qcom,led-flash@60 {
+		cell-index = <0>;
+		reg = <0x60>;
+		qcom,slave-id = <0x60 0x00 0x0011>;
+		compatible = "qcom,led-flash";
+		qcom,flash-name = "adp1600";
+		qcom,flash-type = <1>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 18 0>,
+			<&msmgpio 19 0>;
+		qcom,gpio-flash-en = <0>;
+		qcom,gpio-flash-now = <1>;
+		qcom,gpio-req-tbl-num = <0 1>;
+		qcom,gpio-req-tbl-flags = <0 0>;
+		qcom,gpio-req-tbl-label = "FLASH_EN",
+			"FLASH_NOW";
+	};
+*/
+
+	actuator0: qcom,actuator@6e {
+		cell-index = <3>;
+		reg = <0x6c>;
+		compatible = "qcom,actuator";
+		qcom,cci-master = <0>;
+	};
+
+	qcom,camera@ac {
+		compatible = "qcom,s5k4ecgx";
+		reg = <0xac>;
+		qcom,slave-id = <0xac 0x0 0x11>;
+		qcom,csiphy-sd-index = <0>;
+		qcom,csid-sd-index = <0>;
+		qcom,mount-angle = <90>;
+		qcom,sensor-name = "s5k4ecgx";
+		cam_vdig-supply = <&pm8110_l7>;
+		cam_vana-supply = <&pm8110_l22>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vana";
+		qcom,cam-vreg-type = <0 0 0>;
+		qcom,cam-vreg-min-voltage = <1800000 2800000>;
+		qcom,cam-vreg-max-voltage = <1800000 2800000>;
+		qcom,cam-vreg-op-mode = <100000 100000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 13 0>,
+			<&msmgpio 21 0>,
+			<&msmgpio 20 0>,
+			<&msmgpio 59 0>,
+			<&msmgpio 77 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-standby = <2>;
+		qcom,gpio-vana = <3>;
+		qcom,gpio-vdig = <4>;
+		qcom,gpio-req-tbl-num = <0 1 2 3 4>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",
+					  "CAM_RESET",
+					  "CAM_STANDBY",
+					  "CAM_A_EN",
+					  "CAM_C_EN";
+		qcom,gpio-set-tbl-num = <1 2 3 4>;
+		qcom,gpio-set-tbl-flags = <0 2 0 0>;
+		qcom,gpio-set-tbl-delay = <1000 4000 1000 1000>;
+		qcom,csi-lane-assign = <0xe4>;
+		qcom,csi-lane-mask = <0x3>;
+		qcom,sensor-position = <0>;
+		qcom,sensor-mode = <0>;
+		qcom,cci-master = <0>;
+	};
+
+	qcom,camera@60 {
+		compatible = "qcom,sr030pc50";
+		reg = <0x60>;
+		qcom,slave-id = <0x60 0x0 0xc100>;
+		qcom,csiphy-sd-index = <1>;
+		qcom,csid-sd-index = <1>;
+		qcom,mount-angle = <270>;
+		qcom,sensor-name = "sr030pc50";
+		cam_vio-supply = <&pm8110_l7>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio";
+		qcom,cam-vreg-type = <2 0>;
+		qcom,cam-vreg-min-voltage = <0 1800000>;
+		qcom,cam-vreg-max-voltage = <0 1800000>;
+		qcom,cam-vreg-op-mode = <0 100000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 14 0>,
+			<&msmgpio 19 0>,
+			<&msmgpio 15 0>,
+			<&msmgpio 83 0>;
+		qcom,gpio-vana = <1>;			
+		qcom,gpio-reset = <2>;
+		qcom,gpio-standby = <3>;
+		qcom,gpio-req-tbl-num = <0 1 2 3>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK",
+					  "CAM_A_EN",
+					  "VT_CAM_RESET",
+					  "VT_CAM_STANDBY";
+		qcom,gpio-set-tbl-num = <1 2 3>;
+		qcom,gpio-set-tbl-flags = <0 0 2 >;
+		qcom,gpio-set-tbl-delay = <4000 1000 1000>;
+		qcom,csi-lane-assign = <0xe4>;
+		qcom,csi-lane-mask = <0x1>;
+		qcom,sensor-position = <1>;
+		qcom,sensor-mode = <1>;
+		qcom,cci-master = <0>;
+	};
+};

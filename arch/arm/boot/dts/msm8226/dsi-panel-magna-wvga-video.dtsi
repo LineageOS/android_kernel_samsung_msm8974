@@ -1,0 +1,91 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&mdss_mdp {
+	dsi_magna_wvga_panel: qcom,mdss_dsi_magna_wvga_video {
+		qcom,mdss-dsi-panel-name = "Magna wvga video mode dsi SEC_S6D2AA0X panel";
+		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
+		qcom,mdss-dsi-panel-type = "dsi_video_mode";
+		qcom,oled-esd-gpio = <&msmgpio 54 0>;
+		qcom,mdss-dsi-panel-destination = "display_1";
+		qcom,mdss-dsi-panel-framerate = <60>;
+		qcom,mdss-dsi-virtual-channel-id = <0>;
+		qcom,mdss-dsi-stream = <0>;
+		qcom,mdss-dsi-panel-width = <480>;
+		qcom,mdss-dsi-panel-height = <800>;
+		qcom,mdss-pan-size = <69 124>; /* <Width> <Height> real size of panel in mm */
+		qcom,mdss-dsi-h-front-porch = <16>;
+		qcom,mdss-dsi-h-back-porch = <16>;
+		qcom,mdss-dsi-h-pulse-width = <4>;
+		qcom,mdss-dsi-h-sync-skew = <0>;
+		qcom,mdss-dsi-v-back-porch = <4>;
+		qcom,mdss-dsi-v-front-porch = <105>;
+		qcom,mdss-dsi-v-pulse-width = <2>;
+		qcom,mdss-dsi-h-left-border = <0>;
+		qcom,mdss-dsi-h-right-border = <0>;
+		qcom,mdss-dsi-v-top-border = <0>;
+		qcom,mdss-dsi-v-bottom-border = <0>;
+		qcom,mdss-dsi-bpp = <24>;
+		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-underflow-color = <0xff>;
+		qcom,mdss-dsi-border-color = <0>;
+		qcom,mdss-dsi-mdp-trigger = <0x0>;
+		qcom,mdss-dsi-dma-trigger = <0x04>;
+		qcom,mdss-dsi-bl-min-level = <1>;
+		qcom,mdss-dsi-bl-max-level = <255>;
+		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
+		qcom,mdss-pan-dsi-t-clk-pre = <0x29>;
+		qcom,mdss-pan-dsi-t-clk-post = <0x20>;
+		qcom,mdss-dsi-panel-timings = [5A 1B 13 00 2C 2E 17 1D 23 03 04 00];
+		qcom,mdss-dsi-lane-0-state;
+		qcom,mdss-dsi-lane-1-state;
+		qcom,mdss-dsi-bllp-eof-power-mode;
+		qcom,mdss-dsi-bllp-power-mode;
+		qcom,mdss-dsi-traffic-mode = <2>;
+		qcom,mdss-force-clk-lane-hs = <1>;
+		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-h-sync-pulse = <0>;
+		qcom,mdss-dsi-panel-clock-rate = <343500000>;
+
+
+		qcom,mdss-dsi-on-command = [39 01 00 00 01 00 03 F1 5A 5A
+					39 01 00 00 01 00 03 F0 5A 5A
+					39 01 00 00 01 00 03 FC 5A 5A
+					05 01 00 00 64 00 02 11 00
+					39 01 00 00 01 00 03 F1 5A 5A
+					39 01 00 00 01 00 03 F0 5A 5A
+					39 01 00 00 01 00 03 FC 5A 5A
+					39 01 00 00 01 00 06 F2 02 06 0A 20 50
+					39 01 00 00 01 00 02 F7 09
+					39 01 00 00 01 00 18 F8 05 71 AC 80 8F 0F 48 00 00 3A 00 00 00 00 00
+						00 07 06 24 24 24 00 00
+					39 01 00 00 01 00 06 F4 AB 6A 00 55 03
+					39 01 00 00 01 00 03 FB 00 5A
+					39 01 00 00 01 00 19 F9 00 C0 BA A5 CF C0 C8 55 00 E0 B8 A3 CD BE C9
+						55 00 E7 B8 A3 CD BE CF 55
+					39 01 00 00 01 00 03 FB 00 A5
+					39 01 00 00 01 00 02 B3 00
+					39 01 00 00 01 00 02 B0 06
+					39 01 00 00 01 00 02 E0 41
+					05 01 00 00 78 00 02 29 00
+	/* Display On */
+					];
+		samsung,panel-manufacture-id-read-cmds = [06 01 00 00 00 00 01 da 01
+							06 01 00 00 00 00 01 db 01
+							06 01 00 00 00 00 01 dc 01];
+
+		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
+		qcom,mdss-dsi-off-command = [05 01 00 00 32 00 02 28 00
+					05 01 00 00 78 00 02 10 00];
+		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
+	};
+};

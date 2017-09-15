@@ -1,0 +1,23 @@
+config SENSORS_YAS532
+	bool "Yamaha YAS532 sensor"
+	default n
+	help
+	  Say Y here if you want support for the YAS532 sensor
+	  device.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called YAS532.
+
+config INPUT_YAS_MAGNETOMETER_POSITION
+	int "YAS Geomagnetic Sensor Mounting Position on Board"
+	default "0"
+	help
+	  Chip mounting position (pin 1).
+	  0: top, upper-left
+	  1: top, upper-right
+	  2: top, lower-right
+	  3: top, lower-left
+	  4: bottom, upper-left
+	  5: bottom, upper-right
+	  6: bottom, lower-right
+	  7: bottom, lower-left

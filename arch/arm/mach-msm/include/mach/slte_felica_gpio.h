@@ -1,0 +1,8 @@
+ #define GPIO_SENN3AB_I2C_SDA		2
+ #define GPIO_SENN3AB_I2C_SCL		3
+ #define GPIO_SENN3AB_UART_TX		49	
+ #define GPIO_SENN3AB_UART_RX		50		
+ #define GPIO_SENN3AB_UART_CTS		51	
+ #define GPIO_SENN3AB_UART_RFR		52 
+ /* #define GPIO_SENN3AB_RFS		89		*/
+ #define GPIO_SENN3AB_VEN			73	

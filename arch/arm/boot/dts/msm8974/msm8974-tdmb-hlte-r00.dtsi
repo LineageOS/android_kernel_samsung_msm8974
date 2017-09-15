@@ -1,0 +1,83 @@
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+/ {
+	aliases {
+		spi2 = &spi_2;
+	};
+};
+
+&soc {
+	i2c_3: i2c@f9925000 { /* BLSP#3 */
+		qcom,master-id = <86>;
+		status = "disabled";
+	};
+	spi_2: spi@f9925000 {
+		compatible = "qcom,spi-qup-v2";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		cell-index = <2>;
+		reg-names = "spi_physical", "spi_bam_physical";
+		reg = <0xf9925000 0x1000>,
+			<0xf9904000 0xf000>;
+
+		interrupt-names = "spi_irq", "spi_bam_irq";
+		interrupts = <0 97 0>, <0 238 0>;
+		spi-max-frequency = <19200000>;
+
+		qcom,gpio-mosi = <&msmgpio 8 0>;
+		qcom,gpio-miso = <&msmgpio 9 0>;
+		qcom,gpio-cs0  = <&msmgpio 10 0>;
+		qcom,gpio-clk  = <&msmgpio 11 0>;
+
+		qcom,infinite-mode = <0>;
+		qcom,use-bam;
+		qcom,ver-reg-exists;
+		qcom,bam-consumer-pipe-index = <16>;
+		qcom,bam-producer-pipe-index = <17>;
+		qcom,master-id = <86>;
+
+		status = "ok";
+
+		tdmb-spi@0 {
+			compatible = "tdmb_spi_comp";
+			reg = <0>;
+			spi-max-frequency = <9600000>;
+
+			tdmb_spi_mosi = <&msmgpio 8 0>;
+			tdmb_spi_miso = <&msmgpio 9 0>;
+			tdmb_spi_cs = <&msmgpio 10 0>;
+			tdmb_spi_clk = <&msmgpio 11 0>;
+
+		};
+	};
+
+	tdmb_data {
+		compatible = "samsung,tdmb";
+		tdmb_pwr_en = <&pm8941_gpios 23 0>;
+		tdmb_irq = <&msmgpio 73 0>;
+		tdmb_ant_irq = <&msmgpio 18 0>;
+		tdmb_use_irq;
+	};
+};
+
+&pm8941_gpios {
+	gpio@d600 { /* GPIO 23 */
+		/* TDMB_EN */
+		qcom,mode = <1>;		/* Digital output */
+		qcom,output-type = <0>;		/* CMOS logic */
+		qcom,invert = <0>;		/* Output low initially */
+		qcom,vin-sel = <2>;		/* PM8941 S3 = 1.8 V */
+		qcom,src-sel = <0>;		/* Constant */
+		qcom,out-strength = <2>;	/* Medium drive strength */
+		qcom,master-en = <1>;		/* Enable GPIO */
+	};
+};

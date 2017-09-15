@@ -1,0 +1,30 @@
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+	onewire {
+		compatible = "w1-gpio-msm";
+		gpios = <&msmgpio 69 0x00>;
+		linux,open-drain = <1>;
+		linux,slave-speed = <1>;
+	};
+
+	ds28el15 {
+		compatible = "w1-ds28el15";
+		ds28el15,id-min = <0>;
+		ds28el15,id-max = <3>;
+		ds28el15,id-default = <1>;
+		ds28el15,color-min = <0>;
+		ds28el15,color-max = <10>;
+		ds28el15,color-default = <1>;
+	};
+};

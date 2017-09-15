@@ -1,0 +1,410 @@
+#
+# kbuild file for firmware/
+#
+
+# Create $(fwabs) from $(CONFIG_EXTRA_FIRMWARE_DIR) -- if it doesn't have a
+# leading /, it's relative to $(srctree).
+fwdir := $(subst ",,$(CONFIG_EXTRA_FIRMWARE_DIR))
+fwabs := $(addprefix $(srctree)/,$(filter-out /%,$(fwdir)))$(filter /%,$(fwdir))
+
+fw-external-y := $(subst ",,$(CONFIG_EXTRA_FIRMWARE))
+
+# There are three cases to care about:
+# 1. Building kernel with CONFIG_FIRMWARE_IN_KERNEL=y -- $(fw-shipped-y) should
+#    include the firmware files to include, according to .config
+# 2. 'make modules_install', which will install firmware for modules, and 
+#    _also_ for the in-kernel drivers when CONFIG_FIRMWARE_IN_KERNEL=n
+# 3. 'make firmware_install', which installs all firmware, unconditionally.
+
+# For the former two cases we want $(fw-shipped-y) and $(fw-shipped-m) to be
+# accurate. In the latter case it doesn't matter -- it'll use $(fw-shipped-all).
+# But be aware that the config file might not be included at all.
+
+ifdef CONFIG_ACENIC_OMIT_TIGON_I
+acenic-objs := acenic/tg2.bin
+fw-shipped- += acenic/tg1.bin
+else
+acenic-objs := acenic/tg1.bin acenic/tg2.bin
+endif
+fw-shipped-$(CONFIG_3C359) += 3com/3C359.bin
+fw-shipped-$(CONFIG_ACENIC) += $(acenic-objs)
+fw-shipped-$(CONFIG_ADAPTEC_STARFIRE) += adaptec/starfire_rx.bin \
+					 adaptec/starfire_tx.bin
+fw-shipped-$(CONFIG_KEYBOARD_ABOV_TOUCH) += abov/abov_tk.fw \
+                                            abov/abov_tk_hestia.fw \
+					    abov/abov_tk_hestia_rev4.fw
+fw-shipped-$(CONFIG_KEYBOARD_ABOV_TOUCH_PATEK) += abov/abov_tk_patek.fw
+fw-shipped-$(CONFIG_ATARI_DSP56K) += dsp56k/bootstrap.bin
+fw-shipped-$(CONFIG_ATM_AMBASSADOR) += atmsar11.fw
+fw-shipped-$(CONFIG_BNX2X) += bnx2x/bnx2x-e1-6.2.9.0.fw \
+			      bnx2x/bnx2x-e1h-6.2.9.0.fw \
+			      bnx2x/bnx2x-e2-6.2.9.0.fw
+fw-shipped-$(CONFIG_BNX2) += bnx2/bnx2-mips-09-6.2.1a.fw \
+			     bnx2/bnx2-rv2p-09-6.0.17.fw \
+			     bnx2/bnx2-rv2p-09ax-6.0.17.fw \
+			     bnx2/bnx2-mips-06-6.2.1.fw \
+			     bnx2/bnx2-rv2p-06-6.0.15.fw
+fw-shipped-$(CONFIG_CASSINI) += sun/cassini.bin
+fw-shipped-$(CONFIG_COMPUTONE) += intelliport2.bin
+fw-shipped-$(CONFIG_CHELSIO_T3) += cxgb3/t3b_psram-1.1.0.bin \
+				   cxgb3/t3c_psram-1.1.0.bin \
+				   cxgb3/t3fw-7.10.0.bin \
+				   cxgb3/ael2005_opt_edc.bin \
+				   cxgb3/ael2005_twx_edc.bin \
+				   cxgb3/ael2020_twx_edc.bin
+fw-shipped-$(CONFIG_DRM_MGA) += matrox/g200_warp.fw matrox/g400_warp.fw
+fw-shipped-$(CONFIG_DRM_R128) += r128/r128_cce.bin
+fw-shipped-$(CONFIG_DRM_RADEON) += radeon/R100_cp.bin radeon/R200_cp.bin \
+				   radeon/R300_cp.bin radeon/R420_cp.bin \
+				   radeon/RS690_cp.bin radeon/RS600_cp.bin \
+				   radeon/R520_cp.bin \
+				   radeon/R600_pfp.bin radeon/R600_me.bin \
+				   radeon/RV610_pfp.bin radeon/RV610_me.bin \
+				   radeon/RV630_pfp.bin radeon/RV630_me.bin \
+				   radeon/RV620_pfp.bin radeon/RV620_me.bin \
+				   radeon/RV635_pfp.bin radeon/RV635_me.bin \
+				   radeon/RV670_pfp.bin radeon/RV670_me.bin \
+				   radeon/RS780_pfp.bin radeon/RS780_me.bin \
+				   radeon/RV770_pfp.bin radeon/RV770_me.bin \
+				   radeon/RV730_pfp.bin radeon/RV730_me.bin \
+				   radeon/RV710_pfp.bin radeon/RV710_me.bin
+fw-shipped-$(CONFIG_DVB_AV7110) += av7110/bootcode.bin
+fw-shipped-$(CONFIG_DVB_TTUSB_BUDGET) += ttusb-budget/dspbootcode.bin
+fw-shipped-$(CONFIG_E100) += e100/d101m_ucode.bin e100/d101s_ucode.bin \
+			     e100/d102e_ucode.bin
+fw-shipped-$(CONFIG_MYRI_SBUS) += myricom/lanai.bin
+fw-shipped-$(CONFIG_PCMCIA_PCNET) += cis/LA-PCM.cis cis/PCMLM28.cis \
+				     cis/DP83903.cis cis/NE2K.cis \
+				     cis/tamarack.cis cis/PE-200.cis \
+				     cis/PE520.cis
+fw-shipped-$(CONFIG_PCMCIA_3C589) += cis/3CXEM556.cis
+fw-shipped-$(CONFIG_PCMCIA_3C574) += cis/3CCFEM556.cis
+fw-shipped-$(CONFIG_SERIAL_8250_CS) += cis/MT5634ZLX.cis cis/RS-COM-2P.cis \
+				       cis/COMpad2.cis cis/COMpad4.cis \
+				       cis/SW_555_SER.cis cis/SW_7xx_SER.cis \
+				       cis/SW_8xx_SER.cis
+fw-shipped-$(CONFIG_PCMCIA_SMC91C92) += ositech/Xilinx7OD.bin
+fw-shipped-$(CONFIG_SCSI_ADVANSYS) += advansys/mcode.bin advansys/38C1600.bin \
+				      advansys/3550.bin advansys/38C0800.bin
+fw-shipped-$(CONFIG_SCSI_QLOGIC_1280) += qlogic/1040.bin qlogic/1280.bin \
+					 qlogic/12160.bin
+fw-shipped-$(CONFIG_SCSI_QLOGICPTI) += qlogic/isp1000.bin
+fw-shipped-$(CONFIG_INFINIBAND_QIB) += qlogic/sd7220.fw
+fw-shipped-$(CONFIG_SMCTR) += tr_smctr.bin
+fw-shipped-$(CONFIG_SND_KORG1212) += korg/k1212.dsp
+fw-shipped-$(CONFIG_SND_MAESTRO3) += ess/maestro3_assp_kernel.fw \
+				     ess/maestro3_assp_minisrc.fw
+fw-shipped-$(CONFIG_SND_SB16_CSP) += sb16/mulaw_main.csp sb16/alaw_main.csp \
+				     sb16/ima_adpcm_init.csp \
+				     sb16/ima_adpcm_playback.csp \
+				     sb16/ima_adpcm_capture.csp
+fw-shipped-$(CONFIG_SND_YMFPCI) += yamaha/ds1_ctrl.fw yamaha/ds1_dsp.fw \
+				   yamaha/ds1e_ctrl.fw
+fw-shipped-$(CONFIG_SND_WAVEFRONT) += yamaha/yss225_registers.bin
+fw-shipped-$(CONFIG_TEHUTI) += tehuti/bdx.bin
+fw-shipped-$(CONFIG_TIGON3) += tigon/tg3.bin tigon/tg3_tso.bin \
+			       tigon/tg3_tso5.bin
+fw-shipped-$(CONFIG_TYPHOON) += 3com/typhoon.bin
+fw-shipped-$(CONFIG_USB_DABUSB) += dabusb/firmware.fw dabusb/bitstream.bin
+fw-shipped-$(CONFIG_USB_EMI26) += emi26/loader.fw emi26/firmware.fw \
+				  emi26/bitstream.fw
+fw-shipped-$(CONFIG_USB_EMI62) += emi62/loader.fw emi62/bitstream.fw \
+				  emi62/spdif.fw emi62/midi.fw
+fw-shipped-$(CONFIG_USB_KAWETH) += kaweth/new_code.bin kaweth/trigger_code.bin \
+				   kaweth/new_code_fix.bin \
+				   kaweth/trigger_code_fix.bin
+ifdef CONFIG_FIRMWARE_IN_KERNEL
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_MPR) += keyspan/mpr.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA18X) += keyspan/usa18x.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA19) += keyspan/usa19.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA19QI) += keyspan/usa19qi.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA19QW) += keyspan/usa19qw.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA19W) += keyspan/usa19w.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA28) += keyspan/usa28.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA28XA) += keyspan/usa28xa.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA28XB) += keyspan/usa28xb.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA28X) += keyspan/usa28x.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA49W) += keyspan/usa49w.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_USA49WLC) += keyspan/usa49wlc.fw
+else
+fw-shipped- += keyspan/mpr.fw keyspan/usa18x.fw keyspan/usa19.fw	\
+	keyspan/usa19qi.fw keyspan/usa19qw.fw keyspan/usa19w.fw		\
+	keyspan/usa28.fw keyspan/usa28xa.fw keyspan/usa28xb.fw		\
+	keyspan/usa28x.fw keyspan/usa49w.fw keyspan/usa49wlc.fw
+endif
+fw-shipped-$(CONFIG_USB_SERIAL_TI) += ti_3410.fw ti_5052.fw \
+				      mts_cdma.fw mts_gsm.fw mts_edge.fw
+fw-shipped-$(CONFIG_USB_SERIAL_EDGEPORT) += edgeport/boot.fw edgeport/boot2.fw \
+					    edgeport/down.fw edgeport/down2.fw
+fw-shipped-$(CONFIG_USB_SERIAL_EDGEPORT_TI) += edgeport/down3.bin
+fw-shipped-$(CONFIG_USB_SERIAL_WHITEHEAT) += whiteheat_loader.fw whiteheat.fw \
+					   # whiteheat_loader_debug.fw
+fw-shipped-$(CONFIG_USB_SERIAL_KEYSPAN_PDA) += keyspan_pda/keyspan_pda.fw
+fw-shipped-$(CONFIG_USB_SERIAL_XIRCOM) += keyspan_pda/xircom_pgs.fw
+fw-shipped-$(CONFIG_USB_VICAM) += vicam/firmware.fw
+fw-shipped-$(CONFIG_VIDEO_CPIA2) += cpia2/stv0672_vp4.bin
+fw-shipped-$(CONFIG_YAM) += yam/1200.bin yam/9600.bin
+
+# for IR LED FPGA
+ifndef CONFIG_MACH_KLTE_KOR
+fw-shipped-$(CONFIG_SEC_FPGA_ICE40XX) += ice40xx/i2c_top_bitmap_1.fw
+endif
+fw-shipped-$(CONFIG_SEC_FPGA_ICE40XX) += ice40xx/i2c_top_bitmap_2.fw
+
+#for TSP FPGA (PATEK Project)
+fw-shipped-$(CONFIG_SEC_PATEK_PROJECT) += ice40xx/fpga_sdio_patek.fw
+
+# for TouchScreen
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS252) += tsp_melfas/lt/melfas_ij.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS252) += tsp_melfas/lt/mms252_el.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS144) += tsp_melfas/s3/CORE.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS144) += tsp_melfas/s3/PRIV.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS144) += tsp_melfas/s3/PUBL.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS134S) += tsp_melfas/kanas_mms134s_old.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS134S) += tsp_melfas/kanas_mms134s_new.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS300) += tsp_melfas/hestia_mms300.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MMS136) += tsp_melfas/victor/victor.fw
+
+ifndef CONFIG_MACH_KLTE_KOR
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)    += tsp_synaptics/synaptics_s5100_hestia.fw
+endif
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)    += tsp_synaptics/synaptics_s5100_k_a2_fhd.fw
+ifndef CONFIG_MACH_KLTE_KOR
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)    += tsp_synaptics/synaptics_s5100_k_a3.fw
+else
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)    += tsp_synaptics/synaptics_s5100_kkor_a3.fw
+endif
+ifndef CONFIG_MACH_KLTE_KOR
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)    += tsp_synaptics/synaptics_s5100_k_active.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)    += tsp_synaptics/synaptics_s5100_k_sports.fw
+endif
+ifdef CONFIG_MACH_KACTIVELTE_KOR
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_G)    += tsp_synaptics/synaptics_s5100_pslte.fw
+endif
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_S5000) += tsp_synaptics/synaptics_b0_5_1.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_S5000) += tsp_synaptics/synaptics_b0_5_1_fac.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_S5000) += tsp_synaptics/synaptics_js_b0_5_1.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_S5000) += tsp_synaptics/synaptics_js_b0_5_1_fac.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_PATEK) += tsp_synaptics/synaptics_patek.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_PATEK) += tsp_synaptics/synaptics_patek_fac.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_PATEK) += tsp_synaptics/synaptics_patek_old.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_PATEK) += tsp_synaptics/synaptics_patek_fac_old.fw
+
+ifdef CONFIG_MACH_JACTIVESKT
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_S5000) += tsp_synaptics/jactive/synaptics_b0_hsync04.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_S5000) += tsp_synaptics/jactive/synaptics_b0_hsync04_fac.fw
+endif
+
+ifdef CONFIG_MACH_MONDRIAN
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)    += tsp_synaptics/synaptics_s5707.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)    += tsp_synaptics/synaptics_s5708.fw
+else
+ifdef CONFIG_SEC_H_PROJECT 
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)      += tsp_synaptics/synaptics_s5050_h.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)      += tsp_synaptics/synaptics_s5000.fw
+else
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)      += tsp_synaptics/synaptics_s5050_h.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)      += tsp_synaptics/synaptics_s5000.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)    += tsp_synaptics/synaptics_s5707_klimt.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)    += tsp_synaptics/synaptics_s5707_rubens.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)      += tsp_synaptics/synaptics_s5050_f.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)      += tsp_synaptics/synaptics_s5006.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI)      += tsp_synaptics/synaptics_chagall_5710.fw
+endif
+endif
+
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_JSGLTE) += tsp_synaptics/jsglte/synaptics_b0_4_3_new.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_JSGLTE) += tsp_synaptics/jsglte/synaptics_b0_5_1.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_JSGLTE) += tsp_synaptics/jsglte/synaptics_b0_fac.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI_JSGLTE) += tsp_synaptics/jsglte/synaptics_b0_5_1_fac.fw
+
+ifdef CONFIG_SEC_VIENNA_PROJECT
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1664S) += tsp_atmel/mXT1664S_v.fw
+endif
+ifdef CONFIG_SEC_V2_PROJECT
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1664S) += tsp_atmel/mXT1664S_v2.fw
+endif
+ifdef CONFIG_SEC_PICASSO_PROJECT
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1664S) += tsp_atmel/mXT1664S_n.fw
+endif
+ifdef CONFIG_SEC_LT03_PROJECT
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1664S) += tsp_atmel/mXT1664S_n.fw
+endif
+ifdef CONFIG_MACH_MATISSELTE_ATT
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1188S) += tsp_atmel/mXT1188S_att.fw
+else
+ifdef CONFIG_MACH_MATISSELTE_VZW
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1188S) += tsp_atmel/mXT1188S_vzw.fw
+else
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1188S) += tsp_atmel/mXT1188S.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT1188S) += tsp_atmel/mXT1664S.fw
+endif
+endif
+
+fw-shipped-$(CONFIG_TOUCHSCREEN_FTS) += tsp_stm/stm.fw tsp_stm/stm_de.fw tsp_stm/stm_sync.fw tsp_stm/stm_tn10.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_FTS_S) += tsp_stm/stm_s.fw
+
+ifdef CONFIG_MACH_KLTE_KOR
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) += tkey/semco_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) += tkey/semco02_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) += tkey/semco04_cypress_tkey.fw
+else
+ifdef CONFIG_SEC_H_PROJECT 
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY_H) += tkey/hlte_cypress_tkey.fw
+else
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY_H) += tkey/hlte_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY_H) += tkey/hltejs01_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY_H) += tkey/klimt_cypress_tkey.fw
+endif
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY_C) += tkey/berluti_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) += tkey/semco_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) += tkey/semco02_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) += tkey/semco04_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TOUCHKEY) += tkey/dtech_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_CYPRESS_TKEY_HL) += tkey/fresco_n_cypress_tkey.fw tkey/s_cypress_tkey.fw
+fw-shipped-$(CONFIG_KEYBOARD_TC360_TOUCHKEY) += tkey/tc300k_chagall.fw
+endif
+
+ifdef CONFIG_SEC_H_PROJECT 
+fw-shipped-$(CONFIG_INPUT_WACOM) += epen/W9010_0174.bin
+fw-shipped-$(CONFIG_INPUT_WACOM) += epen/W9010_0208.bin
+else
+fw-shipped-$(CONFIG_INPUT_WACOM) += epen/W9007A_0450.bin
+fw-shipped-$(CONFIG_INPUT_WACOM) += epen/W9007_0200.bin
+fw-shipped-$(CONFIG_INPUT_WACOM) += epen/W9007A_0267.bin
+fw-shipped-$(CONFIG_INPUT_WACOM) += epen/W9010_0174.bin
+fw-shipped-$(CONFIG_INPUT_WACOM) += epen/W9010_0208.bin
+fw-shipped-$(CONFIG_INPUT_WACOM_HL) += epen/W9001_fresco.bin
+endif
+fw-shipped-all := $(fw-shipped-y) $(fw-shipped-m) $(fw-shipped-)
+
+#for sensorhub
+fw-shipped-$(CONFIG_SENSORS_SSP_ATMEL) += ssp.fw ssp_rev03.fw ssp_fortius.fw
+ifndef CONFIG_SENSORS_SSP_BOUNCE_FIRMWARE
+ifdef CONFIG_SEC_PATEK_PROJECT
+fw-shipped-$(CONFIG_SEC_PATEK_PROJECT) += ssp_stm_patek.fw ssp_stm_maxim_patek.fw
+else
+fw-shipped-$(CONFIG_SENSORS_SSP_STM) += ssp_stm.fw ssp_stm_rvs.fw ssp_stm_88921.fw ssp_stm_w2014.fw
+endif
+ifdef CONFIG_MACH_JSGLTE_CHN_CMCC
+fw-shipped-$(CONFIG_MACH_JSGLTE_CHN_CMCC) += ssp_stm32f_jsglte.fw
+else
+fw-shipped-$(CONFIG_SENSORS_SSP_STM_32F) += ssp_stm32f.fw
+endif
+fw-shipped-$(CONFIG_SEC_KSPORTS_PROJECT) += ssp_stm_tasman.fw
+fw-shipped-$(CONFIG_SENSORS_SSP_STM_HESTIA) += ssp_stm_hestia.fw
+endif
+fw-shipped-$(CONFIG_SENSORS_SSP_BOUNCE_FIRMWARE) += ssp_stm_bf.fw
+fw-shipped-$(CONFIG_SENSORS_SSP) += ssp_crashed.fw
+
+# Directories which we _might_ need to create, so we have a rule for them.
+firmware-dirs := $(sort $(addprefix $(objtree)/$(obj)/,$(dir $(fw-external-y) $(fw-shipped-all))))
+
+quiet_cmd_mkdir = MKDIR   $(patsubst $(objtree)/%,%,$@)
+      cmd_mkdir = mkdir -p $@
+
+quiet_cmd_ihex  = IHEX    $@
+      cmd_ihex  = $(OBJCOPY) -Iihex -Obinary $< $@
+
+quiet_cmd_ihex2fw  = IHEX2FW $@
+      cmd_ihex2fw  = $(objtree)/$(obj)/ihex2fw $< $@
+
+quiet_cmd_h16tofw  = H16TOFW $@
+      cmd_h16tofw  = $(objtree)/$(obj)/ihex2fw -w $< $@
+
+quiet_cmd_fwbin = MK_FW   $@
+      cmd_fwbin = FWNAME="$(patsubst firmware/%.gen.S,%,$@)";		     \
+		  FWSTR="$(subst /,_,$(subst .,_,$(subst -,_,$(patsubst	     \
+				firmware/%.gen.S,%,$@))))";		     \
+		  ASM_WORD=$(if $(CONFIG_64BIT),.quad,.long);		     \
+		  ASM_ALIGN=$(if $(CONFIG_64BIT),3,2);			     \
+		  PROGBITS=$(if $(CONFIG_ARM),%,@)progbits;		     \
+		  echo "/* Generated by firmware/Makefile */"		> $@;\
+		  echo "    .section .rodata"				>>$@;\
+		  echo "    .p2align $${ASM_ALIGN}"			>>$@;\
+		  echo "_fw_$${FWSTR}_bin:"				>>$@;\
+		  echo "    .incbin \"$(2)\""				>>$@;\
+		  echo "_fw_end:"					>>$@;\
+		  echo "   .section .rodata.str,\"aMS\",$${PROGBITS},1"	>>$@;\
+		  echo "    .p2align $${ASM_ALIGN}"			>>$@;\
+		  echo "_fw_$${FWSTR}_name:"				>>$@;\
+		  echo "    .string \"$$FWNAME\""			>>$@;\
+		  echo "    .section .builtin_fw,\"a\",$${PROGBITS}"	>>$@;\
+		  echo "    .p2align $${ASM_ALIGN}"			>>$@;\
+		  echo "    $${ASM_WORD} _fw_$${FWSTR}_name"		>>$@;\
+		  echo "    $${ASM_WORD} _fw_$${FWSTR}_bin"		>>$@;\
+		  echo "    $${ASM_WORD} _fw_end - _fw_$${FWSTR}_bin"	>>$@;
+
+# One of these files will change, or come into existence, whenever
+# the configuration changes between 32-bit and 64-bit. The .S files
+# need to change when that happens.
+wordsize_deps := $(wildcard include/config/64bit.h include/config/32bit.h \
+		include/config/ppc32.h include/config/ppc64.h \
+		include/config/superh32.h include/config/superh64.h \
+		include/config/x86_32.h include/config/x86_64.h)
+
+# Workaround for make < 3.81, where .SECONDEXPANSION doesn't work.
+# It'll end up depending on these targets, so make them a PHONY rule which
+# depends on _all_ the directories in $(firmware-dirs), and it'll work out OK.
+PHONY += $(objtree)/$$(%) $(objtree)/$(obj)/$$(%)
+$(objtree)/$$(%) $(objtree)/$(obj)/$$(%): $(firmware-dirs)
+	@true
+
+# For the $$(dir %) trick, where we need % to be expanded first.
+.SECONDEXPANSION:
+
+$(patsubst %,$(obj)/%.gen.S, $(fw-shipped-y)): %: $(wordsize_deps) \
+		| $(objtree)/$$(dir %)
+	$(call cmd,fwbin,$(patsubst %.gen.S,%,$@))
+$(patsubst %,$(obj)/%.gen.S, $(fw-external-y)): %: $(wordsize_deps) \
+		include/config/extra/firmware/dir.h | $(objtree)/$$(dir %)
+	$(call cmd,fwbin,$(fwabs)/$(patsubst $(obj)/%.gen.S,%,$@))
+
+# The .o files depend on the binaries directly; the .S files don't.
+$(patsubst %,$(obj)/%.gen.o, $(fw-shipped-y)): %.gen.o: %
+$(patsubst %,$(obj)/%.gen.o, $(fw-external-y)): $(obj)/%.gen.o: $(fwdir)/%
+
+# .ihex is used just as a simple way to hold binary files in a source tree
+# where binaries are frowned upon. They are directly converted with objcopy.
+$(obj)/%: $(obj)/%.ihex | $(objtree)/$(obj)/$$(dir %)
+	$(call cmd,ihex)
+
+# Don't depend on ihex2fw if we're installing and it already exists.
+# Putting it after | in the dependencies doesn't seem sufficient when
+# we're installing after a cross-compile, because ihex2fw has dependencies
+# on stuff like /usr/lib/gcc/ppc64-redhat-linux/4.3.0/include/stddef.h and 
+# thus wants to be rebuilt. Which it can't be, if the prebuilt kernel tree
+# is exported read-only for someone to run 'make install'.
+ifeq ($(INSTALL):$(wildcard $(obj)/ihex2fw),install:$(obj)/ihex2fw)
+ihex2fw_dep :=
+else
+ihex2fw_dep := $(obj)/ihex2fw
+endif
+
+# .HEX is also Intel HEX, but where the offset and length in each record
+# is actually meaningful, because the firmware has to be loaded in a certain
+# order rather than as a single binary blob. Thus, we convert them into our
+# more compact binary representation of ihex records (<linux/ihex.h>)
+$(obj)/%.fw: $(obj)/%.HEX $(ihex2fw_dep) | $(objtree)/$(obj)/$$(dir %)
+	$(call cmd,ihex2fw)
+
+# .H16 is our own modified form of Intel HEX, with 16-bit length for records.
+$(obj)/%.fw: $(obj)/%.H16 $(ihex2fw_dep) | $(objtree)/$(obj)/$$(dir %)
+	$(call cmd,h16tofw)
+
+$(firmware-dirs):
+	$(call cmd,mkdir)
+
+obj-y				 += $(patsubst %,%.gen.o, $(fw-external-y))
+obj-$(CONFIG_FIRMWARE_IN_KERNEL) += $(patsubst %,%.gen.o, $(fw-shipped-y))
+
+# Remove .S files and binaries created from ihex
+# (during 'make clean' .config isn't included so they're all in $(fw-shipped-))
+targets := $(fw-shipped-) $(patsubst $(obj)/%,%, \
+				$(shell find $(obj) -name \*.gen.S 2>/dev/null))
+
+# Without this, built-in.o won't be created when it's empty, and the
+# final vmlinux link will fail.
+obj-n := dummy
+
+hostprogs-y := ihex2fw

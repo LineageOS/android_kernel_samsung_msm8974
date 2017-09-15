@@ -1,0 +1,9 @@
+#
+# SYNAPTICS TOUCH driver configuration
+#
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI_PATEK
+	tristate "Synaptics i2c touchscreen"
+	depends on I2C
+	help
+	  This enables support for Synaptics RMI over I2C based touchscreens.
+	  use Synaptics S5000, S5050, S5707, S5708 IC.

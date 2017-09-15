@@ -1,0 +1,81 @@
+/*
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&cci {
+
+	qcom,camera@0 {
+		cell-index = <0>;
+		compatible = "qcom,camera";
+		reg = <0x0>;
+		qcom,csiphy-sd-index = <0>;
+		qcom,csid-sd-index = <0>;
+		cam_vio-supply = <&pm8226_l23>;
+		qcom,cam-vreg-name ="cam_vdig","cam_vio";
+		qcom,cam-vreg-type = <0 0>;
+		qcom,cam-vreg-min-voltage = <0 1800000>;
+		qcom,cam-vreg-max-voltage = <0 1800000>;
+		qcom,cam-vreg-op-mode = <0 1800000>;
+		qcom,gpio-no-mux = <0>;
+		gpios = <&msmgpio 26 0>,
+				<&msmgpio 110 0>,
+				<&msmgpio 36 0>,
+				<&msmgpio 112 0>,
+				<&msmgpio 16 0>,
+				<&msmgpio 28 0>,
+				<&msmgpio 35 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-standby = <2>;
+		qcom,gpio-ext-vana-power = <3>;
+		qcom,gpio-ext-vio-power = <4>;
+		qcom,gpio-vt-reset = <5>;
+		qcom,gpio-vt-standby = <6>;
+		qcom,gpio-req-tbl-num = <0 1 2 3 4 5 6>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK" , "CAM_RESET" , "CAM_STBY" , "CAM_ANALOG_EN", "VTCAM_EN" , "VT_RESET", "VT_STANDBY";
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+
+	qcom,camera@2 {
+		cell-index = <2>;
+		compatible = "qcom,camera";
+		reg = <0x2>;
+		qcom,csiphy-sd-index = <1>;
+		qcom,csid-sd-index = <1>;
+		cam_vio-supply = <&pm8226_l23>;
+		qcom,cam-vreg-name = "cam_vdig","cam_vio";
+		qcom,cam-vreg-type = <0 0>;
+		qcom,cam-vreg-min-voltage = <0 1800000>;
+		qcom,cam-vreg-max-voltage = <0 1800000>;
+		qcom,cam-vreg-op-mode = <0 1800000>;
+		qcom,gpio-no-mux = <0>;
+			gpios = <&msmgpio 26 0>,
+				<&msmgpio 110 0>,
+				<&msmgpio 36 0>,
+				<&msmgpio 112 0>,
+				<&msmgpio 16 0>,
+				<&msmgpio 28 0>,
+				<&msmgpio 35 0>;
+		qcom,gpio-reset = <1>;
+		qcom,gpio-standby = <2>;
+		qcom,gpio-ext-vana-power = <3>;
+		qcom,gpio-ext-vio-power = <4>;
+		qcom,gpio-vt-reset = <5>;
+		qcom,gpio-vt-standby = <6>;
+		qcom,gpio-req-tbl-num = <0 1 2 3 4 5 6>;
+		qcom,gpio-req-tbl-flags = <1 0 0 0 0 0 0>;
+		qcom,gpio-req-tbl-label = "CAMIF_MCLK" , "CAM_RESET" , "CAM_STBY" , "CAM_ANALOG_EN", "VTCAM_EN" , "VT_RESET", "VT_STANDBY";
+		qcom,cci-master = <0>;
+		status = "ok";
+	};
+};

@@ -1,0 +1,5 @@
+config GPU_UNIFIED_SYSFS
+	tristate "Unified Sysfs for GPU"
+	depends on ARM
+	help
+	  Chose this option to enable the Unified Sysfs for GPU.

@@ -1,0 +1,57 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/ {
+	sec,backlight {
+		compatible = "sec,leds-gpio-bkl";
+		sec,led-ctrl = <&msmgpio 59 0>;
+		linux,default-trigger = "bkl-trigger";
+		sec,control-type="gpio_swing";
+		sec,max-brightness-value = <255>;
+		sec,min-brightness-value = <30>;
+		sec,dimming-value = <31>;
+		sec,max-brightness-in-blu-value = <32>;
+		sec,brightness-table-len = <30>;
+		sec,brightness-table = <
+								0	0
+								30	31
+								40	30
+								50	29
+								60	28
+								70	27
+								80	26
+								90	25
+								100	24
+								110	23
+								121	22
+								132	21
+								143	20  //default
+								150	19
+								157	18
+								164	17
+								171	16
+								178	15
+								185	14
+								192	13
+								199	12
+								206	11
+								213	10
+								219	9
+								225	8
+								231	7
+								237	6
+								243	5
+								249	4
+								255	3
+							>;
+	};
+};

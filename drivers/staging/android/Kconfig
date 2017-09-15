@@ -1,0 +1,153 @@
+menu "Android"
+
+config ANDROID
+	bool "Android Drivers"
+	default N
+	---help---
+	  Enable support for various drivers needed on the Android platform
+
+if ANDROID
+
+config ANDROID_BINDER_IPC
+	bool "Android Binder IPC Driver"
+	default n
+
+config ASHMEM
+	bool "Enable the Anonymous Shared Memory Subsystem"
+	default n
+	depends on SHMEM || TINY_SHMEM
+	help
+	  The ashmem subsystem is a new shared memory allocator, similar to
+	  POSIX SHM but with different behavior and sporting a simpler
+	  file-based API.
+
+config ANDROID_LOGGER
+	tristate "Android log driver"
+	default n
+
+config LOGCAT_SIZE
+	int "Adjust android log buffer sizes"
+	default 512
+	depends on ANDROID_LOGGER
+	help
+	  Set logger buffer size. Enter a number greater than zero.
+	  Any value less than 256 is recommended. Reduce value to save kernel static memory size.
+
+config ANDROID_PERSISTENT_RAM
+	bool
+	depends on HAVE_MEMBLOCK
+	select REED_SOLOMON
+	select REED_SOLOMON_ENC8
+	select REED_SOLOMON_DEC8
+
+config ANDROID_RAM_CONSOLE
+	bool "Android RAM buffer console"
+	depends on !S390 && !UML && HAVE_MEMBLOCK
+	select ANDROID_PERSISTENT_RAM
+	default n
+
+config PERSISTENT_TRACER
+	bool "Persistent function tracer"
+	depends on HAVE_FUNCTION_TRACER
+	select FUNCTION_TRACER
+	select ANDROID_PERSISTENT_RAM
+	help
+	  persistent_trace traces function calls into a persistent ram
+	  buffer that can be decoded and dumped after reboot through
+	  /sys/kernel/debug/persistent_trace.  It can be used to
+	  determine what function was last called before a reset or
+	  panic.
+
+	  If unsure, say N.
+
+config ANDROID_TIMED_OUTPUT
+	bool "Timed output class driver"
+	default y
+
+config ANDROID_TIMED_GPIO
+	tristate "Android timed gpio driver"
+	depends on GENERIC_GPIO && ANDROID_TIMED_OUTPUT
+	default n
+
+config ANDROID_LOW_MEMORY_KILLER
+	bool "Android Low Memory Killer"
+	default N
+	---help---
+	  Register processes to be killed when memory is low
+
+config ANDROID_LOW_MEMORY_KILLER_AUTODETECT_OOM_ADJ_VALUES
+	bool "Android Low Memory Killer: detect oom_adj values"
+	depends on ANDROID_LOW_MEMORY_KILLER
+	default y
+	---help---
+	  Detect oom_adj values written to
+	  /sys/module/lowmemorykiller/parameters/adj and convert them
+	  to oom_score_adj values.
+
+config SEC_OOM_KILLER
+	bool "Android OOM Killer"
+	default n
+	help
+	  klaatu@samsung
+	  This enables 'Android-Style oom-killer'
+	  The way to select victim by oom-killer provided by
+	  linux kernel is totally different from android policy.
+	  Hence, it makes more sense that we select the oom victim
+	  as android does when LMK is invoked.
+
+config SEC_DEBUG_LMK_MEMINFO
+	bool "Show Meminfo when lmk invoked"
+	depends on !SAMSUNG_PRODUCT_SHIP
+	default n
+	help
+	  Show memory information when lmk kills process
+
+config SEC_DEBUG_LMK_COUNT_INFO
+	bool "Record LMK execution count"
+	default n
+	help
+	  Show LMK execution count information when lmk invoked
+
+config EXCLUDE_LRU_LIVING_IN_CMA
+	bool "Exclude LRU living is CMA"
+	depends on CMA_PAGE_COUNTING
+	default n
+	help
+	  Number of LRU pages living in CMA area should be excluded
+          so that LMK will kill a process to release memory pressure
+	  This feature based on reclamation prohibition for CMA area.
+
+source "drivers/staging/android/switch/Kconfig"
+
+config ANDROID_INTF_ALARM_DEV
+	bool "Android alarm driver"
+	depends on RTC_CLASS
+	default n
+	help
+	  Provides non-wakeup and rtc backed wakeup alarms based on rtc or
+	  elapsed realtime, and a non-wakeup alarm on the monotonic clock.
+	  Also exports the alarm interface to user-space.
+
+config RUNTIME_COMPCACHE
+	bool "Android rtcc v3"
+	depends on ZRAM && ANDROID
+	default n
+	help
+	  This option enables rtcc v3 for android
+
+config KSWAPD_NOSWAP
+	bool "Disable swap in kswapd"
+	depends on RUNTIME_COMPCACHE
+	default n
+	help
+	  This option controls swap action in kswapd
+
+config SAMP_HOTNESS
+	bool "Kill hidden process by hotness"
+	default n
+	help
+	  This option change kill hidden process policy in LMK
+
+endif # if ANDROID
+
+endmenu

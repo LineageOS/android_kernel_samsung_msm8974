@@ -1,0 +1,11 @@
+* msm-adsp-sensors
+
+Required properties:
+
+ - compatible:	"qcom,msm-adsp-sensors"
+
+Example:
+
+	qcom,msm-adsp-sensors {
+		compatible = "qcom,msm-adsp-sensors";
+	};

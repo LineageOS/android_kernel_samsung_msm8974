@@ -1,0 +1,99 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/* qcom,msm-id =<Chip_id Board_version Other_Specific_info>
+ * All these three fields are unsigned 32 bit integers
+ * For OtherSpecificInfo = 0xABCDEFGH [32 bits in total]
+ *  G[4BITS]:MODEL_VARIANT i.e. 0 for MS01,1 for MILLET_3G, 2 for CT01, 3 for S3VE
+ *  H[4BITS]:Hardware Revision
+ * Please refer to .../lk/platform/msm_shared/dev_tree.c also
+ */
+
+/dts-v1/;
+/include/ "msm8926.dtsi"
+/include/ "msm8926-sec-afyonlte-r06.dtsi"
+
+/ {
+	model = "[AFYON-LTE-TMO]Rev-06-MTP-v2";
+	compatible = "qcom,msm8226-mtp", "qcom,msm8226", "qcom,mtp";
+	qcom,msm-id = <0xC808FF01 6 0x10001>;
+};
+
+/{
+        spi0{
+        status = "disable";
+        };
+};
+
+&soc {
+	/*Adding node for the SM5502/TSU6721-MUIC I2C QUP Interface*/
+        i2c@f9926000 { /* BLSP-1 QUP-3 */
+                cell-index = <13>;
+                compatible = "qcom,i2c-qup";
+                reg = <0xf9926000 0x1000>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+                reg-names = "qup_phys_addr";
+                interrupts = <0 98 0>;
+                interrupt-names = "qup_err_intr";
+                qcom,i2c-bus-freq = <100000>;
+                qcom,i2c-src-freq = <19200000>;
+                qcom,scl-gpio = <&msmgpio 15 0>;
+                qcom,sda-gpio = <&msmgpio 14 0>;
+                qcom,master-id = <86>;
+	};
+
+	i2c@f9923000 { /* BLSP-1 QUP-1 */
+		cell-index = <1>;
+		compatible = "qcom,i2c-qup";
+		reg = <0xf9923000 0x1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg-names = "qup_phys_addr";
+		interrupts = <0 95 0>;
+		interrupt-names = "qup_err_intr";
+		qcom,i2c-bus-freq = <400000>;
+		qcom,i2c-src-freq = <19200000>;
+                qcom,master-id = <86>;
+		status = "okay";
+	};
+
+	i2c@f9924000 { /* BLSP-1 QUP-2 */
+		cell-index = <2>;
+		compatible = "qcom,i2c-qup";
+		reg = <0xf9924000 0x1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg-names = "qup_phys_addr";
+		interrupts = <0 96 0>;
+		interrupt-names = "qup_err_intr";
+		qcom,i2c-bus-freq = <100000>;
+		qcom,i2c-src-freq = <19200000>;
+                qcom,master-id = <86>;
+	};
+
+	earjack {
+                /*Override GPIO properties*/
+                qcom,earjack-detect-gpio = <&msmgpio 69 0>;
+                qcom,earjack-sendend-gpio = <&msmgpio 35 0>;
+		det-zones-list = <&det_zones 0 10000 10 0>,
+                             <&det_zones 661 10000 10 0>,
+                             <&det_zones 662 10000 10 1>,
+                             <&det_zones 9999 10000 10 1>;
+		but-zones-list = <&but_zones 0 0 184>,
+                             <&but_zones 1 185 287>,
+                             <&but_zones 2 288 9999>;
+		mpp-channel-scaling = <6 1 1>;
+        };
+};
+
+

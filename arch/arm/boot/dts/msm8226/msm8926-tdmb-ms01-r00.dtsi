@@ -1,0 +1,56 @@
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+	aliases {
+		spi3 = &spi_3;
+	};
+
+	spi_3: spi@f9926000 {
+		compatible = "qcom,spi-qup-v2";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg-names = "spi_physical", "spi_bam_physical";
+		reg = <0xf9926000 0x1000>, <0xf9904000 0x19000>;
+		interrupt-names = "spi_irq", "spi_bam_irq";
+		interrupts = <0 98 0>, <0 238 0>;
+		spi-max-frequency = <19200000>;
+
+		qcom,gpio-mosi = <&msmgpio 12 0>;
+		qcom,gpio-miso = <&msmgpio 13 0>;
+		qcom,gpio-clk  = <&msmgpio 15 0>;
+		qcom,gpio-cs0  = <&msmgpio 14 0>;
+
+		qcom,infinite-mode = <0>;
+		qcom,use-bam;
+		qcom,ver-reg-exists;
+		qcom,bam-consumer-pipe-index = <18>;
+		qcom,bam-producer-pipe-index = <19>;
+		qcom,master-id = <86>;
+
+		tdmb-spi@0 {
+			compatible = "tdmb_spi_comp";
+			reg = <0>;
+			spi-max-frequency = <9600000>;
+		};
+	};
+
+	tdmb_data {
+		compatible = "tdmb_pdata";
+		tdmb_spi_mosi = <&msmgpio 12 0>;
+		tdmb_spi_miso = <&msmgpio 13 0>;
+		tdmb_spi_cs = <&msmgpio 14 0>;
+		tdmb_spi_clk = <&msmgpio 15 0>;
+		tdmb_pwr_en = <&msmgpio 53 0>;
+		tdmb_irq = <&msmgpio 55 0>;
+	};
+};

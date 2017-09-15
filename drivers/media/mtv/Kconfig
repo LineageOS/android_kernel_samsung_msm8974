@@ -1,0 +1,83 @@
+#
+# MTV config states
+#
+
+############################################
+# Define following features for MOBILETV(MTV) in defconfig file
+############################################
+# ex..
+# MTV function - CONFIG_MTV
+# AP Vendor - CONFIG_MTV_QUALCOMM
+# Chip Vendor - CONFIG_MTV_MTV222
+# Interface - CONFIG_MTV_SPI 
+############################################
+
+config MTV
+	bool "ISDB-T"
+	default n
+	help
+	  This allows MTV.
+	  This module is designed for SPI or TSIF.
+	  Select chipset and interface
+
+choice
+	depends on MTV
+	prompt "AP vendor"
+	default MTV_QUALCOMM
+	config MTV_QUALCOMM
+		bool "Qualcomm"
+	config MTV_SLSI
+		bool "S.LSI"
+	config MTV_MARVELL
+		bool "Marvell"
+endchoice
+
+choice
+	depends on MTV
+	prompt "chip"
+	default MTV_FC8300
+	config MTV_FC8150
+		bool "FCI8150"
+	config MTV_FC8300
+		bool "FCI8300"
+	config MTV_MTV222
+		bool "MTV222"
+	config MTV_MTV23x
+		bool "MTV23x"
+endchoice
+
+config MTV_SPI
+	depends on MTV
+	default n
+	bool "SPI"
+
+config MTV_EBI
+	depends on MTV
+	default n
+	bool "EBI"
+	
+config MTV_TSIF
+	depends on MTV
+	default n
+	bool "TSIF"
+
+config MTV_I2C
+	depends on MTV
+	default n
+	bool "I2C"
+
+config MTV_SIMUL
+	depends on MTV
+	default n
+	bool "Simulation"
+
+config MTV_DEBUG
+	depends on MTV
+	default n
+	bool "isdbt debugfs"
+
+config MTV_ANT_DET
+	depends on MTV
+	default n
+	bool "isdbt antenna detector"
+

@@ -1,0 +1,242 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+/include/ "msm8974pro-sec.dtsi"
+/include/ "msm8974pro-max77804k-k.dtsi"
+/include/ "msm8974pro-ac-sec-k-r14.dtsi"
+/include/ "msm8974pro-tdmb-klte-r00.dtsi"
+
+/ {
+	model = "SAMSUNG K KOR PROJECT REV14";
+	compatible = "qcom,msm8974-mtp", "qcom,msm8974", "qcom,mtp";
+	/*QCOM BOARD REV TYPE...*/
+	/*qcom,msm-id = <194 14 0x10000>;*/
+	/*SEC BOARD REV TYPE...*/
+        qcom,msm-id = <0xC2085201 14 0x10000>;
+        /* [31:24] chip-id, [23:16] platform-id, [15:8] national code, [7:0] operator revision, reserved */
+};
+
+&soc {
+	qcom,wdt@f9017000 {
+		compatible = "qcom,msm-watchdog";
+		qcom,memblock-reserve = <0x0 0x4000>;
+		reg = <0xf9017000 0x1000>;
+		interrupts = <0 3 0>, <0 4 0>;
+		qcom,bark-time = <15000>;
+		qcom,pet-time = <10000>;
+		qcom,ipi-ping;
+	};
+
+	earjack {
+		compatible = "sec_jack";
+		qcom,earjack-read-vadc = <&pma8084_vadc>;
+		qcom,earjack-detect-gpio = <&pma8084_gpios 20 0>;
+		qcom,earjack-micbias-gpio = <&msmgpio 85 0>;
+		qcom,earjack-sendend-gpio = <&msmgpio 77 0>;
+		qcom,send-end-active-high;
+		det-zones-list = <&det_zones 3 10000 10 0>,
+				 <&det_zones 950 10000 10 0>,
+				 <&det_zones 2400 10000 10 1>,
+				 <&det_zones 9999 10000 10 1>;
+		but-zones-list = <&but_zones 0 0 155>,
+				 <&but_zones 1 156 313>,
+				 <&but_zones 2 314 643>;
+		mpp-channel-scaling = <4 1 3>;
+	};
+
+	sound {
+		qcom,model = "msm8974-taiko-mtp-snd-card";
+		qcom,cdc-micbias2-headset-only;
+		qcom,earjack-fsa_en-expander-gpio = <310>;
+
+		qcom,audio-routing =
+			"RX_BIAS", "MCLK",
+			"LDO_H", "MCLK",
+			"AIF4 MAD", "MCLK",
+			"AMIC2", "MIC BIAS2 External",
+			"MIC BIAS2 External", "Headset Mic",
+			"DMIC1", "MIC BIAS1 External",
+			"MIC BIAS1 External", "Digital Mic1",
+			"DMIC2", "Main Mic Bias",
+			"Main Mic Bias", "Main Mic",
+			"DMIC3", "MIC BIAS3 External",
+			"MIC BIAS3 External", "Digital Mic3",
+			"DMIC4", "MIC BIAS1 External",
+			"MIC BIAS1 External", "Sub Mic",
+			"DMIC5", "MIC BIAS4 External",
+			"MIC BIAS4 External", "Digital Mic5",
+			"DMIC6", "MIC BIAS3 External",
+			"MIC BIAS3 External", "Third Mic";
+	};
+};
+
+&pma8084_vadc {
+	chan@23 {
+		label = "mpp4_div3";
+		reg = <0x23>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <1>; /* 1:3 scaling */
+		qcom,calibration-type = "absolute";
+		qcom,scale-function = <0>;
+		qcom,hw-settle-time = <0>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@73 {
+		label = "msm_therm";
+		reg = <0x73>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@75 {
+		label = "pa_therm0";
+		reg = <0x75>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@77 {
+		label = "pa_therm1";
+		reg = <0x77>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+
+	chan@78 {
+		label = "quiet_therm";
+		reg = <0x78>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+	};
+};
+
+&pma8084_adc_tm {
+	chan@73 {
+		label = "msm_therm";
+		reg = <0x73>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x48>;
+		qcom,thermal-node;
+	};
+
+	chan@75 {
+		label = "pa_therm0";
+		reg = <0x75>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x68>;
+		qcom,thermal-node;
+	};
+
+	chan@77 {
+		label = "pa_therm1";
+		reg = <0x77>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x70>;
+		qcom,thermal-node;
+	};
+
+	chan@78 {
+		label = "quiet_therm";
+		reg = <0x78>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,btm-channel-number = <0x78>;
+		qcom,thermal-node;
+	};
+};
+
+&usb3 {
+	interrupt-names = "irq", "otg_irq", "hs_phy_irq", "pmic_id_irq";
+	interrupt-parent = <&usb3>;
+	interrupts = <0 1>;
+	#interrupt-cells = <1>;
+	interrupt-map-mask = <0x0 0xffffffff>;
+	interrupt-map = <0x0 0 &intc 0 133 0
+			 0x0 1 &spmi_bus 0x0 0x0 0x9 0x0>;
+	interrupt-names = "hs_phy_irq", "pmic_id_irq";
+	/*qcom,misc-ref = <&pm8941_misc>;*/
+};
+
+&slim_msm {
+	taiko_codec {
+		qcom,cdc-micbias1-ext-cap;
+		/delete-property/ qcom,cdc-micbias2-ext-cap;
+		qcom,cdc-micbias3-ext-cap;
+		qcom,cdc-micbias4-ext-cap;
+
+		qcom,cdc-micbias1-cfilt-sel = <0x0>;
+		qcom,cdc-micbias2-cfilt-sel = <0x1>;
+		qcom,cdc-micbias3-cfilt-sel = <0x0>;
+		qcom,cdc-micbias4-cfilt-sel = <0x0>;
+
+		/*
+		 * Liquid has external spkrdrv supply. Give a dummy supply to
+		 * make codec driver's happy.
+		 */
+		cdc-vdd-spkdrv-supply = <&vph_pwr_vreg>;
+		qcom,cdc-vdd-spkdrv-voltage = <0 0>;
+		qcom,cdc-vdd-spkdrv-current = <0>;
+
+		qcom,cdc-on-demand-supplies = "cdc-vdd-spkdrv";
+	};
+	es705-codec {
+		compatible = "es705-codec-gen0";
+		elemental-addr = [00 01 83 00 BE 02];
+
+		es705-gpioa-gpio = <&msmgpio 76 0>;
+		es705-gpiob-gpio = <&msmgpio 79 0>;
+		es705-uart-tx = <&msmgpio 0 0>;
+		es705-uart-rx = <&msmgpio 1 0>;
+		es705-reset-expander-gpio = <300>;
+
+		es705-slim-ifd = "es705-ifd";
+		es705-slim-ifd-elemental-addr = [00 00 03 00 BE 02];
+	};
+};

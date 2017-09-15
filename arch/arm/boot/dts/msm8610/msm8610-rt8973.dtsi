@@ -1,0 +1,31 @@
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+        i2c@15{
+                cell-index = <15>;
+                compatible = "i2c-gpio";
+                gpios = <&msmgpio 8 0  /*SDA*/
+                        &msmgpio 9 0  /*SCL*/
+                        >;
+                i2c-gpio,delay-us = <2>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+                rt8973@14{
+                        compatible = "rt8973,i2c";
+                        reg = <0x14>;
+                        interrupt-parent = <&msmgpio>;
+                        interupts= <82 0>;
+                        rt8973,irq-gpio = <&msmgpio 82 0x00>;
+                };
+        };
+};

@@ -1,0 +1,919 @@
+/* Copyright (c) 2012, Samsung Electronics Corporation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&mdss_mdp {
+	/* DSI_0 */
+	dsi_dual_2560p_cmd_s6e3ha1_right: mdss_dsi_samsung_dual_2560p_cmd_s6e3ha1_right{
+		qcom,mdss-dsi-panel-name = "samsung,mdss-amoled-dsi-panel";
+		label = "samsung amoled wqxga command mode dsi S6E3HA1 right panel";
+		status = "disable";
+
+		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
+		qcom,mdss-dsi-panel-type = "dsi_cmd_mode";
+		qcom,mdss-pan-dest = "display_1";
+
+		qcom,rst-gpio = <&pm8941_gpios 9 0>;
+		qcom,te-gpio = <&msmgpio 12 0>;
+
+		qcom,mdss-pan-broadcast-mode = <1>;
+		qcom,cont-splash-enabled = <1>;
+
+		qcom,mdss-pan-res = <800 2560>;
+		qcom,mdss-pan-size = <112 180>; /* <Width> <Height> real size of panel in mm */
+		qcom,mdss-pan-bpp = <24>;
+
+		qcom,mdss-clk-rate=<850000000>;
+
+		qcom,mdss-vsync-enable=<1>;
+		qcom,mdss-hw-vsync-mode=<1>;
+		qcom,mdss-pan-insert-dcs-cmd=<1>;
+		qcom,mdss-pan-wr-mem-continue=<0x3c>;
+		qcom,mdss-pan-wr-mem-start=<0x2c>;
+		qcom,mdss-pan-te-sel=<1>;
+		qcom,mdss-pan-clk-rate=<850000000>;
+
+		qcom,mdss-pan-porch-values = <36 12 132 10 2 32>; /* <HBP> <HPW> <HFP> <VBP> <VPW> <VFP> */
+
+		qcom,mdss-pan-underflow-clr = <0xff>;
+		qcom,mdss-pan-bl-ctrl = "bl_ctrl_dcs_cmds";
+		qcom,mdss-pan-bl-levels = <1 255>;
+		qcom,mdss-pan-dsi-mode = <1>;
+		qcom,mdss-pan-dsi-h-pulse-mode = <0>;
+		qcom,mdss-pan-dsi-h-power-stop = <0 0 0>;
+		qcom,mdss-pan-dsi-bllp-power-stop = <1 1>;
+		qcom,mdss-pan-dsi-traffic-mode = <2>;
+		qcom,mdss-pan-dsi-dst-format = <8>;
+		qcom,mdss-pan-dsi-vc = <0>;
+		qcom,mdss-pan-dsi-rgb-swap = <0>;
+		qcom,mdss-force-clk-lane-hs = <0>;
+		samsung,mdss-early-lcd-on = <1>;
+		qcom,mdss-pan-dsi-data-lanes = <1 1 1 1>;
+		qcom,mdss-pan-dsi-dlane-swap = <0>;
+		qcom,mdss-pan-dsi-t-clk = <0x17 0x02>;
+		qcom,mdss-pan-dsi-stream = <0>;
+		qcom,mdss-pan-dsi-mdp-tr = <0x0>;
+		qcom,mdss-pan-dsi-dma-tr = <0x04>;
+		qcom,mdss-pan-dsi-frame-rate = <60>;
+		qcom,mdss-pan-dsi-tx-eot-append = <1>;
+		qcom,panel-phy-regulatorSettings = [07 09 03 00  /* Regualotor settings */
+						    20 00 01];
+		qcom,panel-phy-timingSettings = [DA 3A 26 00 6A 6E 2C 3E 2F 03 04 00];
+		qcom,panel-phy-strengthCtrl = [ff 06];		/*!!!! */
+		qcom,panel-phy-bistCtrl = [00 00 b1 ff
+                                              00 00];   /*!!!! BIST Ctrl settings */
+		qcom,panel-phy-laneConfig = [
+			00 00 00 00 00 00 00 01 97 /* lane0 config */
+			00 00 00 00 05 00 00 01 97 /* lane1 config */
+			00 00 00 00 0a 00 00 01 97 /* lane2 config */
+			00 00 00 00 0f 00 00 01 97 /* lane3 config */
+			00 c0 00 00 00 00 00 01 bb]; /* Clk ln config */
+
+		qcom,panel-display-on-seq = [
+				/* Interface Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 03 F2 03 40 		/* Dual DSI */
+				29 01 00 00 00 00 02 F9 0A 			/* MIC Control */
+				29 01 00 00 00 00 02 B9 00			/* PSR Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				05 01 00 00 78 00 02 11 00  		/* Sleep out = Needs 120ms */
+
+				/* Interface Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 03 F2 03 40 		/* Dual DSI */
+				29 01 00 00 00 00 02 F9 0A 			/* MIC Control */
+				29 01 00 00 00 00 02 B9 00			/* PSR Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				/* TE On */
+				29 01 00 00 00 00 02 35 00
+
+				/* TSP TE(Hsync) Control
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 02 BD 85
+				29 01 00 00 00 00 03 F0 A5 A5 		/* TEST KEY Disable */
+
+				/* PenTile Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 05 C0 00 0F D8 D8	/* PenTile Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				/* POC & ETC Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 03 FC 5A 5A 		/* TEST KEY(LEVEL3) Enable */
+				29 01 00 00 00 00 02 B0 20			/* Global Para 33rd */
+				29 01 00 00 00 00 02 FE 08			/* POC Setting */
+				29 01 00 00 00 00 05 FF 00 00 00 08	/* Setup Margin */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+				29 01 00 00 00 00 03 FC A5 A5		/* TEST KEY(LEVEL3) Disable */
+
+				/* Brightness condition set */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 22				/* Gamma 2.2 Setting */
+					CA 01 00 01 00 01 00 80
+					80 80 80 80 80 80 80 80
+					80 80 80 80 80 80 80 80
+					80 80 80 80 80 80 80 00
+					00 00
+				29 01 00 00 00 00 03 B2 00 0A 		/* AID 0% */
+				29 01 00 00 00 00 03 B6 9C 0F		/* ELVSS Setting */
+				23 01 00 00 00 00 02 F7 03			/* update */
+				29 01 00 00 00 00 03 F0 A5 A5 		/* TEST KEY Disable */
+
+				/* ACL Control */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 02 B5 41			/* Frame Avg.(16, ACL OFF) */
+				29 01 00 00 00 00 02 55 00			/* POC Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				/* ELVSS Temp Compensation */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 02 B0 05			/* Global Para 6th */
+				29 01 00 00 00 00 02 B8 19			/* TSET(Default:0x19) Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+			];
+		qcom,on-cmds-dsi-state = "dsi_hs_mode";
+		qcom,panel-display-off-seq = [
+				05 01 00 00 0A 00 02 28 00			/* wait 10ms(0x0A) */
+				05 01 00 00 78 00 02 10 00			/* wait 120ms(0x78) */
+		];
+		qcom,off-cmds-dsi-state = "dsi_hs_mode";
+
+		/*used for only fhd evt1 panel and over for*/
+		qcom,panel-hsync-on-seq = [
+				29 01 00 00 00 00 03 F0 5A 5A		/* TEST KEY Enable */
+				29 01 00 00 00 00 04 BD 85 02 0C	/* Touch Hsync Enable */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+			];
+
+		/*
+			the last byte in read commands  represent READ LENGH,
+			like below  READ LENGH = 0x21
+		 */
+		 	samsung,panel-test-key-enable-cmds 	= [ 29 01 00 00 00 00 03 F0 5A 5A];
+		 	samsung,panel-test-key-disable-cmds = [ 29 01 00 00 00 00 03 F0 A5 A5];
+
+			samsung,panel-nv-mtp-read-cmds		= [ 06 01 00 00 00 00 01 c8 21 00];
+			samsung,panel-nv-mtp-read-hbm-cmds	= [ 06 01 00 00 00 00 01 c8 07 21];	/* read C8 34~40th , 33=0x21*/
+			samsung,panel-nv-mtp-read-hbm2-cmds	= [ 06 01 00 00 00 00 01 c8 0F 48];	/* read C8 73~87th , 72=0x48*/
+			samsung,panel-nv-mdnie-read-cmds	= [ 06 01 00 00 00 00 01 A1 04 00];
+			samsung,panel-nv-mtp-read-elvss-cmds	= [ 06 01 00 00 00 00 01 b6 01 14];	/* read C6 21th , 20=0x14*/
+			samsung,panel-nv-read-cmds			= [ 06 01 00 00 00 00 01 c8 21 00];
+			samsung,panel-nv-read-enable-cmds = [
+								29 01 00 00 00 00 03 f0 5a 5a
+								29 01 00 00 00 00 03 fc 5a 5a ];
+			samsung,panel-nv-read-disable-cmds = [ 29 01 00 00 00 00 03 f0 a5 a5 ];
+
+			/* the last byte in all read commands will represent READ LENGH */
+			samsung,panel-manufacture-id-read-cmds = [
+								06 01 00 00 00 00 01 da 01 00
+								06 01 00 00 00 00 01 db 01 00
+								06 01 00 00 00 00 01 dc 01 00];
+
+			samsung,panel-manufacture-date-read-cmds = [ 06 01 00 00 00 00 01 c8 02 28];	/* read C8 41~42th , 40=0x28*/
+
+			samsung,panel-ddi-id-read-cmds = [ 06 01 00 00 00 00 01 d6 05 00];	/* read D6 1~5th */
+
+			samsung,panel-ldi-debug-read-cmds = [
+								06 01 00 00 00 00 01 0A 01 00
+								06 01 00 00 00 00 01 0E 01 00
+								06 01 00 00 00 00 01 EA 08 00];
+
+			samsung,panel-ldi-fps-write-cmds = [
+								29 01 00 00 00 00 02 B0 1A    /* Global Para. (27para) */
+								29 01 00 00 00 00 02 D7 00];
+
+			samsung,panel-ldi-fps-read-cmds = [
+								06 01 00 00 00 00 01 D7 01 1A]; /* read D7 27th , 27=0x1B*/
+			samsung,panel-ldi-partial-disp-on = [
+								29 01 00 00 00 00 05 30 00 C8 03 20
+								29 01 00 00 00 00 02 12 00 ];
+			samsung,panel-ldi-partial-disp-off = [29 01 00 00 00 00 02 13 00];
+
+			qcom,panel-display-on-cmds	= [05 01 00 00 32 00 02 29 00];
+			qcom,panel-display-off-cmds	= [05 01 00 00 32 00 02 28 00];
+
+			samsung,panel-elvss-lowtemp-cmds-list = [
+								29 01 00 00 00 00 02 B0 05
+								29 01 00 00 00 00 02 B8 00];	/* Low Temperature Command */
+
+			samsung,panel-gamma-cmds-list = [
+					29 01 00 00 00 00 22            /* Brightness Condition Set - Gamma 2.2 Setting*/
+						CA 01 00 01 00 01 00 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 00
+						00 00
+					29 01 00 00 00 00 02 F7 03		/* Gamma, LTPS(AID) update */
+					29 01 00 00 00 00 02 F7 00
+				];
+
+			samsung,panel-gamma-hbm-cmds-list = [
+						29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+						29 01 00 00 00 00 22            /* Brightness Condition Set for HBM - Gamma 2.2 Setting*/
+						CA 01 00 01 00 01 00 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 00
+						00 00
+				];
+			samsung,panel-etc-hbm-cmds-list = [
+						29 01 00 00 00 00 03 B2 00 0A	/* AID setting */
+						29 01 00 00 00 00 03 B6 8C 0F	/* MPS/ELVSS setting */
+						29 01 00 00 00 00 02 B0 14	/* Global para */
+						29 01 00 00 00 00 02 B6 00	/* ELVSS setting */
+						29 01 00 00 00 00 02 B5 51	/* OPR Average */
+						29 01 00 00 00 00 02 55 01	/* ACL ON */
+						29 01 00 00 00 00 02 F7 03	/* gamma update */
+						29 01 00 00 00 00 03 F0 A5 A5	/* TEST KEY Disable */
+				];
+
+			/*
+			 * ************************************************************************************************************************
+			 * AID command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-aid-cmds-list = [
+				29 01 00 00 00 00 03 B2 09 BE  /* 0  samsung_brightness_aor_ 4cd_96.8 */
+				29 01 00 00 00 00 03 B2 09 AA  /* 1  samsung_brightness_aor_ 5cd_96.0 */
+				29 01 00 00 00 00 03 B2 09 98  /* 2  samsung_brightness_aor_ 6cd_95.3 */
+				29 01 00 00 00 00 03 B2 09 85  /* 3  samsung_brightness_aor_ 7cd_94.6 */
+				29 01 00 00 00 00 03 B2 09 73  /* 4  samsung_brightness_aor_ 8cd_93.9 */
+				29 01 00 00 00 00 03 B2 09 5F  /* 5  samsung_brightness_aor_ 9cd_93.1 */
+				29 01 00 00 00 00 03 B2 09 4D  /* 6  samsung_brightness_aor_10cd_92.4 */
+				29 01 00 00 00 00 03 B2 09 38  /* 7  samsung_brightness_aor_11cd_91.6 */
+				29 01 00 00 00 00 03 B2 09 25  /* 8  samsung_brightness_aor_12cd_90.9 */
+				29 01 00 00 00 00 03 B2 09 11  /* 9  samsung_brightness_aor_13cd_90.1 */
+
+				29 01 00 00 00 00 03 B2 08 FE  /* 10 samsung_brightness_aor_14cd_89.4 */
+				29 01 00 00 00 00 03 B2 08 EA  /* 11 samsung_brightness_aor_15cd_88.6 */
+				29 01 00 00 00 00 03 B2 08 D7  /* 12 samsung_brightness_aor_16cd_87.8 */
+				29 01 00 00 00 00 03 B2 08 C3  /* 13 samsung_brightness_aor_17cd_87.1 */
+				29 01 00 00 00 00 03 B2 08 9B  /* 14 samsung_brightness_aor_19cd_85.5 */
+				29 01 00 00 00 00 03 B2 08 87  /* 15 samsung_brightness_aor_20cd_84.7 */
+				29 01 00 00 00 00 03 B2 08 73  /* 16 samsung_brightness_aor_21cd_84.0 */
+				29 01 00 00 00 00 03 B2 08 5F  /* 17 samsung_brightness_aor_22cd_83.2 */
+				29 01 00 00 00 00 03 B2 08 36  /* 18 samsung_brightness_aor_24cd_81.6 */
+				29 01 00 00 00 00 03 B2 08 22  /* 19 samsung_brightness_aor_25cd_80.8 */
+
+				29 01 00 00 00 00 03 B2 07 F9  /* 20 samsung_brightness_aor_27cd_79.2 */
+				29 01 00 00 00 00 03 B2 07 D1  /* 21 samsung_brightness_aor_29cd_77.7 */
+				29 01 00 00 00 00 03 B2 07 BB  /* 22 samsung_brightness_aor_30cd_76.8 */
+				29 01 00 00 00 00 03 B2 07 90  /* 23 samsung_brightness_aor_32cd_75.2 */
+				29 01 00 00 00 00 03 B2 07 66  /* 24 samsung_brightness_aor_34cd_73.5 */
+				29 01 00 00 00 00 03 B2 07 26  /* 25 samsung_brightness_aor_37cd_71.0 */
+
+				29 01 00 00 00 00 03 B2 06 FC  /* 26 samsung_brightness_aor_39cd_69.4 */
+				29 01 00 00 00 00 03 B2 06 D1  /* 27 samsung_brightness_aor_41cd_67.7 */
+				29 01 00 00 00 00 03 B2 06 A4  /* 28 samsung_brightness_aor_44cd_66.0 */
+				29 01 00 00 00 00 03 B2 06 4A  /* 29 samsung_brightness_aor_47cd_62.5 */
+				29 01 00 00 00 00 03 B2 06 07  /* 30 samsung_brightness_aor_50cd_59.9 */
+
+				29 01 00 00 00 00 03 B2 05 C6  /* 31 samsung_brightness_aor_53cd_57.4 */
+				29 01 00 00 00 00 03 B2 05 7F  /* 32 samsung_brightness_aor_56cd_54.6 */
+				29 01 00 00 00 00 03 B2 05 22  /* 33 samsung_brightness_aor_60cd_51.0 */
+
+				29 01 00 00 00 00 03 B2 04 C5  /* 34 samsung_brightness_aor_64cd_47.4 */
+				29 01 00 00 00 00 03 B2 04 65  /* 35 samsung_brightness_aor_68cd_43.7 */
+
+				29 01 00 00 00 00 03 B2 03 FE  /* 36 samsung_brightness_aor_72_162cd_39.7 */
+
+				29 01 00 00 00 00 03 B2 03 FE  /* 37 samsung_brightness_aor_172cd_39.7 */
+				29 01 00 00 00 00 03 B2 03 7B  /* 38 samsung_brightness_aor_183cd_34.6 */
+				29 01 00 00 00 00 03 B2 02 E5  /* 39 samsung_brightness_aor_195cd_28.8 */
+				29 01 00 00 00 00 03 B2 02 46  /* 40 samsung_brightness_aor_207cd_22.6 */
+				29 01 00 00 00 00 03 B2 01 99  /* 41 samsung_brightness_aor_220cd_15.9 */
+				29 01 00 00 00 00 03 B2 00 D5  /* 42 samsung_brightness_aor_234cd_8.3 */
+				29 01 00 00 00 00 03 B2 00 0A  /* 43 samsung_brightness_aor_249_300cd_0.4 */
+			];
+
+			/* bl_level, Index in aid command list */
+			samsung,panel-aid-map-table = <
+				4	0		5	1		6	2		7	3		8	4
+				9	5		10	6		11	7		12	8		13	9
+				14	10		15	11		16	12		17	13		19	14
+				20	15		21	16		22	17		24	18		25	19
+				27	20		29	21		30	22		32	23		34	24
+				37	25		39	26		41	27		44	28		47	29
+				50	30		53	31		56	32		60	33		64	34
+				68	35		72	36		77	36		82	36		87	36
+				93	36		98	36		105	36		111	36		119	36
+				126	36		134	36		143	36		152	36		162	36
+				172	37		183	38		195	39		207	40		220	41
+				234	42		249	43		265	43		282	43		300	43
+			>;
+
+			/*
+			 * ************************************************************************************************************************
+			 * ACL command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			 samsung,panel-aclcont-cmds-list = [
+			 		29 01 00 00 00 00 03 F0 5A 5A
+					29 01 00 00 00 00 02 B5 51
+					29 01 00 00 00 00 02 55 01
+					29 01 00 00 00 00 03 F0 A5 A5
+			];
+
+
+			samsung,panel-acl-cmds-list = [
+					29 01 00 00 00 00 02 55 00
+					29 01 00 00 00 00 02 55 01		/* ACL 30% */
+					29 01 00 00 00 00 02 55 02		/* default ACL 15% */
+					29 01 00 00 00 00 02 55 03];	/* ACL 50% */
+
+			samsung,panel-acl-off-cmds = [
+								29 01 00 00 00 00 02 B5 41   /* ACL OFF - 41 (16Frame Averaging) */
+								29 01 00 00 00 00 02 55 00];/*off, b5<-0x41*/
+
+			/* bl_level , Index in acl command list */
+			samsung,panel-acl-map-table =  <
+				4	2		5	2		6	2		7	2		8	2
+				9	2		10	2		11	2		12	2		13	2
+				14	2		15	2		16	2		17	2		19	2
+				20	2		21	2		22	2		24	2		25	2
+				27	2		29	2		30	2		32	2		34	2
+				37	2		39	2		41	2		44	2		47	2
+				50	2		53	2		56	2		60	2		64	2
+				68	2		72	2		77	2		82	2		87	2
+				93	2		98	2		105	2		111	2		119	2
+				126	2		134	2		143	2		152	2		162	2
+				172	2		183	2		195	2		207	2		220	2
+				234	2		249	2		265	2		282	2		300	2
+				>;
+
+			/*
+			 * ************************************************************************************************************************
+			 * ELVSS(ACL Off) command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-elvss-cmds-list = [
+				29 01 00 00 00 00 03 b6 9c 0F /* 0 DEFAULT_ELVSS(0x0f) */
+				29 01 00 00 00 00 03 b6 9c 10 /* 1 DEFAULT_ELVSS(0x10) */
+				29 01 00 00 00 00 03 b6 9c 11 /* 2 DEFAULT_ELVSS(0x11) */
+				29 01 00 00 00 00 03 b6 9c 12 /* 3 DEFAULT_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 9c 13 /* 4 DEFAULT_ELVSS(0x13) */
+			];
+
+			/*
+			 * ************************************************************************************************************************
+			 * SMART ACL(ACL On) ELVSS command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-smart-acl-elvss-cmds-list = [
+				29 01 00 00 00 00 03 b6 8c 10/* 0 SMART_ACL_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 8c 11/* 1 SMART_ACL_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 8c 12/* 2 SMART_ACL_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 8c 13/* 3 SMART_ACL_ELVSS(0x11) */
+				29 01 00 00 00 00 03 b6 8c 14/* 4 SMART_ACL_ELVSS(0x10) */
+			];
+
+			/* bl_level, Index in elvss command list */
+			/* bl_level, Index in elvss command list */
+			samsung,panel-smart-acl-elvss-map-table = <
+				4	4		5	4		6	4		7	4		8	4
+				9	4		10	4		11	4		12	4		13	4
+				14	4		15	4		16	4		17	4		19	4
+				20	4		21	4		22	4		24	4		25	4
+				27	4		29	4		30	4		32	4		34	4
+				37	4		39	4		41	4		44	4		47	4
+				50	4		53	4		56	4		60	4		64	4
+				68	4		72	4		77	4		82	4		87	4
+				93	4		98	4		105	4		111	4		119	4
+				126	4		134	4		143	4		152	4		162	4
+				172	4		183	4		195	4		207	4		220	4
+				234	4		249	3		265	2		282	1		300	0
+					>;
+			/*
+			 * ************************************************************************************************************************
+			 * candela to index mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-candella-mapping-table = <
+			/*<idx>	  <from>  <till> <candella> */
+				0		0		4		4
+				1		5		5		5
+				2		6		6		6
+				3		7		7		7
+				4		8		8		8
+				5		9		9		9
+				6		10		10		10
+				7		11		11		11
+				8		12		12		12
+				9		13		13		13
+				10		14		14		14
+				11		15		15		15
+				12		16		16		16
+				13		17		18		17
+				14		19		19		19
+				15		20		20		20
+				16		21		21		21
+				17		22		23		22
+				18		24		24		24
+				19		25		26		25
+				20		27		28		27
+				21		29		29		29
+				22		30		30		30
+				23		31		31		32
+				24		32		33		34
+				25		34		36		37
+				26		37		37		39
+				27		38		39		41
+				28		40		41		44
+				29		42		44		47
+				30		45		46		50
+				31		47		49		53
+				32		50		51		56
+				33		52		55		60
+				34		56		58		64
+				35		59		61		68
+				36		62		65		72
+				37		66		69		77
+				38		70		73		82
+				39		74		77		87
+				40		78		82		93
+				41		83		86		98
+				42		87		92		105
+				43		93		97		111
+				44		98		104		119
+				45		105		110		126
+				46		111		116		134
+				47		117		124		143
+				48		125		131		152
+				49		132		140		162
+				50		141		148		172
+				51		149		157		183
+				52		158		167		195
+				53		168		177		207
+				54		178		188		220
+				55		189		200		234
+				56		201		212		249
+				57		213		225		265
+				58		226		242		282
+				59		243		255		300
+				>;
+	};
+
+
+	/* DSI_1 */
+	dsi_dual_2560p_cmd_s6e3ha1_left: mdss_dsi_samsung_dual_2560p_cmd_s6e3ha1_left{
+		qcom,mdss-dsi-panel-name = "samsung,mdss-amoled-dsi-panel";
+		label = "samsung amoled wqxga command mode dsi S6E3HA1 left panel";
+		status = "disable";
+
+		qcom,mdss-dsi-panel-controller = <&mdss_dsi1>;
+		qcom,mdss-dsi-panel-type = "dsi_cmd_mode";
+		qcom,mdss-pan-dest = "display_2";
+
+		qcom,rst-gpio = <&pm8941_gpios 9 0>;
+		qcom,te-gpio = <&msmgpio 12 0>;
+
+		qcom,mdss-pan-broadcast-mode = <1>;
+		qcom,cont-splash-enabled = <1>;
+
+		qcom,mdss-pan-res = <800 2560>;
+		qcom,mdss-pan-size = <112 180>; /* <Width> <Height> real size of panel in mm */
+		qcom,mdss-pan-bpp = <24>;
+
+		qcom,mdss-clk-rate=<850000000>;
+
+		qcom,mdss-vsync-enable=<1>;
+		qcom,mdss-hw-vsync-mode=<1>;
+		qcom,mdss-pan-insert-dcs-cmd=<1>;
+		qcom,mdss-pan-wr-mem-continue=<0x3c>;
+		qcom,mdss-pan-wr-mem-start=<0x2c>;
+		qcom,mdss-pan-te-sel=<1>;
+		qcom,mdss-pan-clk-rate=<850000000>;
+
+		qcom,mdss-pan-porch-values = <36 12 132 10 2 32>; /* <HBP> <HPW> <HFP> <VBP> <VPW> <VFP> */
+
+		qcom,mdss-pan-underflow-clr = <0xff>;
+		qcom,mdss-pan-bl-ctrl = "bl_ctrl_dcs_cmds";
+		qcom,mdss-pan-bl-levels = <1 255>;
+		qcom,mdss-pan-dsi-mode = <1>;
+		qcom,mdss-pan-dsi-h-pulse-mode = <0>;
+		qcom,mdss-pan-dsi-h-power-stop = <0 0 0>;
+		qcom,mdss-pan-dsi-bllp-power-stop = <1 1>;
+		qcom,mdss-pan-dsi-traffic-mode = <2>;
+		qcom,mdss-pan-dsi-dst-format = <8>;
+		qcom,mdss-pan-dsi-vc = <0>;
+		qcom,mdss-pan-dsi-rgb-swap = <0>;
+		qcom,mdss-force-clk-lane-hs = <0>;
+		samsung,mdss-early-lcd-on = <1>;
+		qcom,mdss-pan-dsi-data-lanes = <1 1 1 1>;
+		qcom,mdss-pan-dsi-dlane-swap = <0>;
+		qcom,mdss-pan-dsi-t-clk = <0x17 0x02>;
+		qcom,mdss-pan-dsi-stream = <0>;
+		qcom,mdss-pan-dsi-mdp-tr = <0x0>;
+		qcom,mdss-pan-dsi-dma-tr = <0x04>;
+		qcom,mdss-pan-dsi-frame-rate = <60>;
+		qcom,mdss-pan-dsi-tx-eot-append = <1>;
+		qcom,panel-phy-regulatorSettings = [07 09 03 00  /* Regualotor settings */
+						    20 00 01];
+		qcom,panel-phy-timingSettings = [DA 3A 26 00 6A 6E 2C 3E 2F 03 04 00];
+
+		qcom,panel-phy-strengthCtrl = [ff 06];		/*!!!! */
+		qcom,panel-phy-bistCtrl = [00 00 b1 ff
+                                              00 00];   /*!!!! BIST Ctrl settings */
+		qcom,panel-phy-laneConfig = [
+			00 00 00 00 00 00 00 01 97 /* lane0 config */
+			00 00 00 00 05 00 00 01 97 /* lane1 config */
+			00 00 00 00 0a 00 00 01 97 /* lane2 config */
+			00 00 00 00 0f 00 00 01 97 /* lane3 config */
+			00 c0 00 00 00 00 00 01 bb]; /* Clk ln config */
+
+		qcom,panel-display-on-seq = [
+				/* Interface Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 03 F2 03 40 		/* Dual DSI */
+				29 01 00 00 00 00 02 F9 0A 			/* MIC Control */
+				29 01 00 00 00 00 02 B9 00			/* PSR Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				/* Sleep Out */
+				05 01 00 00 78 00 02 11 00  		/* Sleep out = Needs 120ms */
+
+				/* Interface Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 03 F2 03 40 		/* Dual DSI */
+				29 01 00 00 00 00 02 F9 0A 			/* MIC Control */
+				29 01 00 00 00 00 02 B9 00			/* PSR Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				/* TE On */
+				29 01 00 00 00 00 02 35 00
+
+				/* TSP TE(Hsync) Control
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 02 BD 85
+				29 01 00 00 00 00 03 F0 A5 A5 		/* TEST KEY Disable */
+
+				/* PenTile Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 05 C0 00 0F D8 D8	/* PenTile Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				/* POC & ETC Setting */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 03 FC 5A 5A 		/* TEST KEY(LEVEL3) Enable */
+				29 01 00 00 00 00 02 B0 20			/* Global Para 33rd */
+				29 01 00 00 00 00 02 FE 08			/* POC Setting */
+				29 01 00 00 00 00 05 FF 00 00 00 08	/* Setup Margin */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+				29 01 00 00 00 00 03 FC A5 A5		/* TEST KEY(LEVEL3) Disable */
+
+				/* Brightness condition set */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 22				/* Gamma 2.2 Setting */
+					CA 01 00 01 00 01 00 80
+					80 80 80 80 80 80 80 80
+					80 80 80 80 80 80 80 80
+					80 80 80 80 80 80 80 00
+					00 00
+				29 01 00 00 00 00 03 B2 00 0A 		/* AID 0% */
+				29 01 00 00 00 00 03 B6 9C 0F		/* ELVSS Setting */
+				23 01 00 00 00 00 02 F7 03			/* update */
+				29 01 00 00 00 00 03 F0 A5 A5 		/* TEST KEY Disable */
+
+				/* ACL Control */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 02 B5 41			/* Frame Avg.(16, ACL OFF) */
+				29 01 00 00 00 00 02 55 00			/* POC Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+
+				/* ELVSS Temp Compensation */
+				29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+				29 01 00 00 00 00 02 B0 05			/* Global Para 6th */
+				29 01 00 00 00 00 02 B8 19			/* TSET(Default:0x19) Setting */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+			];
+		qcom,on-cmds-dsi-state = "dsi_hs_mode";
+		qcom,panel-display-off-seq = [
+				05 01 00 00 0A 00 02 28 00			/* wait 10ms(0x0A) */
+				05 01 00 00 78 00 02 10 00			/* wait 120ms(0x78) */
+		];
+		qcom,off-cmds-dsi-state = "dsi_hs_mode";
+
+		/*used for only fhd evt1 panel and over for*/
+		qcom,panel-hsync-on-seq = [
+				29 01 00 00 00 00 03 F0 5A 5A		/* TEST KEY Enable */
+				29 01 00 00 00 00 04 BD 85 02 0C	/* Touch Hsync Enable */
+				29 01 00 00 00 00 03 F0 A5 A5		/* TEST KEY Disable */
+			];
+
+		/*
+			the last byte in read commands  represent READ LENGH,
+			like below  READ LENGH = 0x21
+		 */
+		 	samsung,panel-test-key-enable-cmds 	= [ 29 01 00 00 00 00 03 F0 5A 5A];
+		 	samsung,panel-test-key-disable-cmds = [ 29 01 00 00 00 00 03 F0 A5 A5];
+
+			samsung,panel-nv-mtp-read-cmds		= [ 06 01 00 00 00 00 01 c8 21 00];
+			samsung,panel-nv-mtp-read-hbm-cmds	= [ 06 01 00 00 00 00 01 c8 07 21];	/* read C8 34~40th , 33=0x21*/
+			samsung,panel-nv-mtp-read-hbm2-cmds	= [ 06 01 00 00 00 00 01 c8 0F 48];	/* read C8 73~87th , 72=0x48*/
+			samsung,panel-nv-mdnie-read-cmds	= [ 06 01 00 00 00 00 01 A1 04 00];
+			samsung,panel-nv-mtp-read-elvss-cmds	= [ 06 01 00 00 00 00 01 b6 01 14];	/* read C6 21th , 20=0x14*/
+			samsung,panel-nv-read-cmds			= [ 06 01 00 00 00 00 01 c8 21 00];
+			samsung,panel-nv-read-enable-cmds = [
+								29 01 00 00 00 00 03 f0 5a 5a
+								29 01 00 00 00 00 03 fc 5a 5a ];
+			samsung,panel-nv-read-disable-cmds = [ 29 01 00 00 00 00 03 f0 a5 a5 ];
+
+			/* the last byte in all read commands will represent READ LENGH */
+			samsung,panel-manufacture-id-read-cmds = [
+								06 01 00 00 00 00 01 da 01 00
+								06 01 00 00 00 00 01 db 01 00
+								06 01 00 00 00 00 01 dc 01 00];
+
+			samsung,panel-manufacture-date-read-cmds = [ 06 01 00 00 00 00 01 c8 02 28];	/* read C8 41~42th , 40=0x28*/
+
+			samsung,panel-ddi-id-read-cmds = [ 06 01 00 00 00 00 01 d6 05 00];	/* read D6 1~5th */
+
+			samsung,panel-ldi-debug-read-cmds = [
+								06 01 00 00 00 00 01 0A 01 00
+								06 01 00 00 00 00 01 0E 01 00
+								06 01 00 00 00 00 01 EA 08 00];
+
+			samsung,panel-ldi-fps-write-cmds = [
+								29 01 00 00 00 00 02 B0 1A    /* Global Para. (27para) */
+								29 01 00 00 00 00 02 D7 00];
+
+			samsung,panel-ldi-fps-read-cmds = [
+								06 01 00 00 00 00 01 D7 01 1A]; /* read D7 27th , 27=0x1B*/
+			samsung,panel-ldi-partial-disp-on = [
+								29 01 00 00 00 00 05 30 00 C8 03 20
+								29 01 00 00 00 00 02 12 00 ];
+			samsung,panel-ldi-partial-disp-off = [29 01 00 00 00 00 02 13 00];
+
+			qcom,panel-display-on-cmds	= [05 01 00 00 32 00 02 29 00];
+			qcom,panel-display-off-cmds	= [05 01 00 00 32 00 02 28 00];
+
+			samsung,panel-elvss-lowtemp-cmds-list = [
+								29 01 00 00 00 00 02 B0 05
+								29 01 00 00 00 00 02 B8 00];	/* Low Temperature Command */
+
+			samsung,panel-gamma-cmds-list = [
+					29 01 00 00 00 00 22            /* Brightness Condition Set - Gamma 2.2 Setting*/
+						CA 01 00 01 00 01 00 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 00
+						00 00
+					29 01 00 00 00 00 02 F7 03		/* Gamma, LTPS(AID) update */
+					29 01 00 00 00 00 02 F7 00
+				];
+
+			samsung,panel-gamma-hbm-cmds-list = [
+						29 01 00 00 00 00 03 F0 5A 5A 		/* TEST KEY Enable */
+						29 01 00 00 00 00 22            /* Brightness Condition Set for HBM - Gamma 2.2 Setting*/
+						CA 01 00 01 00 01 00 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 80
+						80 80 80 80 80 80 80 00
+						00 00
+				];
+			samsung,panel-etc-hbm-cmds-list = [
+						29 01 00 00 00 00 03 B2 00 0A	/* AID setting */
+						29 01 00 00 00 00 03 B6 8C 0F	/* MPS/ELVSS setting */
+						29 01 00 00 00 00 02 B0 14	/* Global para */
+						29 01 00 00 00 00 02 B6 00	/* ELVSS setting */
+						29 01 00 00 00 00 02 B5 51	/* OPR Average */
+						29 01 00 00 00 00 02 55 01	/* ACL ON */
+						29 01 00 00 00 00 02 F7 03	/* gamma update */
+						29 01 00 00 00 00 03 F0 A5 A5	/* TEST KEY Disable */
+				];
+			/*
+			 * ************************************************************************************************************************
+			 * AID command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-aid-cmds-list = [
+				29 01 00 00 00 00 03 B2 09 BE  /* 0  samsung_brightness_aor_ 4cd_96.8 */
+				29 01 00 00 00 00 03 B2 09 AA  /* 1  samsung_brightness_aor_ 5cd_96.0 */
+				29 01 00 00 00 00 03 B2 09 98  /* 2  samsung_brightness_aor_ 6cd_95.3 */
+				29 01 00 00 00 00 03 B2 09 85  /* 3  samsung_brightness_aor_ 7cd_94.6 */
+				29 01 00 00 00 00 03 B2 09 73  /* 4  samsung_brightness_aor_ 8cd_93.9 */
+				29 01 00 00 00 00 03 B2 09 5F  /* 5  samsung_brightness_aor_ 9cd_93.1 */
+				29 01 00 00 00 00 03 B2 09 4D  /* 6  samsung_brightness_aor_10cd_92.4 */
+				29 01 00 00 00 00 03 B2 09 38  /* 7  samsung_brightness_aor_11cd_91.6 */
+				29 01 00 00 00 00 03 B2 09 25  /* 8  samsung_brightness_aor_12cd_90.9 */
+				29 01 00 00 00 00 03 B2 09 11  /* 9  samsung_brightness_aor_13cd_90.1 */
+
+				29 01 00 00 00 00 03 B2 08 FE  /* 10 samsung_brightness_aor_14cd_89.4 */
+				29 01 00 00 00 00 03 B2 08 EA  /* 11 samsung_brightness_aor_15cd_88.6 */
+				29 01 00 00 00 00 03 B2 08 D7  /* 12 samsung_brightness_aor_16cd_87.8 */
+				29 01 00 00 00 00 03 B2 08 C3  /* 13 samsung_brightness_aor_17cd_87.1 */
+				29 01 00 00 00 00 03 B2 08 9B  /* 14 samsung_brightness_aor_19cd_85.5 */
+				29 01 00 00 00 00 03 B2 08 87  /* 15 samsung_brightness_aor_20cd_84.7 */
+				29 01 00 00 00 00 03 B2 08 73  /* 16 samsung_brightness_aor_21cd_84.0 */
+				29 01 00 00 00 00 03 B2 08 5F  /* 17 samsung_brightness_aor_22cd_83.2 */
+				29 01 00 00 00 00 03 B2 08 36  /* 18 samsung_brightness_aor_24cd_81.6 */
+				29 01 00 00 00 00 03 B2 08 22  /* 19 samsung_brightness_aor_25cd_80.8 */
+
+				29 01 00 00 00 00 03 B2 07 F9  /* 20 samsung_brightness_aor_27cd_79.2 */
+				29 01 00 00 00 00 03 B2 07 D1  /* 21 samsung_brightness_aor_29cd_77.7 */
+				29 01 00 00 00 00 03 B2 07 BB  /* 22 samsung_brightness_aor_30cd_76.8 */
+				29 01 00 00 00 00 03 B2 07 90  /* 23 samsung_brightness_aor_32cd_75.2 */
+				29 01 00 00 00 00 03 B2 07 66  /* 24 samsung_brightness_aor_34cd_73.5 */
+				29 01 00 00 00 00 03 B2 07 26  /* 25 samsung_brightness_aor_37cd_71.0 */
+
+				29 01 00 00 00 00 03 B2 06 FC  /* 26 samsung_brightness_aor_39cd_69.4 */
+				29 01 00 00 00 00 03 B2 06 D1  /* 27 samsung_brightness_aor_41cd_67.7 */
+				29 01 00 00 00 00 03 B2 06 A4  /* 28 samsung_brightness_aor_44cd_66.0 */
+				29 01 00 00 00 00 03 B2 06 4A  /* 29 samsung_brightness_aor_47cd_62.5 */
+				29 01 00 00 00 00 03 B2 06 07  /* 30 samsung_brightness_aor_50cd_59.9 */
+
+				29 01 00 00 00 00 03 B2 05 C6  /* 31 samsung_brightness_aor_53cd_57.4 */
+				29 01 00 00 00 00 03 B2 05 7F  /* 32 samsung_brightness_aor_56cd_54.6 */
+				29 01 00 00 00 00 03 B2 05 22  /* 33 samsung_brightness_aor_60cd_51.0 */
+
+				29 01 00 00 00 00 03 B2 04 C5  /* 34 samsung_brightness_aor_64cd_47.4 */
+				29 01 00 00 00 00 03 B2 04 65  /* 35 samsung_brightness_aor_68cd_43.7 */
+
+				29 01 00 00 00 00 03 B2 03 FE  /* 36 samsung_brightness_aor_72_162cd_39.7 */
+
+				29 01 00 00 00 00 03 B2 03 FE  /* 37 samsung_brightness_aor_172cd_39.7 */
+				29 01 00 00 00 00 03 B2 03 7B  /* 38 samsung_brightness_aor_183cd_34.6 */
+				29 01 00 00 00 00 03 B2 02 E5  /* 39 samsung_brightness_aor_195cd_28.8 */
+				29 01 00 00 00 00 03 B2 02 46  /* 40 samsung_brightness_aor_207cd_22.6 */
+				29 01 00 00 00 00 03 B2 01 99  /* 41 samsung_brightness_aor_220cd_15.9 */
+				29 01 00 00 00 00 03 B2 00 D5  /* 42 samsung_brightness_aor_234cd_8.3 */
+				29 01 00 00 00 00 03 B2 00 0A  /* 43 samsung_brightness_aor_249_300cd_0.4 */
+			];
+
+			/* bl_level, Index in aid command list */
+			samsung,panel-aid-map-table = <
+				4	0		5	1		6	2		7	3		8	4
+				9	5		10	6		11	7		12	8		13	9
+				14	10		15	11		16	12		17	13		19	14
+				20	15		21	16		22	17		24	18		25	19
+				27	20		29	21		30	22		32	23		34	24
+				37	25		39	26		41	27		44	28		47	29
+				50	30		53	31		56	32		60	33		64	34
+				68	35		72	36		77	36		82	36		87	36
+				93	36		98	36		105	36		111	36		119	36
+				126	36		134	36		143	36		152	36		162	36
+				172	37		183	38		195	39		207	40		220	41
+				234	42		249	43		265	43		282	43		300	43
+			>;
+
+			/*
+			 * ************************************************************************************************************************
+			 * ACL command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			 samsung,panel-aclcont-cmds-list = [
+			 		29 01 00 00 00 00 03 F0 5A 5A
+					29 01 00 00 00 00 02 B5 51
+					29 01 00 00 00 00 02 55 01
+					29 01 00 00 00 00 03 F0 A5 A5
+			];
+
+
+			samsung,panel-acl-cmds-list = [
+					29 01 00 00 00 00 02 55 00
+					29 01 00 00 00 00 02 55 01		/* ACL 30% */
+					29 01 00 00 00 00 02 55 02		/* default ACL 15% */
+					29 01 00 00 00 00 02 55 03];	/* ACL 50% */
+
+			samsung,panel-acl-off-cmds = [
+								29 01 00 00 00 00 02 B5 41   /* ACL OFF - 41 (16Frame Averaging) */
+								29 01 00 00 00 00 02 55 00];/*off, b5<-0x41*/
+
+			/* bl_level , Index in acl command list */
+			samsung,panel-acl-map-table =  <
+				4	2		5	2		6	2		7	2		8	2
+				9	2		10	2		11	2		12	2		13	2
+				14	2		15	2		16	2		17	2		19	2
+				20	2		21	2		22	2		24	2		25	2
+				27	2		29	2		30	2		32	2		34	2
+				37	2		39	2		41	2		44	2		47	2
+				50	2		53	2		56	2		60	2		64	2
+				68	2		72	2		77	2		82	2		87	2
+				93	2		98	2		105	2		111	2		119	2
+				126	2		134	2		143	2		152	2		162	2
+				172	2		183	2		195	2		207	2		220	2
+				234	2		249	2		265	2		282	2		300	2
+				>;
+			/*
+			 * ************************************************************************************************************************
+			 * ELVSS(ACL Off) command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-elvss-cmds-list = [
+				29 01 00 00 00 00 03 b6 9c 0F /* 0 DEFAULT_ELVSS(0x0f) */
+				29 01 00 00 00 00 03 b6 9c 10 /* 1 DEFAULT_ELVSS(0x10) */
+				29 01 00 00 00 00 03 b6 9c 11 /* 2 DEFAULT_ELVSS(0x11) */
+				29 01 00 00 00 00 03 b6 9c 12 /* 3 DEFAULT_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 9c 13 /* 4 DEFAULT_ELVSS(0x13) */
+			];
+
+			/*
+			 * ************************************************************************************************************************
+			 * SMART ACL(ACL On) ELVSS command list and mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-smart-acl-elvss-cmds-list = [
+				29 01 00 00 00 00 03 b6 8c 10/* 0 SMART_ACL_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 8c 11/* 1 SMART_ACL_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 8c 12/* 2 SMART_ACL_ELVSS(0x12) */
+				29 01 00 00 00 00 03 b6 8c 13/* 3 SMART_ACL_ELVSS(0x11) */
+				29 01 00 00 00 00 03 b6 8c 14/* 4 SMART_ACL_ELVSS(0x10) */
+			];
+
+			/* bl_level, Index in elvss command list */
+			/* bl_level, Index in elvss command list */
+			samsung,panel-smart-acl-elvss-map-table = <
+				4	4		5	4		6	4		7	4		8	4
+				9	4		10	4		11	4		12	4		13	4
+				14	4		15	4		16	4		17	4		19	4
+				20	4		21	4		22	4		24	4		25	4
+				27	4		29	4		30	4		32	4		34	4
+				37	4		39	4		41	4		44	4		47	4
+				50	4		53	4		56	4		60	4		64	4
+				68	4		72	4		77	4		82	4		87	4
+				93	4		98	4		105	4		111	4		119	4
+				126	4		134	4		143	4		152	4		162	4
+				172	4		183	4		195	4		207	4		220	4
+				234	4		249	3		265	2		282	1		300	0
+					>;
+			/*
+			 * ************************************************************************************************************************
+			 * candela to index mappings
+			 * ************************************************************************************************************************
+			 */
+			samsung,panel-candella-mapping-table = <
+			/*<idx>	  <from>  <till> <candella> */
+				0		0		4		4
+				1		5		5		5
+				2		6		6		6
+				3		7		7		7
+				4		8		8		8
+				5		9		9		9
+				6		10		10		10
+				7		11		11		11
+				8		12		12		12
+				9		13		13		13
+				10		14		14		14
+				11		15		15		15
+				12		16		16		16
+				13		17		18		17
+				14		19		19		19
+				15		20		20		20
+				16		21		21		21
+				17		22		23		22
+				18		24		24		24
+				19		25		26		25
+				20		27		28		27
+				21		29		29		29
+				22		30		30		30
+				23		31		31		32
+				24		32		33		34
+				25		34		36		37
+				26		37		37		39
+				27		38		39		41
+				28		40		41		44
+				29		42		44		47
+				30		45		46		50
+				31		47		49		53
+				32		50		51		56
+				33		52		55		60
+				34		56		58		64
+				35		59		61		68
+				36		62		65		72
+				37		66		69		77
+				38		70		73		82
+				39		74		77		87
+				40		78		82		93
+				41		83		86		98
+				42		87		92		105
+				43		93		97		111
+				44		98		104		119
+				45		105		110		126
+				46		111		116		134
+				47		117		124		143
+				48		125		131		152
+				49		132		140		162
+				50		141		148		172
+				51		149		157		183
+				52		158		167		195
+				53		168		177		207
+				54		178		188		220
+				55		189		200		234
+				56		201		212		249
+				57		213		225		265
+				58		226		242		282
+				59		243		255		300
+				>;
+	};
+};
+

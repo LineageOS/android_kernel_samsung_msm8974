@@ -1,0 +1,17 @@
+#
+# USB Host notify configuration
+#
+
+config USB_HOST_NOTIFY
+	boolean "USB Host notify Driver"
+	depends on USB
+	help
+	  Android framework needs uevents for usb host operation.
+	  Host notify Driver serves uevent format
+	  that is used by usb host or otg.
+
+config USB_DEBUG_DETEAILED_LOG
+	boolean "USB detailed log for debugging"
+	depends on USB
+	help
+	  Add detailed log for debugging.

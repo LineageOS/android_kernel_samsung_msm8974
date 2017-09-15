@@ -1,0 +1,100 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&mdss_mdp {
+	dsi_himax_hd_vid_01: qcom,mdss_dsi_himax_qhd_video {
+		qcom,mdss-dsi-panel-name = "Himax qHD video mode dsi SEC_S6D2AA0X panel";
+		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
+		qcom,mdss-dsi-panel-type = "dsi_video_mode";
+		qcom,oled-esd-gpio = <&msmgpio 16 0>;
+		qcom,mdss-dsi-panel-destination = "display_1";
+		qcom,mdss-dsi-panel-framerate = <60>;
+		qcom,mdss-dsi-virtual-channel-id = <0>;
+		qcom,mdss-dsi-stream = <0>;
+		qcom,mdss-dsi-panel-width = <540>;
+		qcom,mdss-dsi-panel-height = <960>;
+		qcom,mdss-pan-size = <69 124>; /* <Width> <Height> real size of panel in mm */
+		qcom,mdss-dsi-h-front-porch = <25>;
+		qcom,mdss-dsi-h-back-porch = <60>;
+		qcom,mdss-dsi-h-pulse-width = <5>;
+		qcom,mdss-dsi-h-sync-skew = <0>;
+		qcom,mdss-dsi-v-back-porch = <6>;
+		qcom,mdss-dsi-v-front-porch = <9>;
+		qcom,mdss-dsi-v-pulse-width = <2>;
+		qcom,mdss-dsi-h-left-border = <0>;
+		qcom,mdss-dsi-h-right-border = <0>;
+		qcom,mdss-dsi-v-top-border = <0>;
+		qcom,mdss-dsi-v-bottom-border = <0>;
+		qcom,mdss-dsi-bpp = <24>;
+		qcom,mdss-dsi-color-order = <0>;
+		qcom,mdss-dsi-underflow-color = <0xff>;
+		qcom,mdss-dsi-border-color = <0>;
+		qcom,mdss-dsi-mdp-trigger = <0x00>;
+		qcom,mdss-dsi-dma-trigger = <0x04>;
+		qcom,mdss-dsi-bl-min-level = <1>;
+		qcom,mdss-dsi-bl-max-level = <255>;
+		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
+		qcom,mdss-pan-dsi-t-clk-pre = <0x1b>;
+		qcom,mdss-pan-dsi-t-clk-post = <0x04>;
+		qcom,mdss-dsi-panel-timings = [8A 33 14 00 45 4A 19 37 23 03 04 00];
+		qcom,mdss-dsi-lane-0-state;
+		qcom,mdss-dsi-lane-1-state;
+		qcom,mdss-dsi-bllp-eof-power-mode;
+		qcom,mdss-dsi-bllp-power-mode;
+		qcom,mdss-dsi-traffic-mode = <2>;
+		qcom,mdss-dsi-lane-map = <0>;
+		qcom,mdss-dsi-h-sync-pulse = <0>;
+		qcom,mdss-dsi-panel-clock-rate = <450000000>;
+
+
+		qcom,mdss-dsi-on-command = [39 01 00 00 01 00 04 B9	FF 83 89
+					39 01 00 00 01 00 02 C6 08
+					39 01 00 00 01 00 14 B1 00 00 07 EF 5D 05 11 B4 F1 36 3E 22 22 43 01
+						5A F2 00 00
+					39 01 00 00 01 00 08 B2 00 00 78 04 07 3F 30
+					39 01 00 00 01 00 20 B4 80 08 00 32 10 00 32 13 C6 00 00 00 37 02 45
+						04 37 02 4A 02 58 5C 01 02 3C 02 3C 14 50 5C 0A
+					39 01 00 00 01 00 31 D5 00 00 00 00 01 00 00 00 00 60 88 88 99 88 01
+						45 88 88 01 45 23 67 88 88 88 88 88 88 88 88 88
+						88 99 54 10 88 88 76 32 54 10 88 88 88 88 88 88
+						88
+					39 01 00 00 01 00 23 E0 00 07 0E 0C 0E 32 1E 2C 08 0E 12 16 18 16 15
+						1A 1A 00 07 0E 0C 0E 32 1E 2C 08 0E 12 16 18 16
+						15 1A 1A
+					39 01 00 00 01 00 80 C1 01 05 07 0F 18 1E 27 2E 33 3A 41 48 51 5B 64
+						6D 76 7E 86 8F 98 A1 A9 B2 BA C3 CB D2 DA E3 E9
+						F2 F8 FF 38 00 1E 78 BE 15 93 A6 00 07 10 16 19
+						1E 26 2D 32 37 3E 46 4E 57 60 68 70 78 80 88 91
+						9B A2 AB B4 BC C5 CB D2 DA E3 EA F4 FC 9B 08 76
+						65 7F 70 44 86 80 05 07 10 15 1B 22 29 2D 31 35
+						3C 42 48 50 58 60 68 70 77 7F 87 8F 97 9F A7 B0
+						B9 C2 CB D2 DD E3 E6 25 97 B2 DA CF 5F E1 23 00
+					39 01 00 00 01 00 03 C0 43 17
+					39 01 00 00 01 00 02 CC 0E
+					39 01 00 00 01 00 05 B6 00 7E 00 7E
+					39 01 00 00 01 00 03 C7 00 00
+					05 01 00 00 78 00 02 11 00 /* Sleep out */
+					05 01 00 00 0A 00 02 29 00
+					39 01 00 00 05 00 02 51 FF
+					39 01 00 00 05 00 02 53 24
+	/* Display On */
+					];
+		samsung,panel-manufacture-id-read-cmds = [06 01 00 00 00 00 01 da 01
+							06 01 00 00 00 00 01 db 01
+							06 01 00 00 00 00 01 dc 01];
+
+		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
+		qcom,mdss-dsi-off-command = [05 01 00 00 32 00 02 28 00
+					05 01 00 00 78 00 02 10 00];
+		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
+	};
+};

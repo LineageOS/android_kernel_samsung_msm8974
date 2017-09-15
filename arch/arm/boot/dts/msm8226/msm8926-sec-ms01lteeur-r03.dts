@@ -1,0 +1,51 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *   
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+
+/dts-v1/;
+/include/ "msm8926.dtsi"
+/include/ "msm8926-sec-ms01lteeur-r03.dtsi"
+
+/ {
+	model = "[SM-G7105 MS01-LTE-EUR]Rev-03 8926 MTP";
+	compatible = "qcom,msm8926-mtp", "qcom,msm8926", "qcom,mtp";
+	qcom,msm-id = <200 8 0x10005>;
+};
+
+&soc {
+	 i2c@f9925000 { /* BLSP-1 QUP-3 */
+                cell-index = <3>;
+                compatible = "qcom,i2c-qup";
+                reg = <0xf9925000 0x1000>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+                reg-names = "qup_phys_addr";
+                interrupts = <0 97 0>;
+                interrupt-names = "qup_err_intr";
+                qcom,i2c-bus-freq = <400000>; /* 400 khz frequency needed for SEC_NFC */
+                qcom,i2c-src-freq = <19200000>;
+        };
+
+	earjack {
+		/*Override GPIO properties*/
+		qcom,earjack-detect-gpio = <&msmgpio 69 0>;
+		qcom,earjack-sendend-gpio = <&msmgpio 35 0>;
+		/*Override det and btn zone ADC Values*/
+		det-zones-list = <&det_zones 3 10000 10 0>,
+                             <&det_zones 600 10000 10 0>,
+                             <&det_zones 601 10000 10 1>,
+                             <&det_zones 9999 10000 10 1>;
+            but-zones-list = <&but_zones 0 0 213>,
+                             <&but_zones 1 214 310>,
+                             <&but_zones 2 311 550>;
+	};
+};

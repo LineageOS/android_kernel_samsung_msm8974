@@ -1,0 +1,76 @@
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+
+	i2c@f9923000 {  /*BLSP 1*/
+		isdb_fc8300@58 {
+			compatible = "isdb,isdb_fc8300";
+			reg = <0x58>;
+		};
+	};
+
+	isdbt_fc8300_data {
+		compatible = "isdb_fc8300_pdata";
+		qcom,isdb-gpio-pwr-en = <&expander_gpios 5 0>;
+		qcom,isdb-gpio-rst = <&expander_gpios 2 0>;
+		qcom,isdb-gpio-irq = <&pma8084_gpios 11 0>;
+		qcom,isdb-gpio-i2c_sda = <&msmgpio 2 0>;
+		qcom,isdb-gpio-i2c_scl = <&msmgpio 3 0>;
+		qcom,isdb-gpio-spi_do = <&msmgpio 49 0>;
+		qcom,isdb-gpio-spi_di = <&msmgpio 50 0>;
+		qcom,isdb-gpio-spi_cs = <&msmgpio 51 0>;
+		qcom,isdb-gpio-spi_clk = <&msmgpio 52 0>;
+	};
+
+	i2c_99: i2c@f9965000 {
+		status = "disabled";
+	};
+	
+	aliases {
+		spi9 = &spi_9;
+	};
+	
+	spi_9: spi@f9965000 {
+		compatible = "qcom,spi-qup-v2";
+		reg = <0xf9965000 0x1000>, <0xf9944000 0x19000>;
+		reg-names = "spi_physical", "spi_bam_physical";
+		interrupts = <0 103 0>, <0 239 0>;
+		interrupt-names = "spi_irq", "spi_bam_irq";
+		qcom,use-bam;
+		qcom,bam-consumer-pipe-index = <16>;
+		qcom,bam-producer-pipe-index = <17>;
+		spi-max-frequency = <19200000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gpios = <&msmgpio 52 0>, /* CLK  */
+			<&msmgpio 50 0>, /* MISO */
+			<&msmgpio 49 0>; /* MOSI */
+		cs-gpios = <&msmgpio 51 0>;
+		qcom,gpio-mosi = <&msmgpio 49 0>;
+		qcom,gpio-miso = <&msmgpio 50 0>;
+		qcom,gpio-cs0  = <&msmgpio 51 0>;
+		qcom,gpio-clk  = <&msmgpio 52 0>;
+
+		qcom,infinite-mode = <0>;
+		qcom,ver-reg-exists;
+		qcom,master-id = <84>;
+
+		isdb-spi@0 {
+			compatible = "isdbt_spi_comp";
+			reg = <0>;
+			spi-max-frequency = <19200000>;
+		};
+
+	};
+
+};

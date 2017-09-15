@@ -1,0 +1,34 @@
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/include/ "dsi-panel-hx8394a-720p-video.dtsi"
+/include/ "dsi-panel-nt35590-720p-video.dtsi"
+/include/ "dsi-panel-nt35521-720p-video.dtsi"
+/include/ "dsi-panel-nt35596-1080p-video.dtsi"
+/include/ "dsi-panel-nt35590-720p-cmd.dtsi"
+/include/ "dsi-panel-ssd2080m-720p-video.dtsi"
+/include/ "dsi-panel-jdi-1080p-video.dtsi"
+/include/ "dsi_panel_sharp_720p_video-r01.dtsi"
+/include/ "dsi_panel_sharp_720p_video.dtsi"
+/include/ "dsi_panel_sdc_wxga_video.dtsi"
+/include/ "dsi_panel_sdc_wxga_video_lte.dtsi"
+/include/ "dsi_panel_tc358764_wxga_video.dtsi"
+/include/ "dsi_panel_tc358764_wxga_video-r01.dtsi"
+/include/ "dsi_panel_tc358764_wxga_video_lte.dtsi"
+/include/ "dsi-panel-himax-qhd-video.dtsi"
+/include/ "dsi-panel-himax-qhd-video-v01.dtsi"
+/include/ "dsi-panel-s6e8aa0a-720p-video.dtsi"
+/include/ "dsi-panel-magna-wvga-video.dtsi"
+/include/ "dsi-panel-boe-wxga-video.dtsi"
+/include/ "dsi_panel_himax_hx8369b_tft_wvga_video.dtsi"
+/include/ "dsi-panel-s6e88a0-qhd-video.dtsi"
+/include/ "dsi_panel_himax_hx8369b_tft_wvga_video_victor3g.dtsi"

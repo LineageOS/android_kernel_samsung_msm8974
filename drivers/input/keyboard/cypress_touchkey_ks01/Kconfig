@@ -1,0 +1,17 @@
+#
+# Cypress touchkey configuration
+#
+
+config KEYBOARD_CYPRESS_TOUCHKEY_KS01
+	tristate "Cypress touchkey support"
+	default n
+	help
+	  Say Y here to enable the
+	  cypress touchkey.
+	  To compile this driver as a
+	  module, choose M here.
+
+config GLOVE_TOUCH
+	tristate "Glove touch"
+	help
+	  Say Y here if you want glove touch.

@@ -1,0 +1,18 @@
+config SCFS
+	tristate "Enable SCFS for system partition"
+	help
+	  SCFS on the VFS layer.
+	  See <file:Documentation/filesystems/scfs.txt> for more info.
+
+config SYSTEM_COMPRESSED 
+	tristate "Flag to check system partition state"
+	help
+	 Flag to check system partition state 
+
+config SCFS_LOWER_PAGECACHE_INVALIDATION
+	tristate "SCFS lower page cache invalidation"
+	default n
+
+config SCFS_USE_CRYPTO
+	tristate "SCFS use crypto API"
+	default n

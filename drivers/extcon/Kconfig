@@ -1,0 +1,139 @@
+menuconfig EXTCON
+	tristate "External Connector Class (extcon) support"
+	help
+	  Say Y here to enable external connector class (extcon) support.
+	  This allows monitoring external connectors by userspace
+	  via sysfs and uevent and supports external connectors with
+	  multiple states; i.e., an extcon that may have multiple
+	  cables attached. For example, an external connector of a device
+	  may be used to connect an HDMI cable and a AC adaptor, and to
+	  host USB ports. Many of 30-pin connectors including PDMI are
+	  also good examples.
+
+if EXTCON
+
+comment "Extcon Device Drivers"
+
+config EXTCON_GPIO
+	tristate "GPIO extcon support"
+	depends on GENERIC_GPIO
+	help
+	  Say Y here to enable GPIO based extcon support. Note that GPIO
+	  extcon supports single state per extcon instance.
+
+config EXTCON_ADC_JACK
+	tristate "ADC Jack extcon support"
+	depends on IIO
+	help
+	  Say Y here to enable extcon device driver based on ADC values.
+
+config EXTCON_MAX77693
+	tristate "MAX77693 EXTCON Support"
+	depends on MFD_MAX77693
+	select IRQ_DOMAIN
+	select REGMAP_I2C
+	help
+	  If you say yes here you get support for the MUIC device of
+	  Maxim MAX77693 PMIC. The MAX77693 MUIC is a USB port accessory
+	  detector and switch.
+
+config EXTCON_FSA9485
+	tristate "FSA9485 EXTCON Support"
+	depends on I2C
+	help
+	  If you say yes here you get support for the MUIC device of
+	  Fairchild FSA9485. The FSA9485 MUIC is a USB port accessory
+	  detector and switch.
+
+config EXTCON_TSU6721
+	tristate "TSU6721 EXTCON Support"
+	depends on I2C
+	help
+	  If you say yes here you get support for the MUIC device of
+	  Texas Instrument TSU6721. The TSU6721 MUIC is a USB port accessory
+	  detector and switch.
+
+config EXTCON_MAX77803
+	tristate "MAX77803 EXTCON Support"
+	depends on MFD_MAX77803
+	help
+	  If you say yes here you get support for the MUIC device of
+	  Maxim MAX77803 PMIC.
+	  The MAX77803 MUIC is a USB port accessory detector and switch.
+
+config EXTCON_MAX77804K
+	tristate "MAX77804K EXTCON Support"
+	depends on MFD_MAX77804K
+	help
+	  If you say yes here you get support for the MUIC device of
+	  Maxim MAX77804K PMIC.
+	  The MAX77804K MUIC is a USB port accessory detector and switch.
+
+config ADC_ONESHOT
+	bool "MAX77804K ADC ONESHOT MODE Support"
+	depends on EXTCON_MAX77804K
+	depends on !SEC_FACTORY
+	default n
+	help
+		Say Y here to enable ADC Oneshot mode when detecting ID value
+
+config MUIC_SUPPORT_AUDIO_DOCK
+	bool "MUIC_SUPPORT_AUDIO_DOCK"
+	default n
+	help
+	  If you say yes here you will get support for the audio dock.
+
+config MUIC_SUPPORT_DESK_DOCK
+	bool "MUIC_SUPPORT_DESK_DOCK"
+	default n
+	help
+	  If you say yes here you will get support for the desk dock.
+
+config MUIC_SUPPORT_SMART_DOCK
+	bool "MUIC_SUPPORT_SMART_DOCK"
+	default n
+	help
+	  If you say yes here you will get support for the smart dock.
+
+config MUIC_SUPPORT_MMD_CTL
+	bool "MUIC_SUPPORT_MMD_CTL"
+	default n
+	help
+	  If you say yes here you will get support for the smart dock enable func by keystring.
+
+config MUIC_SUPPORT_INCOMPATIBLE_CHARGER
+	bool "MUIC_SUPPORT_INCOMPATIBLE_CHARGER"
+	default n
+	help
+	  If you say yes here you will get support for the incompatible charger.
+
+config MUIC_MAX77804K_SUPPORT_LANHUB
+	bool "MUIC_MAX77804K_SUPPORT_LANHUB"
+	depends on !SEC_FACTORY
+	default n
+	help
+	  If you say yes here, you will get support for the LANHUB cable.
+
+config MUIC_SUPPORT_RUSTPROOF
+	bool "MUIC Disable UART"
+	depends on !SEC_FACTORY
+	default n
+	help
+	 This option will disable the UART to prevent the rusting of the
+	 IF Connector in the case of Kmini Devices.
+
+config USBID_STANDARD
+	bool "USBID_STANDARD"
+	default n
+	help
+	  If you say yes here you will get support for usbid standard.
+
+config EXTCON_ARIZONA
+	tristate "Wolfson Arizona EXTCON support"
+	depends on MFD_ARIZONA && INPUT
+	help
+	  Say Y here to enable support for external accessory detection
+	  with Wolfson Arizona devices. These are audio CODECs with
+	  advanced audio accessory detection support.
+
+endif # MULTISTATE_SWITCH

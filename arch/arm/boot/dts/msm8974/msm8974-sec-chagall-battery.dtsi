@@ -1,0 +1,98 @@
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&soc {
+	battery {
+		status = "okay";
+		compatible = "samsung,sec-battery";
+		battery,vendor = "SDI SDI";
+		battery,charger_name = "smb358";
+		battery,fuelgauge_name = "sec-fuelgauge";
+		battery,technology = <2>; /* POWER_SUPPLY_TECHNOLOGY_LION */
+		battery,ta_int = <&pm8941_gpios 29 0x1>;
+		battery,ta_irq_attr = <0x3>;
+		battery,chip_vendor = "QCOM";
+		battery,temp_adc_type = <1>; /* SEC_BATTERY_ADC_TYPE_AP */
+		battery,polling_time = <10 30 30 30 3600>;
+		battery,adc_check_count = <6>;
+		/* SEC_BATTERY_CABLE_CHECK_INT |
+		SEC_BATTERY_CABLE_CHECK_NOUSBCHARGE |
+		SEC_BATTERY_CABLE_CHECK_PSY */
+		battery,cable_check_type = <13>;
+		battery,cable_source_type = <3>; /* SEC_BATTERY_CABLE_SOURCE_EXTERNAL | SEC_BATTERY_CABLE_SOURCE_CALLBACK */
+		battery,event_check;
+		battery,event_waiting_time = <600>;
+		battery,polling_type = <1>; /* SEC_BATTERY_MONITOR_ALARM */
+		battery,monitor_initial_count = <3>;
+		battery,battery_check_type = <0>; /* SEC_BATTERY_CHECK_NONE */
+		battery,check_count = <0>;
+		battery,check_adc_max = <0>;
+		battery,check_adc_min = <0>;
+		battery,ovp_uvlo_check_type = <3>; /* SEC_BATTERY_OVP_UVLO_CHGPOLLING */
+		battery,thermal_source = <0>; /* SEC_BATTERY_THERMAL_SOURCE_FG */
+		battery,temp_check_type = <2>; /* _BATTERY_TEMP_CHECK_TEMP */
+		battery,temp_check_count = <1>;
+		battery,temp_high_threshold_event = <600>;
+		battery,temp_high_recovery_event = <430>;
+		battery,temp_low_threshold_event = <(-50)>;
+		battery,temp_low_recovery_event = <0>;
+		battery,temp_high_threshold_normal = <600>;
+		battery,temp_high_recovery_normal = <430>;
+		battery,temp_low_threshold_normal = <(-50)>;
+		battery,temp_low_recovery_normal = <0>;
+		battery,temp_high_threshold_lpm = <600>;
+		battery,temp_high_recovery_lpm = <400>;
+		battery,temp_low_threshold_lpm = <(-50)>;
+		battery,temp_low_recovery_lpm = <0>;
+		battery,full_check_type = <2>; /* SEC_BATTERY_FULLCHARGED_FG_CURRENT */
+		battery,full_check_type_2nd = <3>; /* SEC_BATTERY_FULLCHARGED_TIME */
+		battery,full_check_count = <1>;
+		battery,chg_gpio_full_check = <0>;
+		battery,chg_polarity_full_check = <0>;
+		/* SEC_BATTERY_FULL_CONDITION_SOC |
+		SEC_BATTERY_FULL_CONDITION_NOTIMEFULL |
+		SEC_BATTERY_FULL_CONDITION_VCELL */
+		battery,full_condition_type = <13>;
+		battery,full_condition_soc = <97>;
+		battery,full_condition_vcell = <4250>;
+		battery,recharge_check_count = <1>;
+		/* SEC_BATTERY_RECHARGE_CONDITION_VCELL |
+		SEC_BATTERY_RECHARGE_CONDITION_AVGVCELL */
+		battery,recharge_condition_type = <6>;
+		battery,recharge_condition_soc = <98>;
+		battery,recharge_condition_avgvcell = <4150>;
+		battery,recharge_condition_vcell = <4300>;
+		battery,charging_total_time = <36000>;
+		battery,recharging_total_time = <5400>;
+		battery,charging_reset_time = <0>;
+
+		charger {
+			status = "disabled";
+			/* Charger */
+			battery,charger_name = "smb358";
+			battery,vbus_ctrl_gpio = <&msmgpio 69 0x00>;
+			battery,chg_gpio_en = <0>;
+			battery,chg_polarity_en = <0>;
+			battery,chg_gpio_status = <0>;
+			battery,chg_polarity_status = <0>;
+			battery,chg_float_voltage = <4340>;
+			battery,ovp_uvlo_check_type = <3>; /* SEC_BATTERY_OVP_UVLO_CHGPOLLING */
+			battery,full_check_type = <2>; /* SEC_BATTERY_FULLCHARGED_FG_CURRENT */
+
+			battery,input_current_limit = <1800 0 460 1800 460 460 1000 460 1800 1800 0 1800 1800 0 1000 400 700 1300 300 1000 1800 460 460 0 1800 80 460 460 460 1400 460>;
+			battery,fast_charging_current = <2000 0 460 2000 460 460 1000 460 2000 2000 0 2000 2000 (-1) 1300 400 700 1300 200 1000 2100 0 0 0 1800 80 0 0 0 1400 460>;
+			battery,full_check_current_1st = <250 0 250 250 250 250 250 250 250 250 0 250 250 0 250 250 250 250 250 250 250 0 0 0 250 0 0 0 0 250 250>;
+			battery,full_check_current_2nd = <2400 0 2400 2400 2400 2400 2400 2400 2400 2400 0 2400 2400 0 2400 2400 2400 2400 2400 2400 2400 0 0 0 2400 2400 0 0 0 2400 2400>;
+		};
+	};
+
+};

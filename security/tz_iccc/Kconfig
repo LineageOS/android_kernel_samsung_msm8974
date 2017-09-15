@@ -1,0 +1,18 @@
+#
+# TZ iccc configuration
+#
+menu "ICCC"
+
+config TZ_ICCC
+    bool "TZ ICCC"
+	default n
+	---help---
+	Provide kernel api for reading and writing secure parameters.
+
+config TZ_ICCC_DEBUG
+    bool "TZ ICCC"
+	default n
+	---help---
+	Provide extra logging for reading and writing secure parameters.
+
+endmenu

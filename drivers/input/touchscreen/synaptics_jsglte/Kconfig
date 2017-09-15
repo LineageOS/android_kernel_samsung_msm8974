@@ -1,0 +1,8 @@
+#
+# SYNAPTICS TOUCH driver configuration
+#
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI_JSGLTE
+	tristate "Synaptics i2c touchscreen"
+	depends on I2C
+	help
+	  This enables support for Synaptics RMI over I2C based touchscreens.
