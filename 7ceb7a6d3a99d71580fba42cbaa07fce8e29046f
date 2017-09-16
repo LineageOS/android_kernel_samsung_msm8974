@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec08bcc4_5b05248a",
+        "filename": "mm/vmpressure.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 18209
+      },
+      "writtenOn": "2017-09-16T06:57:17Z",
+      "side": 1,
+      "message": "I think this should be CONFIG_CGROUP_MEM_RES_CTLR, as CONFIG_MEMCG is not yet added to this branch.",
+      "range": {
+        "startLine": 98,
+        "startChar": 7,
+        "endLine": 98,
+        "endChar": 19
+      },
+      "revId": "7ceb7a6d3a99d71580fba42cbaa07fce8e29046f",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f6f1765_d2b8a7ce",
+        "filename": "mm/vmpressure.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 18209
+      },
+      "writtenOn": "2017-09-16T06:57:17Z",
+      "side": 1,
+      "message": "Same here, it should be CONFIG_CGROUP_MEM_RES_CTLR.",
+      "range": {
+        "startLine": 328,
+        "startChar": 1,
+        "endLine": 328,
+        "endChar": 30
+      },
+      "revId": "7ceb7a6d3a99d71580fba42cbaa07fce8e29046f",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
+    }
+  ]
+}
