@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06a755f6_13c74aea",
+        "filename": "drivers/media/platform/msm/camera_ll/isp/msm_isp_stats_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 3917
+      },
+      "writtenOn": "2017-09-16T06:43:42Z",
+      "side": 1,
+      "message": "i think this is not necessary as already tested in this function",
+      "revId": "9bb0ad201c1fc7129b94247354df8888e40452c1",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
