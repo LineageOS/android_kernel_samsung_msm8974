@@ -571,14 +571,6 @@ static inline bool need_inplace_update(struct inode *inode,
 			utilization(sbi) > SM_I(sbi)->min_ipu_util)
 		return true;
 
-	/*
-	 * IPU for rewrite async pages
-	 */
-	if (policy & (0x1 << F2FS_IPU_ASYNC) &&
-			fio && fio->op == REQ_OP_WRITE &&
-			!(fio->op_flags & REQ_SYNC))
-		return true;
-
 	/* this is only set during fdatasync */
 	if (policy & (0x1 << F2FS_IPU_FSYNC) &&
 			is_inode_flag_set(inode, FI_NEED_IPU))
