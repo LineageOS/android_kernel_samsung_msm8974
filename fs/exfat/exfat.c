@@ -3190,10 +3190,11 @@ DENTRY_T *get_entry_with_sector(struct super_block *sb, UINT32 sector, INT32 off
 
 DENTRY_T *get_entry_in_dir(struct super_block *sb, CHAIN_T *p_dir, INT32 entry, UINT32 *sector)
 {
+	FS_INFO_T *p_fs = &(EXFAT_SB(sb)->fs_info);
+	UINT32 dentries_per_page = PAGE_SIZE >> DENTRY_SIZE_BITS;
 	INT32 off;
 	UINT32 sec;
 	UINT8 *buf;
-	FS_INFO_T *p_fs = &(EXFAT_SB(sb)->fs_info);
 
 	if (p_fs->dev_ejected)
 		return NULL;
@@ -3202,6 +3203,10 @@ DENTRY_T *get_entry_in_dir(struct super_block *sb, CHAIN_T *p_dir, INT32 entry, 
 
 	if (find_location(sb, p_dir, entry, &sec, &off) != FFS_SUCCESS)
 		return NULL;
+
+	/* if first entry, then do read-ahead */
+	if (!(entry & (dentries_per_page - 1)))
+		buf_cache_readahead(sb, sec);
 
 	buf = buf_getblk(sb, sec);
 

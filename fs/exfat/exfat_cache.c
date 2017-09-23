@@ -738,3 +738,31 @@ static void move_to_lru(BUF_CACHE_T *bp, BUF_CACHE_T *list)
 	bp->next->prev = bp->prev;
 	push_to_lru(bp, list);
 }
+
+INT32 buf_cache_readahead(struct super_block * sb, UINT32 sec)
+{
+	FS_INFO_T *p_fs = &(EXFAT_SB(sb)->fs_info);
+	struct buffer_head *bh;
+	UINT32 max_ra_count = DCACHE_MAX_RA_SIZE >> sb->s_blocksize_bits;
+	UINT32 page_ra_count = PAGE_SIZE >> sb->s_blocksize_bits;
+	UINT32 adj_ra_count = max(p_fs->sectors_per_clu, page_ra_count);
+	UINT32 ra_count = min(adj_ra_count, max_ra_count);
+
+	if (p_fs->sectors_per_clu == 1)
+		return 0;
+
+	if (sec < p_fs->data_start_sector)
+		return (FFS_MEDIAERR);
+
+	/* Not sector aligned with ra_count, resize ra_count to page size */
+	if ((sec - p_fs->data_start_sector) & (ra_count - 1))
+		ra_count = page_ra_count;
+
+	bh = sb_find_get_block(sb, sec);
+	if (!bh || !buffer_uptodate(bh))
+		bdev_reada(sb, sec, ra_count);
+
+	brelse(bh);
+
+	return 0;
+}
