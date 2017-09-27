@@ -460,10 +460,12 @@ static inline void hlist_add_after_rcu(struct hlist_node *prev,
  * as long as the traversal is guarded by rcu_read_lock().
  */
 #define hlist_for_each_entry_rcu(tpos, pos, head, member)		\
-	for (pos = rcu_dereference_raw(hlist_first_rcu(head));		\
+	for (pos = hlist_entry_safe(rcu_dereference_raw(hlist_first_rcu(head)),\
+			typeof(*(pos)), member);			\
 		pos &&							 \
-		({ tpos = hlist_entry(pos, typeof(*tpos), member); 1; }); \
-		pos = rcu_dereference_raw(hlist_next_rcu(pos)))
+		({ tpos = hlist_entry_safe(pos, typeof(*tpos), member); 1; }); \
+		pos = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(\
+			&(pos)->member)), typeof(*(pos)), member))
 
 /**
  * hlist_for_each_entry_rcu_bh - iterate over rcu list of given type
@@ -477,10 +479,12 @@ static inline void hlist_add_after_rcu(struct hlist_node *prev,
  * as long as the traversal is guarded by rcu_read_lock().
  */
 #define hlist_for_each_entry_rcu_bh(tpos, pos, head, member)		 \
-	for (pos = rcu_dereference_bh((head)->first);			 \
+	for (pos = hlist_entry_safe(rcu_dereference_bh(hlist_first_rcu(head)),\
+			typeof(*(pos)), member);			\
 		pos &&							 \
-		({ tpos = hlist_entry(pos, typeof(*tpos), member); 1; }); \
-		pos = rcu_dereference_bh(pos->next))
+		({ tpos = hlist_entry_safe(pos, typeof(*tpos), member); 1; }); \
+		pos = hlist_entry_safe(rcu_dereference_bh(hlist_next_rcu(\
+			&(pos)->member)), typeof(*(pos)), member))
 
 /**
  * hlist_for_each_entry_continue_rcu - iterate over a hlist continuing after current point
@@ -489,10 +493,12 @@ static inline void hlist_add_after_rcu(struct hlist_node *prev,
  * @member:	the name of the hlist_node within the struct.
  */
 #define hlist_for_each_entry_continue_rcu(tpos, pos, member)		\
-	for (pos = rcu_dereference((pos)->next);			\
+	for (pos = hlist_entry_safe(rcu_dereference((pos)->member.next),\
+			typeof(*(pos)), member);			\
 	     pos &&							\
-	     ({ tpos = hlist_entry(pos, typeof(*tpos), member); 1; });  \
-	     pos = rcu_dereference(pos->next))
+	     ({ tpos = hlist_entry_safe(pos, typeof(*tpos), member); 1; });  \
+	     pos = hlist_entry_safe(rcu_dereference((pos)->member.next),\
+			typeof(*(pos)), member))
 
 /**
  * hlist_for_each_entry_continue_rcu_bh - iterate over a hlist continuing after current point
@@ -501,11 +507,12 @@ static inline void hlist_add_after_rcu(struct hlist_node *prev,
  * @member:	the name of the hlist_node within the struct.
  */
 #define hlist_for_each_entry_continue_rcu_bh(tpos, pos, member)		\
-	for (pos = rcu_dereference_bh((pos)->next);			\
+	for (pos = hlist_entry_safe(rcu_dereference_bh((pos)->member.next),\
+			typeof(*(pos)), member);			\
 	     pos &&							\
-	     ({ tpos = hlist_entry(pos, typeof(*tpos), member); 1; });  \
-	     pos = rcu_dereference_bh(pos->next))
-
+	     ({ tpos = hlist_entry_safe(pos, typeof(*tpos), member); 1; });  \
+	     pos = hlist_entry_safe(rcu_dereference_bh((pos)->member.next),\
+			typeof(*(pos)), member))
 
 #endif	/* __KERNEL__ */
 #endif
