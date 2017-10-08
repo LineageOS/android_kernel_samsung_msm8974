@@ -18,6 +18,7 @@
 #include "zcomp_lzo.h"
 #ifdef CONFIG_ZRAM_LZ4_COMPRESS
 #include "zcomp_lz4.h"
+#include "zcomp_lz4hc.h"
 #endif
 
 /*
@@ -47,6 +48,7 @@ static struct zcomp_backend *backends[] = {
 	&zcomp_lzo,
 #ifdef CONFIG_ZRAM_LZ4_COMPRESS
 	&zcomp_lz4,
+	&zcomp_lz4hc,
 #endif
 	NULL
 };
