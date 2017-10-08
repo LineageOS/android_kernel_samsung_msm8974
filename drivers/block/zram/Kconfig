@@ -18,6 +18,7 @@ config ZRAM
 config ZRAM_LZ4_COMPRESS
 	bool "Enable LZ4 algorithm support"
 	depends on ZRAM
+	select CRYPTO_LZ4HC
 	select LZ4_COMPRESS
 	select LZ4_DECOMPRESS
 	default n
