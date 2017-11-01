@@ -709,11 +709,9 @@ static int psmouse_extensions(struct psmouse *psmouse,
  * We always check for lifebook because it does not disturb mouse
  * (it only checks DMI information).
  */
-	if (psmouse_do_detect(lifebook_detect, psmouse, set_properties) == 0) {
-		if (max_proto > PSMOUSE_IMEX) {
-			if (!set_properties || lifebook_init(psmouse) == 0)
-				return PSMOUSE_LIFEBOOK;
-		}
+	if (max_proto > PSMOUSE_IMEX) {
+		if (!set_properties || lifebook_init(psmouse) == 0)
+			return PSMOUSE_LIFEBOOK;
 	}
 
 /*
@@ -823,15 +821,12 @@ static int psmouse_extensions(struct psmouse *psmouse,
  * Trackpoint devices (causing TP_READ_ID command to time out).
  */
 	if (max_proto > PSMOUSE_IMEX) {
-		if (psmouse_do_detect(fsp_detect,
-				      psmouse, set_properties) == 0) {
-			if (!set_properties || fsp_init(psmouse) == 0)
-				return PSMOUSE_FSP;
+		if (!set_properties || fsp_init(psmouse) == 0)
+			return PSMOUSE_FSP;
 /*
  * Init failed, try basic relative protocols
  */
-			max_proto = PSMOUSE_IMEX;
-		}
+		max_proto = PSMOUSE_IMEX;
 	}
 
 /*
@@ -1399,7 +1394,7 @@ static int psmouse_connect(struct serio *serio, struct serio_driver *drv)
 	ps2_init(&psmouse->ps2dev, serio);
 	INIT_DELAYED_WORK(&psmouse->resync_work, psmouse_resync);
 	psmouse->dev = input_dev;
-	snprintf(psmouse->phys, sizeof(psmouse->phys), "%s/input0", serio->phys);
+	snprintf(psmouse->phys, sizeof(psmouse->phys), serio->phys);
 
 	psmouse_set_state(psmouse, PSMOUSE_INITIALIZING);
 
