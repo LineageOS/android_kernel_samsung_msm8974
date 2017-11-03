@@ -90,7 +90,7 @@ struct rmidb_handle {
 static struct bin_attribute attr_data = {
 	.attr = {
 		.name = "data",
-		.mode = (S_IRUGO | S_IWUSR | S_IWGRP),
+		.mode = (S_IRUGO | S_IWUSR),
 	},
 	.size = 0,
 	.read = rmidb_sysfs_data_show,
@@ -98,16 +98,16 @@ static struct bin_attribute attr_data = {
 };
 
 static struct device_attribute attrs[] = {
-	__ATTR(pid, S_IRUGO | S_IWUSR | S_IWGRP,
+	__ATTR(pid, S_IRUGO | S_IWUSR,
 			rmidb_sysfs_pid_show,
 			rmidb_sysfs_pid_store),
-	__ATTR(term, S_IWUSR | S_IWGRP,
+	__ATTR(term, S_IWUSR,
 			synaptics_rmi4_show_error,
 			rmidb_sysfs_term_store),
-	__ATTR(address, S_IRUGO | S_IWUSR | S_IWGRP,
+	__ATTR(address, S_IRUGO | S_IWUSR,
 			rmidb_sysfs_address_show,
 			rmidb_sysfs_address_store),
-	__ATTR(length, S_IRUGO | S_IWUSR | S_IWGRP,
+	__ATTR(length, S_IRUGO | S_IWUSR,
 			rmidb_sysfs_length_show,
 			rmidb_sysfs_length_store),
 	__ATTR(query_base_addr, S_IRUGO,
