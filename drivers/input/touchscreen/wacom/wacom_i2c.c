@@ -1588,6 +1588,10 @@ static int wacom_i2c_probe(struct i2c_client *client,
 	mutex_init(&wac_i2c->irq_lock);
 #endif
 
+#ifdef BATTERY_SAVING_MODE
+	wac_i2c->battery_saving_mode = true;
+#endif
+
 #ifdef WACOM_BOOSTER
 	wacom_init_dvfs(wac_i2c);
 #endif
