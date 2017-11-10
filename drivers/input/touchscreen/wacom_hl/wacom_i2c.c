@@ -1581,6 +1581,9 @@ static int wacom_i2c_probe(struct i2c_client *client, const struct i2c_device_id
 #endif
 	INIT_WORK(&wac_i2c->update_work, wacom_i2c_update_work);
 	/*init wacom booster*/
+#ifdef BATTERY_SAVING_MODE
+	wac_i2c->battery_saving_mode = true;
+#endif
 #if defined(WACOM_BOOSTER_DVFS)	
 	wacom_init_dvfs(wac_i2c);
 #elif defined(WACOM_BOOSTER)
