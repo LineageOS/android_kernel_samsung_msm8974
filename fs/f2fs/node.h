@@ -169,14 +169,15 @@ static inline void next_free_nid(struct f2fs_sb_info *sbi, nid_t *nid)
 	struct f2fs_nm_info *nm_i = NM_I(sbi);
 	struct free_nid *fnid;
 
-	spin_lock(&nm_i->free_nid_list_lock);
-	if (nm_i->fcnt <= 0) {
-		spin_unlock(&nm_i->free_nid_list_lock);
+	spin_lock(&nm_i->nid_list_lock);
+	if (nm_i->nid_cnt[FREE_NID_LIST] <= 0) {
+		spin_unlock(&nm_i->nid_list_lock);
 		return;
 	}
-	fnid = list_entry(nm_i->free_nid_list.next, struct free_nid, list);
+	fnid = list_entry(nm_i->nid_list[FREE_NID_LIST].next,
+						struct free_nid, list);
 	*nid = fnid->nid;
-	spin_unlock(&nm_i->free_nid_list_lock);
+	spin_unlock(&nm_i->nid_list_lock);
 }
 
 /*
@@ -185,6 +186,12 @@ static inline void next_free_nid(struct f2fs_sb_info *sbi, nid_t *nid)
 static inline void get_nat_bitmap(struct f2fs_sb_info *sbi, void *addr)
 {
 	struct f2fs_nm_info *nm_i = NM_I(sbi);
+
+#ifdef CONFIG_F2FS_CHECK_FS
+	if (memcmp(nm_i->nat_bitmap, nm_i->nat_bitmap_mir,
+						nm_i->bitmap_size))
+		f2fs_bug_on(sbi, 1);
+#endif
 	memcpy(addr, nm_i->nat_bitmap, nm_i->bitmap_size);
 }
 
@@ -193,13 +200,16 @@ static inline pgoff_t current_nat_addr(struct f2fs_sb_info *sbi, nid_t start)
 	struct f2fs_nm_info *nm_i = NM_I(sbi);
 	pgoff_t block_off;
 	pgoff_t block_addr;
-	int seg_off;
 
+	/*
+	 * block_off = segment_off * 512 + off_in_segment
+	 * OLD = (segment_off * 512) * 2 + off_in_segment
+	 * NEW = 2 * (segment_off * 512 + off_in_segment) - off_in_segment
+	 */
 	block_off = NAT_BLOCK_OFFSET(start);
-	seg_off = block_off >> sbi->log_blocks_per_seg;
 
 	block_addr = (pgoff_t)(nm_i->nat_blkaddr +
-		(seg_off << sbi->log_blocks_per_seg << 1) +
+		(block_off << 1) -
 		(block_off & (sbi->blocks_per_seg - 1)));
 
 	if (f2fs_test_bit(block_off, nm_i->nat_bitmap))
@@ -214,11 +224,7 @@ static inline pgoff_t next_nat_addr(struct f2fs_sb_info *sbi,
 	struct f2fs_nm_info *nm_i = NM_I(sbi);
 
 	block_addr -= nm_i->nat_blkaddr;
-	if ((block_addr >> sbi->log_blocks_per_seg) % 2)
-		block_addr -= sbi->blocks_per_seg;
-	else
-		block_addr += sbi->blocks_per_seg;
-
+	block_addr ^= 1 << sbi->log_blocks_per_seg;
 	return block_addr + nm_i->nat_blkaddr;
 }
 
@@ -227,6 +233,9 @@ static inline void set_to_next_nat(struct f2fs_nm_info *nm_i, nid_t start_nid)
 	unsigned int block_off = NAT_BLOCK_OFFSET(start_nid);
 
 	f2fs_change_bit(block_off, nm_i->nat_bitmap);
+#ifdef CONFIG_F2FS_CHECK_FS
+	f2fs_change_bit(block_off, nm_i->nat_bitmap_mir);
+#endif
 }
 
 static inline void fill_node_footer(struct page *page, nid_t nid,
@@ -321,7 +330,7 @@ static inline bool IS_DNODE(struct page *node_page)
 	unsigned int ofs = ofs_of_node(node_page);
 
 	if (f2fs_has_xattr_block(ofs))
-		return false;
+		return true;
 
 	if (ofs == 3 || ofs == 4 + NIDS_PER_BLOCK ||
 			ofs == 5 + 2 * NIDS_PER_BLOCK)

@@ -2162,7 +2162,7 @@ static int ntfs_file_fsync(struct file *filp, loff_t start, loff_t end,
 
 	ntfs_debug("Entering for inode 0x%lx.", vi->i_ino);
 
-	err = filemap_write_and_wait_range(vi->i_mapping, start, end);
+	err = file_write_and_wait_range(filp, start, end);
 	if (err)
 		return err;
 	mutex_lock(&vi->i_mutex);

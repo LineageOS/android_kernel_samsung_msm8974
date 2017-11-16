@@ -112,3 +112,15 @@ Date:		January 2016
 Contact:	"Shuoran Liu" <liushuoran@huawei.com>
 Description:
 		 Shows total written kbytes issued to disk.
+
+What:		/sys/fs/f2fs/<disk>/gc_urgent
+Date:		August 2017
+Contact:	"Jaegeuk Kim" <jaegeuk@kernel.org>
+Description:
+		 Do background GC agressively
+
+What:		/sys/fs/f2fs/<disk>/gc_urgent_sleep_time
+Date:		August 2017
+Contact:	"Jaegeuk Kim" <jaegeuk@kernel.org>
+Description:
+		 Controls sleep time of GC urgent mode

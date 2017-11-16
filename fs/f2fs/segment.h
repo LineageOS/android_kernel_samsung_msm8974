@@ -75,10 +75,16 @@
 	(((blk_addr == NULL_ADDR) || (blk_addr == NEW_ADDR)) ?		\
 	NULL_SEGNO : GET_L2R_SEGNO(FREE_I(sbi),			\
 		GET_SEGNO_FROM_SEG0(sbi, blk_addr)))
-#define GET_SECNO(sbi, segno)					\
+#define BLKS_PER_SEC(sbi)					\
+	((sbi)->segs_per_sec * (sbi)->blocks_per_seg)
+#define GET_SEC_FROM_SEG(sbi, segno)				\
 	((segno) / sbi->segs_per_sec)
-#define GET_ZONENO_FROM_SEGNO(sbi, segno)				\
-	((segno / sbi->segs_per_sec) / sbi->secs_per_zone)
+#define GET_SEG_FROM_SEC(sbi, secno)				\
+	((secno) * (sbi)->segs_per_sec)
+#define GET_ZONE_FROM_SEC(sbi, secno)				\
+	((secno) / (sbi)->secs_per_zone)
+#define GET_ZONE_FROM_SEG(sbi, segno)				\
+	GET_ZONE_FROM_SEC(sbi, GET_SEC_FROM_SEG(sbi, segno))
 
 #define GET_SUM_BLOCK(sbi, segno)				\
 	((sbi->sm_info->ssa_blkaddr) + segno)
@@ -202,6 +208,9 @@ struct sit_info {
 	block_t sit_blocks;		/* # of blocks used by SIT area */
 	block_t written_valid_blocks;	/* # of valid blocks in main area */
 	char *sit_bitmap;		/* SIT bitmap pointer */
+#ifdef CONFIG_F2FS_CHECK_FS
+	char *sit_bitmap_mir;		/* SIT bitmap mirror */
+#endif
 	unsigned int bitmap_size;	/* SIT bitmap size */
 
 	unsigned long *tmp_map;			/* bitmap for temporal use */
@@ -293,17 +302,17 @@ static inline struct sec_entry *get_sec_entry(struct f2fs_sb_info *sbi,
 						unsigned int segno)
 {
 	struct sit_info *sit_i = SIT_I(sbi);
-	return &sit_i->sec_entries[GET_SECNO(sbi, segno)];
+	return &sit_i->sec_entries[GET_SEC_FROM_SEG(sbi, segno)];
 }
 
 static inline unsigned int get_valid_blocks(struct f2fs_sb_info *sbi,
-				unsigned int segno, int section)
+				unsigned int segno, bool use_section)
 {
 	/*
 	 * In order to get # of valid blocks in a section instantly from many
 	 * segments, f2fs manages two counting structures separately.
 	 */
-	if (section > 1)
+	if (use_section && sbi->segs_per_sec > 1)
 		return get_sec_entry(sbi, segno)->valid_blocks;
 	else
 		return get_seg_entry(sbi, segno)->valid_blocks;
@@ -345,8 +354,8 @@ static inline unsigned int find_next_inuse(struct free_segmap_info *free_i,
 static inline void __set_free(struct f2fs_sb_info *sbi, unsigned int segno)
 {
 	struct free_segmap_info *free_i = FREE_I(sbi);
-	unsigned int secno = segno / sbi->segs_per_sec;
-	unsigned int start_segno = secno * sbi->segs_per_sec;
+	unsigned int secno = GET_SEC_FROM_SEG(sbi, segno);
+	unsigned int start_segno = GET_SEG_FROM_SEC(sbi, secno);
 	unsigned int next;
 
 	spin_lock(&free_i->segmap_lock);
@@ -366,7 +375,8 @@ static inline void __set_inuse(struct f2fs_sb_info *sbi,
 		unsigned int segno)
 {
 	struct free_segmap_info *free_i = FREE_I(sbi);
-	unsigned int secno = segno / sbi->segs_per_sec;
+	unsigned int secno = GET_SEC_FROM_SEG(sbi, segno);
+
 	set_bit(segno, free_i->free_segmap);
 	free_i->free_segments--;
 	if (!test_and_set_bit(secno, free_i->free_secmap))
@@ -377,8 +387,8 @@ static inline void __set_test_and_free(struct f2fs_sb_info *sbi,
 		unsigned int segno)
 {
 	struct free_segmap_info *free_i = FREE_I(sbi);
-	unsigned int secno = segno / sbi->segs_per_sec;
-	unsigned int start_segno = secno * sbi->segs_per_sec;
+	unsigned int secno = GET_SEC_FROM_SEG(sbi, segno);
+	unsigned int start_segno = GET_SEG_FROM_SEC(sbi, secno);
 	unsigned int next;
 
 	spin_lock(&free_i->segmap_lock);
@@ -399,7 +409,8 @@ static inline void __set_test_and_inuse(struct f2fs_sb_info *sbi,
 		unsigned int segno)
 {
 	struct free_segmap_info *free_i = FREE_I(sbi);
-	unsigned int secno = segno / sbi->segs_per_sec;
+	unsigned int secno = GET_SEC_FROM_SEG(sbi, segno);
+
 	spin_lock(&free_i->segmap_lock);
 	if (!test_and_set_bit(segno, free_i->free_segmap)) {
 		free_i->free_segments--;
@@ -413,6 +424,12 @@ static inline void get_sit_bitmap(struct f2fs_sb_info *sbi,
 		void *dst_addr)
 {
 	struct sit_info *sit_i = SIT_I(sbi);
+
+#ifdef CONFIG_F2FS_CHECK_FS
+	if (memcmp(sit_i->sit_bitmap, sit_i->sit_bitmap_mir,
+						sit_i->bitmap_size))
+		f2fs_bug_on(sbi, 1);
+#endif
 	memcpy(dst_addr, sit_i->sit_bitmap, sit_i->bitmap_size);
 }
 
@@ -456,14 +473,9 @@ static inline int overprovision_segments(struct f2fs_sb_info *sbi)
 	return SM_I(sbi)->ovp_segments;
 }
 
-static inline int overprovision_sections(struct f2fs_sb_info *sbi)
-{
-	return ((unsigned int) overprovision_segments(sbi)) / sbi->segs_per_sec;
-}
-
 static inline int reserved_sections(struct f2fs_sb_info *sbi)
 {
-	return ((unsigned int) reserved_segments(sbi)) / sbi->segs_per_sec;
+	return GET_SEC_FROM_SEG(sbi, (unsigned int)reserved_segments(sbi));
 }
 
 static inline bool need_SSR(struct f2fs_sb_info *sbi)
@@ -475,7 +487,7 @@ static inline bool need_SSR(struct f2fs_sb_info *sbi)
 		return false;
 
 	return free_sections(sbi) <= (node_secs + 2 * dent_secs +
-						reserved_sections(sbi) + 1);
+						2 * reserved_sections(sbi));
 }
 
 static inline bool has_not_enough_free_secs(struct f2fs_sb_info *sbi, int freed)
@@ -519,6 +531,7 @@ static inline int utilization(struct f2fs_sb_info *sbi)
  */
 #define DEF_MIN_IPU_UTIL	70
 #define DEF_MIN_FSYNC_BLOCKS	8
+#define DEF_MIN_HOT_BLOCKS	16
 
 enum {
 	F2FS_IPU_FORCE,
@@ -526,19 +539,21 @@ enum {
 	F2FS_IPU_UTIL,
 	F2FS_IPU_SSR_UTIL,
 	F2FS_IPU_FSYNC,
+	F2FS_IPU_ASYNC,
 };
 
-static inline bool need_inplace_update(struct inode *inode)
+static inline bool need_inplace_update_policy(struct inode *inode,
+				struct f2fs_io_info *fio)
 {
 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
 	unsigned int policy = SM_I(sbi)->ipu_policy;
 
-	/* IPU can be done only for the user data */
-	if (S_ISDIR(inode->i_mode) || f2fs_is_atomic_file(inode))
-		return false;
-
 	if (test_opt(sbi, LFS))
 		return false;
+
+	/* if this is cold file, we should overwrite to avoid fragmentation */
+	if (file_is_cold(inode))
+		return true;
 
 	if (policy & (0x1 << F2FS_IPU_FORCE))
 		return true;
@@ -631,6 +646,12 @@ static inline pgoff_t current_sit_addr(struct f2fs_sb_info *sbi,
 
 	check_seg_range(sbi, start);
 
+#ifdef CONFIG_F2FS_CHECK_FS
+	if (f2fs_test_bit(offset, sit_i->sit_bitmap) !=
+			f2fs_test_bit(offset, sit_i->sit_bitmap_mir))
+		f2fs_bug_on(sbi, 1);
+#endif
+
 	/* calculate sit block address */
 	if (f2fs_test_bit(offset, sit_i->sit_bitmap))
 		blk_addr += sit_i->sit_blocks;
@@ -656,6 +677,9 @@ static inline void set_to_next_sit(struct sit_info *sit_i, unsigned int start)
 	unsigned int block_off = SIT_BLOCK_OFFSET(start);
 
 	f2fs_change_bit(block_off, sit_i->sit_bitmap);
+#ifdef CONFIG_F2FS_CHECK_FS
+	f2fs_change_bit(block_off, sit_i->sit_bitmap_mir);
+#endif
 }
 
 static inline unsigned long long get_mtime(struct f2fs_sb_info *sbi)
@@ -686,6 +710,15 @@ static inline block_t sum_blk_addr(struct f2fs_sb_info *sbi, int base, int type)
 				- (base + 1) + type;
 }
 
+static inline bool no_fggc_candidate(struct f2fs_sb_info *sbi,
+						unsigned int secno)
+{
+	if (get_valid_blocks(sbi, GET_SEG_FROM_SEC(sbi, secno), true) >=
+						sbi->fggc_threshold)
+		return true;
+	return false;
+}
+
 static inline bool sec_usage_check(struct f2fs_sb_info *sbi, unsigned int secno)
 {
 	if (IS_CURSEC(sbi, secno) || (sbi->cur_victim_sec == secno))
@@ -704,8 +737,8 @@ static inline unsigned int max_hw_blocks(struct f2fs_sb_info *sbi)
  * It is very important to gather dirty pages and write at once, so that we can
  * submit a big bio without interfering other data writes.
  * By default, 512 pages for directory data,
- * 512 pages (2MB) * 3 for three types of nodes, and
- * max_bio_blocks for meta are set.
+ * 512 pages (2MB) * 8 for nodes, and
+ * 256 pages * 8 for meta are set.
  */
 static inline int nr_pages_to_skip(struct f2fs_sb_info *sbi, int type)
 {

@@ -269,15 +269,19 @@ static int f2fs_write_meta_pages(struct address_space *mapping,
 	struct blk_plug plug;
 	long diff, written;
 
+	if (unlikely(is_sbi_flag_set(sbi, SBI_POR_DOING)))
+		goto skip_write;
+
 	/* collect a number of dirty meta pages and write together */
 	if (wbc->for_kupdate ||
 		get_pages(sbi, F2FS_DIRTY_META) < nr_pages_to_skip(sbi, META))
 		goto skip_write;
 
-	trace_f2fs_writepages(mapping->host, wbc, META);
+	/* if locked failed, cp will flush dirty pages instead */
+	if (!mutex_trylock(&sbi->cp_mutex))
+		goto skip_write;
 
-	/* if mounting is failed, skip writing node pages */
-	mutex_lock(&sbi->cp_mutex);
+	trace_f2fs_writepages(mapping->host, wbc, META);
 	diff = nr_pages_to_write(sbi, META, wbc);
 	blk_start_plug(&plug);
 	written = sync_meta_pages(sbi, META, wbc->nr_to_write);
@@ -737,6 +741,11 @@ int get_valid_checkpoint(struct f2fs_sb_info *sbi)
 	if (sanity_check_ckpt(sbi))
 		goto fail_no_cp;
 
+	if (cur_page == cp1)
+		sbi->cur_cp_pack = 1;
+	else
+		sbi->cur_cp_pack = 2;
+
 	if (cp_blks <= 1)
 		goto done;
 
@@ -772,7 +781,9 @@ static void __add_dirty_inode(struct inode *inode, enum inode_type type)
 		return;
 
 	set_inode_flag(inode, flag);
-	list_add_tail(&F2FS_I(inode)->dirty_list, &sbi->inode_list[type]);
+	if (!f2fs_is_volatile_file(inode))
+		list_add_tail(&F2FS_I(inode)->dirty_list,
+						&sbi->inode_list[type]);
 	stat_inc_dirty_inode(sbi, type);
 }
 
@@ -830,6 +841,7 @@ int sync_dirty_inodes(struct f2fs_sb_info *sbi, enum inode_type type)
 	struct inode *inode;
 	struct f2fs_inode_info *fi;
 	bool is_dir = (type == DIR_INODE);
+	unsigned long ino = 0;
 
 	trace_f2fs_sync_dirty_inodes_enter(sbi->sb, is_dir,
 				get_pages(sbi, is_dir ?
@@ -852,8 +864,17 @@ retry:
 	inode = igrab(&fi->vfs_inode);
 	spin_unlock(&sbi->inode_lock[type]);
 	if (inode) {
+		unsigned long cur_ino = inode->i_ino;
+
 		filemap_fdatawrite(inode->i_mapping);
 		iput(inode);
+		/* We need to give cpu to another writers. */
+		if (ino == cur_ino) {
+			congestion_wait(BLK_RW_ASYNC, HZ/50);
+			cond_resched();
+		} else {
+			ino = cur_ino;
+		}
 	} else {
 		/*
 		 * We should submit bio, since it exists several
@@ -893,6 +914,19 @@ int f2fs_sync_inode_meta(struct f2fs_sb_info *sbi)
 	return 0;
 }
 
+static void __prepare_cp_block(struct f2fs_sb_info *sbi)
+{
+	struct f2fs_checkpoint *ckpt = F2FS_CKPT(sbi);
+	struct f2fs_nm_info *nm_i = NM_I(sbi);
+	nid_t last_nid = nm_i->next_scan_nid;
+
+	next_free_nid(sbi, &last_nid);
+	ckpt->valid_block_count = cpu_to_le64(valid_user_blocks(sbi));
+	ckpt->valid_node_count = cpu_to_le32(valid_node_count(sbi));
+	ckpt->valid_inode_count = cpu_to_le32(valid_inode_count(sbi));
+	ckpt->next_free_nid = cpu_to_le32(last_nid);
+}
+
 /*
  * Freeze all the FS-operations for checkpoint.
  */
@@ -916,21 +950,26 @@ retry_flush_dents:
 		err = sync_dirty_inodes(sbi, DIR_INODE);
 		if (err)
 			goto out;
-		goto retry_flush_dents;
-	}
-
-	if (get_pages(sbi, F2FS_DIRTY_IMETA)) {
-		f2fs_unlock_all(sbi);
-		err = f2fs_sync_inode_meta(sbi);
-		if (err)
-			goto out;
+		cond_resched();
 		goto retry_flush_dents;
 	}
 
 	/*
 	 * POR: we should ensure that there are no dirty node pages
-	 * until finishing nat/sit flush.
+	 * until finishing nat/sit flush. inode->i_blocks can be updated.
 	 */
+	down_write(&sbi->node_change);
+
+	if (get_pages(sbi, F2FS_DIRTY_IMETA)) {
+		up_write(&sbi->node_change);
+		f2fs_unlock_all(sbi);
+		err = f2fs_sync_inode_meta(sbi);
+		if (err)
+			goto out;
+		cond_resched();
+		goto retry_flush_dents;
+	}
+
 retry_flush_nodes:
 	down_write(&sbi->node_write);
 
@@ -938,11 +977,20 @@ retry_flush_nodes:
 		up_write(&sbi->node_write);
 		err = sync_node_pages(sbi, &wbc);
 		if (err) {
+			up_write(&sbi->node_change);
 			f2fs_unlock_all(sbi);
 			goto out;
 		}
+		cond_resched();
 		goto retry_flush_nodes;
 	}
+
+	/*
+	 * sbi->node_change is used only for AIO write_begin path which produces
+	 * dirty node blocks and some checkpoint values by block allocation.
+	 */
+	__prepare_cp_block(sbi);
+	up_write(&sbi->node_change);
 out:
 	blk_finish_plug(&plug);
 	return err;
@@ -952,7 +1000,6 @@ static void unblock_operations(struct f2fs_sb_info *sbi)
 {
 	up_write(&sbi->node_write);
 
-	build_free_nids(sbi);
 	f2fs_unlock_all(sbi);
 }
 
@@ -975,9 +1022,7 @@ static int do_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 {
 	struct f2fs_checkpoint *ckpt = F2FS_CKPT(sbi);
 	struct curseg_info *curseg = CURSEG_I(sbi, CURSEG_WARM_NODE);
-	struct f2fs_nm_info *nm_i = NM_I(sbi);
 	unsigned long orphan_num = sbi->im[ORPHAN_INO].ino_num;
-	nid_t last_nid = nm_i->next_scan_nid;
 	block_t start_blk;
 	unsigned int data_sum_blocks, orphan_blocks;
 	__u32 crc32 = 0;
@@ -1003,14 +1048,11 @@ static int do_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 			return -EIO;
 	}
 
-	next_free_nid(sbi, &last_nid);
-
 	/*
 	 * modify checkpoint
 	 * version number is already updated
 	 */
 	ckpt->elapsed_time = cpu_to_le64(get_mtime(sbi));
-	ckpt->valid_block_count = cpu_to_le64(valid_user_blocks(sbi));
 	ckpt->free_segment_count = cpu_to_le32(free_segments(sbi));
 	for (i = 0; i < NR_CURSEG_NODE_TYPE; i++) {
 		ckpt->cur_node_segno[i] =
@@ -1028,10 +1070,6 @@ static int do_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 		ckpt->alloc_type[i + CURSEG_HOT_DATA] =
 				curseg_alloc_type(sbi, i + CURSEG_HOT_DATA);
 	}
-
-	ckpt->valid_node_count = cpu_to_le32(valid_node_count(sbi));
-	ckpt->valid_inode_count = cpu_to_le32(valid_inode_count(sbi));
-	ckpt->next_free_nid = cpu_to_le32(last_nid);
 
 	/* 2 cp  + n data seg summary + orphan inode blocks */
 	data_sum_blocks = npages_for_summary_flush(sbi, false);
@@ -1080,7 +1118,7 @@ static int do_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 				le32_to_cpu(ckpt->checksum_offset)))
 				= cpu_to_le32(crc32);
 
-	start_blk = __start_cp_addr(sbi);
+	start_blk = __start_cp_next_addr(sbi);
 
 	/* need to wait for end_io results */
 	wait_on_all_pages_writeback(sbi);
@@ -1151,6 +1189,8 @@ static int do_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 
 	clear_prefree_segments(sbi, cpc);
 	clear_sbi_flag(sbi, SBI_IS_DIRTY);
+	clear_sbi_flag(sbi, SBI_NEED_CP);
+	__set_cp_next_pack(sbi);
 
 	return 0;
 }
