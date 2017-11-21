@@ -28,6 +28,13 @@
 #define CONFIG_SAMSUNG_KERNEL_DEBUG_USER
 #endif
 
+#define LONG_PRESS_TIME 500
+#define MIN_GEST_DIST 50
+#define MIN_GEST_VEL 25
+static int gesture_start_x;
+static int gesture_start_y;
+static ktime_t gesture_start_time;
+
 #ifdef WACOM_BOOSTER
 static void wacom_change_dvfs_lock(struct work_struct *work)
 {
@@ -907,6 +914,37 @@ void wacom_i2c_softkey(struct wacom_i2c *wac_i2c, s16 key, s16 pressed)
 }
 #endif
 
+static int handle_gestures(int x, int y, ktime_t end)
+{
+	int dx = x - gesture_start_x;
+	int dy = y - gesture_start_y;
+	int dt = ktime_to_ms(ktime_sub(end, gesture_start_time));
+
+	if (abs(dx/dt) > abs(dy/dt)) {
+		if (abs(dx) > MIN_GEST_DIST && abs(dx/dt) > MIN_GEST_VEL) {
+			if (dx > 0) {
+				return KEY_PEN_LTR;
+			} else {
+				return KEY_PEN_RTL;
+			}
+		}
+	} else {
+		if (abs(dy) > MIN_GEST_DIST && abs(dy/dt) > MIN_GEST_VEL) {
+			if (dy > 0) {
+				return KEY_PEN_UTD;
+			} else {
+				return KEY_PEN_DTU;
+			}
+		}
+	}
+
+	if (dt >= LONG_PRESS_TIME) {
+		return KEY_PEN_LP;
+	}
+
+	return -1;
+}
+
 int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 {
 	bool prox = false;
@@ -916,6 +954,7 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 	static s16 x, y, pressure;
 	static s16 tmp;
 	int rdy = 0;
+	int key;
 
 #if defined(WACOM_USE_GAIN)
 	u8 gain = 0;
@@ -1136,14 +1175,25 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 
 			wac_i2c->pen_pressed = prox;
 
-			if (stylus && !wac_i2c->side_pressed)
+			if (stylus && !wac_i2c->side_pressed) {
 				dev_info(&wac_i2c->client->dev,
 						"%s: side on\n",
 						__func__);
-			else if (!stylus && wac_i2c->side_pressed)
+				gesture_start_x = x;
+				gesture_start_y = y;
+				gesture_start_time = ktime_get();
+			} else if (!stylus && wac_i2c->side_pressed) {
 				dev_info(&wac_i2c->client->dev,
 						"%s: side off\n",
 						__func__);
+				key = handle_gestures(x, y, ktime_get());
+				if (key > 0) {
+					input_report_key(wac_i2c->input_dev, key, 1);
+					input_sync(wac_i2c->input_dev);
+					input_report_key(wac_i2c->input_dev, key, 0);
+					input_sync(wac_i2c->input_dev);
+				}
+			}
 
 			wac_i2c->side_pressed = stylus;
 		}
