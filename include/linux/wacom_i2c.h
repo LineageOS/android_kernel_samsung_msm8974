@@ -215,6 +215,9 @@ struct wacom_g5_callbacks {
 	int (*check_prox)(struct wacom_g5_callbacks *);
 };
 
+#define LONG_PRESS_TIME 500
+#define MIN_GEST_DIST 384
+
 /*Parameters for i2c driver*/
 struct wacom_i2c {
 	struct i2c_client *client;
@@ -302,6 +305,12 @@ struct wacom_i2c {
 	bool touch_pressed;
 #endif
 	bool enabled;
+
+	int enabled_gestures;
+	int gesture_key;
+	int gesture_start_x;
+	int gesture_start_y;
+	ktime_t gesture_start_time;
 };
 
 struct wacom_g5_platform_data {
