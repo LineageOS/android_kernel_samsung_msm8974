@@ -28,6 +28,13 @@
 #define CONFIG_SAMSUNG_KERNEL_DEBUG_USER
 #endif
 
+#define LONG_PRESS_TIME 500
+#define MIN_GEST_DIST 50
+#define MIN_GEST_VEL 25
+int gesture_start_x;
+int gesture_start_y;
+unsigned int gesture_start_time;
+
 #ifdef WACOM_BOOSTER
 static void wacom_change_dvfs_lock(struct work_struct *work)
 {
@@ -907,6 +914,36 @@ void wacom_i2c_softkey(struct wacom_i2c *wac_i2c, s16 key, s16 pressed)
 }
 #endif
 
+int handle_gestures(int x, int y, unsigned int end)
+{
+	int dx = x - gesture_start_x;
+	int dy = y - gesture_start_y;
+	int dt = end - gesture_start_time;
+
+	if (abs(dx/dt) > abs(dy/dt)) {
+		if (abs(dx) > MIN_GEST_DIST && abs(dx/dt) > MIN_GEST_VEL) {
+			if (dx > 0) {
+				return KEY_PEN_LTR;
+			} else {
+				return KEY_PEN_RTL;
+			}
+		}
+	} else {
+		if (abs(dy) > MIN_GEST_DIST && abs(dy/dt) > MIN_GEST_VEL) {
+			if (dy > 0) {
+				return KEY_PEN_UTD;
+			} else {
+				return KEY_PEN_DTU;
+			}
+		}
+	}
+
+	if (dt >= LONG_PRESS_TIME) {
+		return KEY_PEN_LP;
+	}
+
+	return -1;
+}
 int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 {
 	bool prox = false;
@@ -1136,14 +1173,26 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 
 			wac_i2c->pen_pressed = prox;
 
-			if (stylus && !wac_i2c->side_pressed)
+			if (stylus && !wac_i2c->side_pressed) {
 				dev_info(&wac_i2c->client->dev,
 						"%s: side on\n",
 						__func__);
-			else if (!stylus && wac_i2c->side_pressed)
+				gesture_start_x = x;
+				gesture_start_y = y;
+				gesture_start_time = jiffies_to_msecs(jiffies);
+			} else if (!stylus && wac_i2c->side_pressed) {
 				dev_info(&wac_i2c->client->dev,
 						"%s: side off\n",
 						__func__);
+				unsigned int end = jiffies_to_msecs(jiffies);
+				int key = handle_gestures(x, y, end);
+				if (key > 0) {
+					input_report_key(wac_i2c->input_dev, key, 1);
+					input_sync(wac_i2c->input_dev);
+					input_report_key(wac_i2c->input_dev, key, 0);
+					input_sync(wac_i2c->input_dev);
+				}
+			}
 
 			wac_i2c->side_pressed = stylus;
 		}
