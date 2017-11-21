@@ -821,6 +821,15 @@ struct input_keymap_entry {
 #define KEY_SIDE_TOUCH_7		0x2ef
 #define KEY_SIDE_CAMERA_DETECTED	0x2f0
 
+/*
+ * S-Pen Gestures
+ */
+#define KEY_PEN_DTU			0x2f1
+#define KEY_PEN_UTD			0x2f2
+#define KEY_PEN_RTL			0x2f3
+#define KEY_PEN_LTR			0x2f4
+#define KEY_PEN_LP			0x2f5
+
 /* We avoid low common keys in module aliases so they don't get huge. */
 #define KEY_MIN_INTERESTING	KEY_MUTE
 #define KEY_MAX			0x2ff
