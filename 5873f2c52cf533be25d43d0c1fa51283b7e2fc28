@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88c820eb_a36ee427",
+        "filename": "drivers/input/touchscreen/wacom/wacom_i2c_func.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 9394
+      },
+      "writtenOn": "2017-11-28T18:10:03Z",
+      "side": 1,
+      "message": "ktime_ms_delta is exactly this pair of calls.",
+      "range": {
+        "startLine": 914,
+        "startChar": 10,
+        "endLine": 914,
+        "endChar": 30
+      },
+      "revId": "5873f2c52cf533be25d43d0c1fa51283b7e2fc28",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a8e2c54_b26f9232",
+        "filename": "drivers/input/touchscreen/wacom/wacom_i2c_func.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 9394
+      },
+      "writtenOn": "2017-11-28T18:10:03Z",
+      "side": 1,
+      "message": "this returns a s64, so it\u0027d be better to make dt s64 as well.  I\u0027m surprised this isn\u0027t a warning, I thought ints were 32bit.",
+      "range": {
+        "startLine": 914,
+        "startChar": 10,
+        "endLine": 914,
+        "endChar": 21
+      },
+      "revId": "5873f2c52cf533be25d43d0c1fa51283b7e2fc28",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a2b73ab_e01cf7b1",
+        "filename": "drivers/input/touchscreen/wacom/wacom_i2c_func.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1180,
+      "author": {
+        "id": 9394
+      },
+      "writtenOn": "2017-11-28T18:10:03Z",
+      "side": 1,
+      "message": "K, so it looks like 0x2f2 is the first gesture_key, then this on the fly converts the key_code to a bitfield?  I\u0027d suggest doing a #define GESTUREKEY_TO_BIT(x) (1 \u003c\u003c ((x) - 0x2f1)) to make this easier to follow.",
+      "range": {
+        "startLine": 1180,
+        "startChar": 7,
+        "endLine": 1180,
+        "endChar": 42
+      },
+      "revId": "5873f2c52cf533be25d43d0c1fa51283b7e2fc28",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24ece81d_bc7570b3",
+        "filename": "include/linux/wacom_i2c.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 9394
+      },
+      "writtenOn": "2017-11-28T18:10:03Z",
+      "side": 1,
+      "message": "maybe make these tunable via device attributes as well?",
+      "range": {
+        "startLine": 218,
+        "startChar": 0,
+        "endLine": 219,
+        "endChar": 25
+      },
+      "revId": "5873f2c52cf533be25d43d0c1fa51283b7e2fc28",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
