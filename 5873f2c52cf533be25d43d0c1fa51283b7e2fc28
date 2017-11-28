@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "6c22ad24_0641c486",
+        "filename": "drivers/input/touchscreen/wacom/wacom_i2c_func.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2017-11-28T18:35:35Z",
+      "side": 1,
+      "message": "It looks like ktime_ms_delta is not present in Linux 3.4. I didn\u0027t notice any warnings about it not being an s64, odd. I\u0027ll change that up if/when I follow this up.",
+      "parentUuid": "1a8e2c54_b26f9232",
+      "range": {
+        "startLine": 914,
+        "startChar": 10,
+        "endLine": 914,
+        "endChar": 21
+      },
+      "revId": "5873f2c52cf533be25d43d0c1fa51283b7e2fc28",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a2b73ab_e01cf7b1",
         "filename": "drivers/input/touchscreen/wacom/wacom_i2c_func.c",
         "patchSetId": 14
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "8cd90517_d45f44e5",
+        "filename": "drivers/input/touchscreen/wacom/wacom_i2c_func.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1180,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2017-11-28T18:35:35Z",
+      "side": 1,
+      "message": "First gesture key is 0x2f1, not 0x2f2, but yeah, you got it. I\u0027ll do that if/when I follow up on this, thanks.",
+      "parentUuid": "1a2b73ab_e01cf7b1",
+      "range": {
+        "startLine": 1180,
+        "startChar": 7,
+        "endLine": 1180,
+        "endChar": 42
+      },
+      "revId": "5873f2c52cf533be25d43d0c1fa51283b7e2fc28",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24ece81d_bc7570b3",
         "filename": "include/linux/wacom_i2c.h",
         "patchSetId": 14
@@ -82,6 +130,30 @@
       "writtenOn": "2017-11-28T18:10:03Z",
       "side": 1,
       "message": "maybe make these tunable via device attributes as well?",
+      "range": {
+        "startLine": 218,
+        "startChar": 0,
+        "endLine": 219,
+        "endChar": 25
+      },
+      "revId": "5873f2c52cf533be25d43d0c1fa51283b7e2fc28",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0020ad6d_345a3fb7",
+        "filename": "include/linux/wacom_i2c.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2017-11-28T18:35:35Z",
+      "side": 1,
+      "message": "Maybe. I\u0027m not sure how I feel about that. I can see it being nice to tune that, but I can also see it being confusing to tune the gesture distance, at least. I\u0027d have to provide the reported x and y info for the distance to make any sense. As far as long press: I could see the value in that. 500ms is based off of a Google search of what Android\u0027s default long press time is.",
+      "parentUuid": "24ece81d_bc7570b3",
       "range": {
         "startLine": 218,
         "startChar": 0,
