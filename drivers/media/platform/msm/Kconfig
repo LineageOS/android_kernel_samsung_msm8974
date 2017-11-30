@@ -46,7 +46,7 @@ menuconfig MSMB_CAMERA_LL
 
 menuconfig MSMB_CAMERA_MM
 	bool "Qualcomm MSM camera and video capture 2.0 support compatible with MM userspace libs"
-	depends on MSMB_CAMERA && SEC_K_PROJECT
+	depends on MSMB_CAMERA && (SEC_K_PROJECT || SEC_KSPORTS_PROJECT)
 	default y
 	---help---
 	  Say Y here to enable selecting the video adapters for
