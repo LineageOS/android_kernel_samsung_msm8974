@@ -1027,11 +1027,11 @@ static int conn_gadget_bind_config(struct usb_configuration *c)
 	dev->cdev = c->cdev;
 	dev->function.name = "conn_gadget";
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
+//#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
 	dev->function.fs_descriptors = fs_conn_gadget_descs;
-#else
-	dev->function.descriptors = fs_conn_gadget_descs;
-#endif
+//#else
+//	dev->function.descriptors = fs_conn_gadget_descs;
+//#endif
 
 	dev->function.hs_descriptors = hs_conn_gadget_descs;
 	dev->function.ss_descriptors = ss_conn_gadget_descs;
