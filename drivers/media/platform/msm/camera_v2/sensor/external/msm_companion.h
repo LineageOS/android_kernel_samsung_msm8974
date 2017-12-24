@@ -64,7 +64,7 @@ enum {
 	FW_PATH_MAX,
 };
 char *companion_fw_path[] = {
-	"/system/cameradata/",
+	"/vendor/cameradata/",
 	"/data/media/0/",
 };
 
