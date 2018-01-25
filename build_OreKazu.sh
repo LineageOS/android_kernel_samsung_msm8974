@@ -44,7 +44,8 @@ GOOGLE='/home/kazudante/Googletoolchain/arm-linux-androideabi-4.9/bin/arm-linux-
 
 UBERTC="/home/sunil/UBERTC-arm-eabi-8.0/bin/arm-linux-androideabi-"
 
-LINARO="/home/sunil/arm-linux-androideabi-7.x-linaro/bin/arm-linaro-linux-androideabi-"
+LINARO='/home/kazudante/arm-linaro-linux-androideabi/bin/arm-linaro-linux-androideabi-' 
+
 
 TOOLCHAIN="GOOGLE"	# Leave empty for using Google’s stock toolchain
 
