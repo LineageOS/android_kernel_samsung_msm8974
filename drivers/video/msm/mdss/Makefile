@@ -158,3 +158,4 @@ endif
 
 obj-$(CONFIG_FB_MSM_MDSS_HX8394C_TFT_VIDEO_720P_PANEL) += isl98611-backlight.o
 
+obj-$(CONFIG_FB_MSM_MDSS_KCAL_CTRL) += mdss_mdp_kcal_ctrl.o

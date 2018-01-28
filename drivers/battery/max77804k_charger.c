@@ -18,6 +18,10 @@
 #include <linux/host_notify.h>
 #endif
 
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+#endif
+
 #if defined(CONFIG_MACH_KLTE_CTC)
 #include <linux/qpnp/power-on.h>
 #endif
@@ -1021,6 +1025,39 @@ static int sec_chg_set_property(struct power_supply *psy,
 			charger->charging_current =
 					charger->pdata->charging_current
 					[charger->cable_type].fast_charging_current;
+#ifdef CONFIG_FORCE_FAST_CHARGE
+			/* Yank555 : Use Fast charge currents accroding to user settings */
+			if (force_fast_charge == FAST_CHARGE_FORCE_AC) {/* We are in basic Fast Charge mode, so we substitute AC to USB levels */
+				switch(charger->cable_type) {
+					case POWER_SUPPLY_TYPE_USB:	/* These are low current USB connections, apply usual 1A/h AC levels to USB */
+					case POWER_SUPPLY_TYPE_USB_ACA:
+					case POWER_SUPPLY_TYPE_CARDOCK:
+					case POWER_SUPPLY_TYPE_OTG:	charger->charging_current_max = USB_CHARGE_1000;
+									charger->charging_current     = USB_CHARGE_1000;
+									break;
+					default:			/* Don't do anything for any other kind of connections and don't touch when type is unknown */
+									break;
+				}
+			} else if (force_fast_charge == FAST_CHARGE_FORCE_CUSTOM_MA) { /* We are in custom current Fast Charge mode for both AC and USB */
+				switch(charger->cable_type) {
+					case POWER_SUPPLY_TYPE_USB:
+					case POWER_SUPPLY_TYPE_USB_DCP:
+					case POWER_SUPPLY_TYPE_USB_CDP:
+					case POWER_SUPPLY_TYPE_USB_ACA:
+					case POWER_SUPPLY_TYPE_CARDOCK:
+					case POWER_SUPPLY_TYPE_OTG:	/* These are USB connections, apply custom USB current for all of them */
+									charger->charging_current_max = usb_charge_level;
+									charger->charging_current     = usb_charge_level;
+									break;
+					case POWER_SUPPLY_TYPE_MAINS:	/* These are AC connections, apply custom AC current for all of them */
+									charger->charging_current_max = ac_charge_level;
+									charger->charging_current     = min(ac_charge_level+300, MAX_CHARGE_LEVEL); /* Keep the 300mA/h delta, but never go above 2.1A/h */
+									break;
+					default:			/* Don't do anything for any other kind of connections and don't touch when type is unknown */
+									break;
+				}
+			}
+#endif // CONFIG_FORCE_FAST_CHARGE
 			/* decrease the charging current according to siop level */
 			set_charging_current =
 				charger->charging_current * charger->siop_level / 100;
@@ -1165,8 +1202,21 @@ static int sec_chg_set_property(struct power_supply *psy,
 			cnfg12 = (0 << CHG_CNFG_12_CHGINSEL_SHIFT);
 			ctrl3 = (1 << CTRL3_JIGSET_SHIFT);
 			if (charger->cable_type == POWER_SUPPLY_TYPE_WIRELESS) {
+#ifdef CONFIG_FORCE_FAST_CHARGE
+				/* Yank555 : Use Fast charge currents accroding to user settings */
+				if (force_fast_charge == FAST_CHARGE_FORCE_AC) {
+					/* We are in basic Fast Charge mode, so we substitute AC to WIRELESS levels */
+					charger->charging_current_max = WIRELESS_CHARGE_1000;
+					charger->charging_current = WIRELESS_CHARGE_1000 + 100;
+				} else if (force_fast_charge == FAST_CHARGE_FORCE_CUSTOM_MA) {
+					/* We are in custom current Fast Charge mode for WIRELESS */
+					charger->charging_current_max = wireless_charge_level;
+					charger->charging_current = min(wireless_charge_level+100, MAX_CHARGE_LEVEL);
+				}
+#else
 				charger->charging_current_max = 650;
 				charger->charging_current = 750;
+#endif // CONFIG_FORCE_FAST_CHARGE
 				max77804k_set_input_current(charger,
 						charger->charging_current_max);
 				max77804k_set_charge_current(charger, charger->charging_current);
