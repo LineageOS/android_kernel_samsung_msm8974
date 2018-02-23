@@ -1,7 +1,7 @@
 /*
  * Include file private to the SOC Interconnect support files.
  *
- * Copyright (C) 1999-2015, Broadcom Corporation
+ * Copyright (C) 1999-2016, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -21,13 +21,17 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: siutils_priv.h 431423 2013-10-23 16:07:35Z $
+ * $Id: siutils_priv.h 625734 2016-03-17 11:58:35Z $
  */
 
 #ifndef	_siutils_priv_h_
 #define	_siutils_priv_h_
 
+#if defined(SI_ERROR_ENFORCE)
+#define	SI_ERROR(args)	printf args
+#else
 #define	SI_ERROR(args)
+#endif	
 
 #define	SI_MSG(args)
 
