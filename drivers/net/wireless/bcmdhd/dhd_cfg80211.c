@@ -153,7 +153,7 @@ static s32 wl_dongle_up(struct net_device *ndev, u32 up)
 {
 	s32 err = 0;
 
-	err = wldev_ioctl(ndev, WLC_UP, &up, sizeof(up), true);
+	err = wldev_ioctl_set(ndev, WLC_UP, &up, sizeof(up));
 	if (unlikely(err)) {
 		WL_ERR(("WLC_UP error (%d)\n", err));
 	}
