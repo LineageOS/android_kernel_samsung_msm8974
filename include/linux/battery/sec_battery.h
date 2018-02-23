@@ -42,6 +42,33 @@ struct sec_battery_extcon_cable{
 
 #define TEMP_HIGHLIMIT_DEFAULT	2000
 
+#define SEC_BAT_CURRENT_EVENT_NONE			0x0000
+#define SEC_BAT_CURRENT_EVENT_AFC			0x0001
+#define SEC_BAT_CURRENT_EVENT_CHARGE_DISABLE		0x0002
+#define SEC_BAT_CURRENT_EVENT_SKIP_HEATING_CONTROL	0x0004
+#define SEC_BAT_CURRENT_EVENT_LOW_TEMP_SWELLING		0x0010
+#define SEC_BAT_CURRENT_EVENT_HIGH_TEMP_SWELLING	0x0020
+#if defined(CONFIG_ENABLE_100MA_CHARGING_BEFORE_USB_CONFIGURED)
+#define SEC_BAT_CURRENT_EVENT_USB_100MA			0x0040
+#else
+#define SEC_BAT_CURRENT_EVENT_USB_100MA			0x0000
+#endif
+#define SEC_BAT_CURRENT_EVENT_LOW_TEMP			0x0080
+#define SEC_BAT_CURRENT_EVENT_USB_SUPER			0x0100
+#define SEC_BAT_CURRENT_EVENT_CHG_LIMIT			0x0200
+#define SEC_BAT_CURRENT_EVENT_CALL			0x0400
+#define SEC_BAT_CURRENT_EVENT_SLATE			0x0800
+#define SEC_BAT_CURRENT_EVENT_VBAT_OVP			0x1000
+#define SEC_BAT_CURRENT_EVENT_VSYS_OVP			0x2000
+
+#if defined(CONFIG_BATTERY_SWELLING)
+enum swelling_mode_state {
+	SWELLING_MODE_NONE = 0,
+	SWELLING_MODE_CHARGING,
+	SWELLING_MODE_FULL,
+};
+#endif
+
 struct adc_sample_info {
 	unsigned int cnt;
 	int total_adc;
@@ -66,6 +93,9 @@ struct sec_battery_info {
 	struct sec_battery_extcon_cable extcon_cable_list[EXTCON_NONE];
 #endif /* CONFIG_EXTCON */
 
+	bool safety_timer_set;
+	bool lcd_status;
+
 	int status;
 	int health;
 	bool present;
@@ -79,6 +109,7 @@ struct sec_battery_info {
 	int current_adc;
 
 	unsigned int capacity;			/* SOC (%) */
+	unsigned int input_voltage;		/* CHGIN/WCIN input voltage (V) */
 	int prev_reported_soc;
 
 	struct mutex adclock;
@@ -149,6 +180,8 @@ struct sec_battery_info {
 	/* charging */
 	unsigned int charging_mode;
 	bool is_recharging;
+	int wdt_kick_disable;
+
 	int cable_type;
 	int muic_cable_type;
 	int extended_cable_type;
@@ -159,6 +192,10 @@ struct sec_battery_info {
 	unsigned int recharge_check_cnt;
 	struct wake_lock vbus_detect_wake_lock;
 	struct delayed_work vbus_detect_work;
+
+	int input_current;
+	int charging_current;
+	int topoff_current;
 
 	/* wireless charging enable */
 	int wc_enable;
@@ -183,11 +220,19 @@ struct sec_battery_info {
 	int siop_level;
 	int stability_test;
 	int eng_not_full_status;
+
+	bool stop_timer;
+	unsigned long prev_safety_time;
+	unsigned long expired_time;
+	unsigned long cal_safety_time;
+
 #if defined(CONFIG_BATTERY_SWELLING)
-	bool swelling_mode;
+	unsigned int swelling_mode;
 	bool charging_block;
 	int swelling_full_check_cnt;
 #endif
+	struct mutex current_eventlock;
+	unsigned int current_event;
 };
 
 ssize_t sec_bat_show_attrs(struct device *dev,
@@ -290,6 +335,7 @@ enum {
 	BATT_STABILITY_TEST,
 	BATT_INBAT_VOLTAGE,
 	BATT_CAPACITY_MAX,
+	BATT_WDT_CONTROL,
 };
 
 enum {
