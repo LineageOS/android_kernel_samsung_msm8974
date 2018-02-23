@@ -1,7 +1,7 @@
 /*
  * Driver O/S-independent utility routines
  *
- * Copyright (C) 1999-2015, Broadcom Corporation
+ * Copyright (C) 1999-2016, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -20,7 +20,7 @@
  *      Notwithstanding the above, under no circumstances may you combine this
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
- * $Id: bcmutils.c 551820 2015-04-24 08:43:23Z $
+ * $Id: bcmutils.c 613265 2016-01-18 11:36:02Z $
  */
 
 #include <bcm_cfg.h>
@@ -262,10 +262,11 @@ pktq_penq(struct pktq *pq, int prec, void *p)
 	struct pktq_prec *q;
 
 	ASSERT(prec >= 0 && prec < pq->num_prec);
-	ASSERT(PKTLINK(p) == NULL);         /* queueing chains not allowed */
-
+	/* queueing chains not allowed and no segmented SKB (Kernel-3.18.y) */
+	ASSERT(!((PKTLINK(p) != NULL) && (PKTLINK(p) != p)));
 	ASSERT(!pktq_full(pq));
 	ASSERT(!pktq_pfull(pq, prec));
+	PKTSETLINK(p, NULL);
 
 	q = &pq->q[prec];
 
@@ -291,10 +292,12 @@ pktq_penq_head(struct pktq *pq, int prec, void *p)
 	struct pktq_prec *q;
 
 	ASSERT(prec >= 0 && prec < pq->num_prec);
-	ASSERT(PKTLINK(p) == NULL);         /* queueing chains not allowed */
+	/* queueing chains not allowed and no segmented SKB (Kernel-3.18.y) */
+	ASSERT(!((PKTLINK(p) != NULL) && (PKTLINK(p) != p)));
 
 	ASSERT(!pktq_full(pq));
 	ASSERT(!pktq_pfull(pq, prec));
+	PKTSETLINK(p, NULL);
 
 	q = &pq->q[prec];
 
@@ -2199,7 +2202,7 @@ bcm_mkiovar(char *name, char *data, uint datalen, char *buf, uint buflen)
 {
 	uint len;
 
-	len = strlen(name) + 1;
+	len = (uint)strlen(name) + 1;
 
 	if ((len + datalen) > buflen)
 		return 0;
@@ -2207,7 +2210,7 @@ bcm_mkiovar(char *name, char *data, uint datalen, char *buf, uint buflen)
 	strncpy(buf, name, buflen);
 
 	/* append data onto the end of the name string */
-	if (data) {
+	if (data && datalen != 0) {
 		memcpy(&buf[len], data, datalen);
 		len += datalen;
 	}

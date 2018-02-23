@@ -4,7 +4,7 @@
  * Provides type definitions and function prototypes used to link the
  * DHD OS, bus, and protocol modules.
  *
- * Copyright (C) 1999-2015, Broadcom Corporation
+ * Copyright (C) 1999-2016, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -24,7 +24,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: dhd.h 605803 2015-12-11 14:44:32Z $
+ * $Id: dhd.h 637878 2016-05-16 04:44:38Z $
  */
 
 /****************
@@ -59,6 +59,11 @@ int get_scheduler_policy(struct task_struct *p);
 #include <wlioctl.h>
 #include <wlfc_proto.h>
 
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 13, 0) && LINUX_VERSION_CODE < \
+	KERNEL_VERSION(3, 18, 0) || defined(CONFIG_BCMDHD_VENDOR_EXT))
+#define WL_VENDOR_EXT_SUPPORT
+#endif /* 3.13.0 <= LINUX_KERNEL_VERSION < 3.18.0 || CONFIG_BCMDHD_VENDOR_EXT */
 
 #if defined(KEEP_ALIVE)
 /* Default KEEP_ALIVE Period is 55 sec to prevent AP from sending Keep Alive probe frame */
@@ -139,7 +144,8 @@ enum dhd_prealloc_index {
 	DHD_PREALLOC_WIPHY_ESCAN1 = 6,
 	DHD_PREALLOC_DHD_INFO = 7,
 	DHD_PREALLOC_DHD_WLFC_INFO = 8,
-	DHD_PREALLOC_DHD_LOG_DUMP_BUF = 9,
+	DHD_PREALLOC_DHD_WLFC_HANGER = 9,
+	DHD_PREALLOC_DHD_LOG_DUMP_BUF = 10,
 	DHD_PREALLOC_SECTION_MAX = DHD_PREALLOC_DHD_LOG_DUMP_BUF
 };
 
@@ -155,7 +161,8 @@ enum dhd_hang_reason {
 	HANG_REASON_MSGBUF_LIVELOCK = 0x8006,
 	HANG_REASON_P2P_IFACE_DEL_FAILURE = 0x8007,
 	HANG_REASON_HT_AVAIL_ERROR = 0x8008,
-	HANG_REASON_MAX = 0x8009
+	HANG_REASON_INVALID_EVENT_OR_DATA = 0x8809,
+	HANG_REASON_MAX = 0x880a
 };
 
 /* Packet alignment for most efficient SDIO (can change based on platform) */
@@ -382,17 +389,19 @@ typedef struct dhd_pub {
 	bool affinity_isdpc;
 	bool affinity_isrxf;
 #endif /* CUSTOMER_HW4 && ARGOS_CPU_SCHEDULER */
-#ifdef KEEP_JP_REGREV
+#if defined(KEEP_KR_REGREV) || defined(KEEP_JP_REGREV)
 	char vars_ccode[WLC_CNTRY_BUF_SZ];
 	uint vars_regrev;
-#endif /* KEEP_JP_REGREV */
+#endif /* KEEP_KR_REGREV || KEEP_JP_REGREV */
 #ifdef DHD_LOSSLESS_ROAMING
 	uint8 dequeue_prec_map;
+	uint8 prio_8021x;
 #endif
 #ifdef DHD_LOG_DUMP
 	struct dhd_log_dump_buf dld_buf;
 	unsigned int dld_enable;
 #endif /* DHD_LOG_DUMP */
+	bool max_dtim_enable;         /* use MAX bcn_li_dtim value in suspend mode */
 } dhd_pub_t;
 #if defined(CUSTOMER_HW4)
 #define MAX_RESCHED_CNT 600
@@ -471,6 +480,10 @@ int dhd_pno_clean(dhd_pub_t *dhd);
  */
 extern int dhd_os_wake_lock(dhd_pub_t *pub);
 extern int dhd_os_wake_unlock(dhd_pub_t *pub);
+extern int dhd_event_wake_lock(dhd_pub_t *pub);
+extern int dhd_event_wake_unlock(dhd_pub_t *pub);
+extern void dhd_pm_wake_lock_timeout(dhd_pub_t *pub, int val);
+extern void dhd_pm_wake_unlock(dhd_pub_t *pub);
 extern int dhd_os_wake_lock_timeout(dhd_pub_t *pub);
 extern int dhd_os_wake_lock_rx_timeout_enable(dhd_pub_t *pub, int val);
 extern int dhd_os_wake_lock_ctrl_timeout_enable(dhd_pub_t *pub, int val);
@@ -514,6 +527,16 @@ inline static void MUTEX_UNLOCK_SOFTAP_SET(dhd_pub_t * dhdp)
 			__FUNCTION__, __LINE__); \
 		dhd_os_wake_unlock(pub); \
 	} while (0)
+#define DHD_PM_WAKE_LOCK_TIMEOUT(pub, val) \
+	do { \
+		PRINT_CALL_INFO("call pm_wake_timeout enable"); \
+	dhd_pm_wake_lock_timeout(pub, val); \
+	} while (0)
+#define DHD_PM_WAKE_UNLOCK(pub) \
+	do { \
+		PRINT_CALL_INFO("call pm_wake unlock"); \
+	dhd_pm_wake_unlock(pub); \
+	} while (0)
 #define DHD_OS_WAKE_LOCK_TIMEOUT(pub) \
 	do { \
 		printf("call wake_lock_timeout: %s %d\n", \
@@ -553,6 +576,10 @@ inline static void MUTEX_UNLOCK_SOFTAP_SET(dhd_pub_t * dhdp)
 #else
 #define DHD_OS_WAKE_LOCK(pub)			dhd_os_wake_lock(pub)
 #define DHD_OS_WAKE_UNLOCK(pub)		dhd_os_wake_unlock(pub)
+#define DHD_EVENT_WAKE_LOCK(pub)			dhd_event_wake_lock(pub)
+#define DHD_EVENT_WAKE_UNLOCK(pub)		dhd_event_wake_unlock(pub)
+#define DHD_PM_WAKE_LOCK_TIMEOUT(pub, val)  dhd_pm_wake_lock_timeout(pub, val)
+#define DHD_PM_WAKE_UNLOCK(pub) 			dhd_pm_wake_unlock(pub)
 #define DHD_OS_WAKE_LOCK_TIMEOUT(pub)		dhd_os_wake_lock_timeout(pub)
 #define DHD_OS_WAKE_LOCK_RX_TIMEOUT_ENABLE(pub, val) \
 	dhd_os_wake_lock_rx_timeout_enable(pub, val)
@@ -727,10 +754,12 @@ extern int dhd_net2idx(struct dhd_info *dhd, struct net_device *net);
 extern struct net_device * dhd_idx2net(void *pub, int ifidx);
 extern int net_os_send_hang_message(struct net_device *dev);
 extern int net_os_send_hang_message_reason(struct net_device *dev, const char *string_num);
-extern int wl_host_event(dhd_pub_t *dhd_pub, int *idx, void *pktdata,
-                         size_t pktlen, wl_event_msg_t *, void **data_ptr);
+extern int wl_host_event(dhd_pub_t *dhd_pub, int *idx, void *pktdata, uint pktlen,
+	wl_event_msg_t *, void **data_ptr,  void *);
+extern int wl_process_host_event(dhd_pub_t *dhd_pub, int *idx, void *pktdata, uint pktlen,
+	wl_event_msg_t *, void **data_ptr,  void *);
 extern void wl_event_to_host_order(wl_event_msg_t * evt);
-
+extern int wl_host_event_get_data(void *pktdata, uint pktlen, bcm_event_msg_u_t *evu);
 extern int dhd_wl_ioctl(dhd_pub_t *dhd_pub, int ifindex, wl_ioctl_t *ioc, void *buf, int len);
 extern int dhd_wl_ioctl_cmd(dhd_pub_t *dhd_pub, int cmd, void *arg, int len, uint8 set,
                             int ifindex);
@@ -766,7 +795,7 @@ extern int dhd_bus_suspend(dhd_pub_t *dhdpub);
 extern int dhd_bus_resume(dhd_pub_t *dhdpub, int stage);
 extern int dhd_bus_membytes(dhd_pub_t *dhdp, bool set, uint32 address, uint8 *data, uint size);
 extern void dhd_print_buf(void *pbuf, int len, int bytes_per_line);
-extern bool dhd_is_associated(dhd_pub_t *dhd, void *bss_buf, int *retval);
+extern bool dhd_is_associated(dhd_pub_t *dhd, uint8 ifidx, int *retval);
 extern uint dhd_bus_chip_id(dhd_pub_t *dhdp);
 extern uint dhd_bus_chiprev_id(dhd_pub_t *dhdp);
 extern uint dhd_bus_chippkg_id(dhd_pub_t *dhdp);
@@ -776,7 +805,8 @@ extern int dhd_keep_alive_onoff(dhd_pub_t *dhd);
 #endif /* KEEP_ALIVE */
 
 extern bool dhd_is_concurrent_mode(dhd_pub_t *dhd);
-extern int dhd_iovar(dhd_pub_t *pub, int ifidx, char *name, char *cmd_buf, uint cmd_len, int set);
+int dhd_iovar(dhd_pub_t *pub, int ifidx, char *name, char *param_buf, uint param_len,
+		char *res_buf, uint res_len, int set);
 typedef enum cust_gpio_modes {
 	WLAN_RESET_ON,
 	WLAN_RESET_OFF,
