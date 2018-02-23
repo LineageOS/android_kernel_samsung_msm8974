@@ -597,6 +597,16 @@ static long msm_private_ioctl(struct file *file, void *fh,
 			wake_up(&cam_dummy_queue.state_wait);
 		return rc;
 	}
+
+	switch (cmd) {
+	case MSM_CAM_V4L2_IOCTL_NOTIFY:
+	case MSM_CAM_V4L2_IOCTL_CMD_ACK:
+	case MSM_CAM_V4L2_IOCTL_NOTIFY_ERROR:
+		break;
+	default:
+		return -ENOTTY;
+	}
+
 	event_data = (struct msm_v4l2_event_data *)
 		     ((struct v4l2_event *)arg)->u.data;
 
