@@ -19,7 +19,26 @@
 #include <linux/battery/sec_fuelgauge.h>
 extern int poweroff_charging;
 
-#if defined(CONFIG_SEC_K_PROJECT)
+#if defined(CONFIG_MACH_KLTE_EUR)
+u16 model_data_active_1[8] = {
+		0xA510, 0xB390, 0xB7E0, 0xB930,
+		0xBB20, 0xBBF0, 0xBD20, 0xBE20
+};
+u16 model_data_active_2[8] = {
+		0xBF10, 0xC0C0, 0xC1B0, 0xC420,
+		0xC530, 0xC7F0, 0xCD30, 0xD360
+};
+u16 model_data_active_3[8] = {
+		0x0060, 0x0C00, 0x3820, 0x0EA0,
+		0x5160, 0x3F60, 0x4FE0, 0x25E0
+};
+u16 model_data_active_4[8] = {
+		0x1B00, 0x1BE0, 0x0F00, 0x23A0,
+		0x11C0, 0x10C0, 0x1000, 0x1000
+};
+
+u16 model_rcomp_seg[8] = {0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080, 0x0080};
+#elif defined(CONFIG_SEC_K_PROJECT)
 u16 model_data_active_1[8] = {
 		0xAB40, 0xB640, 0xBAF0, 0xBC90,
 		0xBD00, 0xBE10,	0xBF40, 0xC230
@@ -187,7 +206,9 @@ static bool max17048_set_modeldata(struct i2c_client *client)
 	/* 6. Delay at least 150msec */
 	/* 7. Write OCV */
 	addr = 0x0E;
-#if defined(CONFIG_SEC_K_PROJECT)
+#if defined(CONFIG_MACH_KLTE_EUR)
+	data = 0xDD60;
+#elif defined(CONFIG_SEC_K_PROJECT)
 	data = 0xE400;
 #elif defined(CONFIG_SEC_S_PROJECT)
 	data = 0xE3D0;
@@ -217,7 +238,9 @@ static bool max17048_set_modeldata(struct i2c_client *client)
 	pr_info("%s : reg = 0x%4x, SOC_DATA1 = 0x%x, SOC_DATA2 = 0x%x\n",
 		__func__, temp, read_soc[1], read_soc[0]);
 
-#if defined(CONFIG_SEC_K_PROJECT)
+#if defined(CONFIG_MACH_KLTE_EUR)
+	if ((read_soc[1] >= 0xEE) && (read_soc[1] <= 0xF0)) {
+#elif defined(CONFIG_SEC_K_PROJECT)
 	if ((read_soc[1] >= 0xF2) && (read_soc[1] <= 0xF4)) {
 #elif defined(CONFIG_SEC_S_PROJECT)
 	if ((read_soc[1] >= 0xE4) && (read_soc[1] <= 0xE6)) {
