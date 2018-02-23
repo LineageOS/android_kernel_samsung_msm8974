@@ -3393,7 +3393,7 @@ int vfs_rename2(struct vfsmount *mnt,
 	if (!error)
 		fsnotify_move(old_dir, new_dir, old_name.name, is_dir,
 			      new_dentry->d_inode, old_dentry);
-	take_dentry_name_snapshot(&old_name, old_dentry);
+	release_dentry_name_snapshot(&old_name);
 
 	return error;
 }
