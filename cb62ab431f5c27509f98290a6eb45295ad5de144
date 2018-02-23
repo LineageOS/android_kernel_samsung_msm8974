@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e27a0ae_99c84472",
+        "filename": "net/ipv4/inet_connection_sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 4550
+      },
+      "writtenOn": "2018-02-23T22:15:02Z",
+      "side": 1,
+      "message": "Duplicate as below(?)",
+      "revId": "cb62ab431f5c27509f98290a6eb45295ad5de144",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f9bb8bd_f5efc6e6",
+        "filename": "sound/soc/msm/qdsp6v2/msm-pcm-routing-v2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1672,
+      "author": {
+        "id": 4550
+      },
+      "writtenOn": "2018-02-23T22:15:02Z",
+      "side": 1,
+      "message": "Duplicate as below",
+      "revId": "cb62ab431f5c27509f98290a6eb45295ad5de144",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
