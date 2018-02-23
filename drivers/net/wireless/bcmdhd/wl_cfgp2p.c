@@ -1,7 +1,7 @@
 /*
  * Linux cfgp2p driver
  *
- * Copyright (C) 1999-2015, Broadcom Corporation
+ * Copyright (C) 1999-2016, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: wl_cfgp2p.c 584255 2015-09-04 14:41:49Z $
+ * $Id: wl_cfgp2p.c 614940 2016-01-25 12:49:41Z $
  *
  */
 #include <typedefs.h>
@@ -361,7 +361,7 @@ wl_cfgp2p_init_priv(struct bcm_cfg80211 *cfg)
 void
 wl_cfgp2p_deinit_priv(struct bcm_cfg80211 *cfg)
 {
-	CFGP2P_DBG(("In\n"));
+	CFGP2P_ERR(("In\n"));
 	if (cfg->p2p) {
 		kfree(cfg->p2p);
 		cfg->p2p = NULL;
@@ -386,13 +386,13 @@ wl_cfgp2p_set_firm_p2p(struct bcm_cfg80211 *cfg)
 	}
 	if (val == 0) {
 		val = 1;
-		ret = wldev_ioctl(ndev, WLC_DOWN, &val, sizeof(s32), true);
+		ret = wldev_ioctl_set(ndev, WLC_DOWN, &val, sizeof(s32));
 		if (ret < 0) {
 			CFGP2P_ERR(("WLC_DOWN error %d\n", ret));
 			return ret;
 		}
 		wldev_iovar_setint(ndev, "apsta", val);
-		ret = wldev_ioctl(ndev, WLC_UP, &val, sizeof(s32), true);
+		ret = wldev_ioctl_set(ndev, WLC_UP, &val, sizeof(s32));
 		if (ret < 0) {
 			CFGP2P_ERR(("WLC_UP error %d\n", ret));
 			return ret;
@@ -442,7 +442,7 @@ wl_cfgp2p_ifadd(struct bcm_cfg80211 *cfg, struct ether_addr *mac, u8 if_type,
 	if (unlikely(err < 0))
 		printk("'cfg p2p_ifadd' error %d\n", err);
 	else if (if_type == WL_P2P_IF_GO) {
-		err = wldev_ioctl(ndev, WLC_SET_SCB_TIMEOUT, &scb_timeout, sizeof(u32), true);
+		err = wldev_ioctl_set(ndev, WLC_SET_SCB_TIMEOUT, &scb_timeout, sizeof(u32));
 		if (unlikely(err < 0))
 			printk("'cfg scb_timeout' error %d\n", err);
 	}
@@ -522,7 +522,7 @@ wl_cfgp2p_ifchange(struct bcm_cfg80211 *cfg, struct ether_addr *mac, u8 if_type,
 	if (unlikely(err < 0)) {
 		printk("'cfg p2p_ifupd' error %d\n", err);
 	} else if (if_type == WL_P2P_IF_GO) {
-		err = wldev_ioctl(netdev, WLC_SET_SCB_TIMEOUT, &scb_timeout, sizeof(u32), true);
+		err = wldev_ioctl_set(netdev, WLC_SET_SCB_TIMEOUT, &scb_timeout, sizeof(u32));
 		if (unlikely(err < 0))
 			printk("'cfg scb_timeout' error %d\n", err);
 	}
@@ -2248,8 +2248,8 @@ wl_cfgp2p_set_p2p_ps(struct bcm_cfg80211 *cfg, struct net_device *ndev, char* bu
 		}
 
 		if ((legacy_ps != -1) && ((legacy_ps == PM_MAX) || (legacy_ps == PM_OFF))) {
-			ret = wldev_ioctl(dev,
-				WLC_SET_PM, &legacy_ps, sizeof(legacy_ps), true);
+			ret = wldev_ioctl_set(dev,
+				WLC_SET_PM, &legacy_ps, sizeof(legacy_ps));
 			if (unlikely(ret))
 				CFGP2P_ERR(("error (%d)\n", ret));
 			wl_cfg80211_update_power_mode(dev);
