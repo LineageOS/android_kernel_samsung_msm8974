@@ -1,7 +1,7 @@
 /*
  * Customer HW 4 dependant file
  *
- * Copyright (C) 1999-2015, Broadcom Corporation
+ * Copyright (C) 1999-2016, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -99,7 +99,6 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"",   "XZ", 1},	/* Universal if Country code is unknown or empty */
 	{"IR", "XZ", 1},	/* Universal if Country code is IRAN, (ISLAMIC REPUBLIC OF) */
 	{"SD", "XZ", 1},	/* Universal if Country code is SUDAN */
-	{"SY", "XZ", 1},	/* Universal if Country code is SYRIAN ARAB REPUBLIC */
 	{"GL", "XZ", 1},	/* Universal if Country code is GREENLAND */
 	{"PS", "XZ", 1},	/* Universal if Country code is PALESTINIAN TERRITORY, OCCUPIED */
 	{"TL", "XZ", 1},	/* Universal if Country code is TIMOR-LESTE (EAST TIMOR) */
@@ -144,7 +143,6 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"",   "XZ", 11},	/* Universal if Country code is unknown or empty */
 	{"IR", "XZ", 11},	/* Universal if Country code is IRAN, (ISLAMIC REPUBLIC OF) */
 	{"SD", "XZ", 11},	/* Universal if Country code is SUDAN */
-	{"SY", "XZ", 11},	/* Universal if Country code is SYRIAN ARAB REPUBLIC */
 	{"GL", "XZ", 11},	/* Universal if Country code is GREENLAND */
 	{"PS", "XZ", 11},	/* Universal if Country code is PALESTINIAN TERRITORY, OCCUPIED */
 	{"TL", "XZ", 11},	/* Universal if Country code is TIMOR-LESTE (EAST TIMOR) */
@@ -174,13 +172,11 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"",   "XZ", 11},	/* Universal if Country code is unknown or empty */
 	{"IR", "XZ", 11},	/* Universal if Country code is IRAN, (ISLAMIC REPUBLIC OF) */
 	{"SD", "XZ", 11},	/* Universal if Country code is SUDAN */
-	{"SY", "XZ", 11},	/* Universal if Country code is SYRIAN ARAB REPUBLIC */
 	{"PS", "XZ", 11},	/* Universal if Country code is PALESTINIAN TERRITORY, OCCUPIED */
 	{"TL", "XZ", 11},	/* Universal if Country code is TIMOR-LESTE (EAST TIMOR) */
 	{"MH", "XZ", 11},	/* Universal if Country code is MARSHALL ISLANDS */
 	{"GL", "GP", 2},
 	{"AL", "AL", 2},
-	{"DZ", "GB", 6},
 	{"AS", "AS", 12},
 	{"AI", "AI", 1},
 	{"AF", "AD", 0},
@@ -189,6 +185,19 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"AW", "AW", 2},
 	{"AU", "AU", 6},
 	{"AT", "AT", 4},
+#if defined(BCM4354_CHIP) || defined(BCM43454_CHIP) || defined(BCM43455_CHIP)
+	{"AM", "AM", 1},
+	{"MY", "MY", 19},
+#if defined(BCM4354_CHIP)
+	{"DZ", "DZ", 2},
+	{"TW", "TW", 65},
+#else
+	{"DZ", "GB", 6},
+	{"TW", "TW", 1},
+#endif /* BCM4354_CHIP */
+#else
+	{"MY", "MY", 3},
+#endif /* BCM4354_CHIP || BCM43454_CHIP || BCM43455_CHIP */
 	{"AZ", "AZ", 2},
 	{"BS", "BS", 2},
 	{"BH", "BH", 4},
@@ -228,7 +237,6 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"IE", "IE", 5},
 	{"IL", "IL", 14},
 	{"IT", "IT", 4},
-	{"JP", "JP", 968},
 	{"JO", "JO", 3},
 	{"KE", "SA", 0},
 	{"KW", "KW", 5},
@@ -242,7 +250,6 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"MO", "SG", 0},
 	{"MK", "MK", 2},
 	{"MW", "MW", 1},
-	{"MY", "MY", 3},
 	{"MV", "MV", 3},
 	{"MT", "MT", 4},
 	{"MQ", "MQ", 2},
@@ -277,10 +284,13 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"LK", "LK", 1},
 	{"SE", "SE", 4},
 	{"CH", "CH", 4},
-	{"TW", "TW", 1},
 	{"TH", "TH", 5},
 	{"TT", "TT", 3},
+#if defined(DHD_SUPPORT_TR_212)
+	{"TR", "TR", 212},
+#else
 	{"TR", "TR", 7},
+#endif
 	{"AE", "AE", 6},
 	{"GB", "GB", 6},
 	{"UY", "VE", 3},
@@ -292,8 +302,15 @@ const struct cntry_locales_custom translate_custom_table[] = {
 	{"EC", "EC", 21},
 	{"SV", "SV", 25},
 	{"KR", "KR", 70},
-	{"RU", "RU", 988},
+#if defined(BCM4354_CHIP) || defined(BCM43454_CHIP) || defined(BCM43455_CHIP)
+	{"JP", "JP", 968},
+	{"RU", "RU", 986},
 	{"UA", "UA", 16},
+#else
+	{"JP", "JP", 45},
+	{"RU", "RU", 13},
+	{"UA", "UA", 8},
+#endif /* BCM4354_CHIP || BCM43454_CHIP || BCM43455_CHIP */
 	{"GT", "GT", 1},
 	{"MN", "MN", 1},
 	{"NI", "NI", 2},
@@ -1305,7 +1322,6 @@ void sec_control_pm(dhd_pub_t *dhd, uint *power_mode)
 	struct file *fp = NULL;
 	char *filepath = PSMINFO;
 	char power_val = 0;
-	char iovbuf[WL_EVENTING_MASK_LEN + 12];
 #ifdef DHD_ENABLE_LPC
 	int ret = 0;
 	uint32 lpc = 0;
@@ -1335,23 +1351,18 @@ void sec_control_pm(dhd_pub_t *dhd, uint *power_mode)
 			dhd_wl_ioctl_cmd(dhd, WLC_SET_PM, (char *)power_mode,
 				sizeof(uint), TRUE, 0);
 			/* Turn off MPC in AP mode */
-			bcm_mkiovar("mpc", (char *)power_mode, 4,
-				iovbuf, sizeof(iovbuf));
-			dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf,
-				sizeof(iovbuf), TRUE, 0);
+			dhd_iovar(dhd, 0, "mpc", (char *)power_mode, sizeof(*power_mode), NULL, 0,
+					TRUE);
 			g_pm_control = TRUE;
 #ifdef ROAM_ENABLE
 			/* Roaming off of dongle */
-			bcm_mkiovar("roam_off", (char *)&roamvar, 4,
-				iovbuf, sizeof(iovbuf));
-			dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf,
-				sizeof(iovbuf), TRUE, 0);
+			dhd_iovar(dhd, 0, "roam_off", (char *)&roamvar, sizeof(roamvar), NULL, 0,
+					TRUE);
 #endif
 #ifdef DHD_ENABLE_LPC
 			/* Set lpc 0 */
-			bcm_mkiovar("lpc", (char *)&lpc, 4, iovbuf, sizeof(iovbuf));
-			if ((ret = dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf,
-				sizeof(iovbuf), TRUE, 0)) < 0) {
+			ret = dhd_iovar(dhd, 0, "lpc", (char *)&lpc, sizeof(lpc), NULL, 0, TRUE);
+			if (ret < 0) {
 				DHD_ERROR(("[WIFI_SEC] %s: Set lpc failed  %d\n",
 				__FUNCTION__, ret));
 			}
@@ -1375,7 +1386,6 @@ int dhd_sel_ant_from_file(dhd_pub_t *dhd)
 	uint32 ant_val = 0;
 	uint32 btc_mode = 0;
 	char *filepath = ANTINFO;
-	char iovbuf[WLC_IOCTL_SMLEN];
 	uint chip_id = dhd_bus_chip_id(dhd);
 
 	/* Check if this chip can support MIMO */
@@ -1416,8 +1426,8 @@ int dhd_sel_ant_from_file(dhd_pub_t *dhd)
 
 	/* bt coex mode off */
 	if (dhd_get_fw_mode(dhd->info) == DHD_FLAG_MFG_MODE) {
-		bcm_mkiovar("btc_mode", (char *)&btc_mode, 4, iovbuf, sizeof(iovbuf));
-		ret = dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
+		ret = dhd_iovar(dhd, 0, "btc_mode", (char *)&btc_mode, sizeof(btc_mode), NULL, 0,
+				TRUE);
 		if (ret) {
 			DHD_ERROR(("[WIFI_SEC] %s: Fail to execute dhd_wl_ioctl_cmd(): "
 				"btc_mode, ret=%d\n",
@@ -1427,16 +1437,14 @@ int dhd_sel_ant_from_file(dhd_pub_t *dhd)
 	}
 
 	/* Select Antenna */
-	bcm_mkiovar("txchain", (char *)&ant_val, 4, iovbuf, sizeof(iovbuf));
-	ret = dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
+	ret = dhd_iovar(dhd, 0, "txchain", (char *)&ant_val, sizeof(ant_val), NULL, 0, TRUE);
 	if (ret) {
 		DHD_ERROR(("[WIFI_SEC] %s: Fail to execute dhd_wl_ioctl_cmd(): txchain, ret=%d\n",
 			__FUNCTION__, ret));
 		return ret;
 	}
 
-	bcm_mkiovar("rxchain", (char *)&ant_val, 4, iovbuf, sizeof(iovbuf));
-	ret = dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
+	ret = dhd_iovar(dhd, 0, "rxchain", (char *)&ant_val, sizeof(ant_val), NULL, 0, TRUE);
 	if (ret) {
 		DHD_ERROR(("[WIFI_SEC] %s: Fail to execute dhd_wl_ioctl_cmd(): rxchain, ret=%d\n",
 			__FUNCTION__, ret));

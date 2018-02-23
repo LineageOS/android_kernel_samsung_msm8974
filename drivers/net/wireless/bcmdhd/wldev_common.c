@@ -53,7 +53,7 @@
 
 extern int dhd_ioctl_entry_local(struct net_device *net, wl_ioctl_t *ioc, int cmd);
 
-s32 wldev_ioctl(
+static s32 wldev_ioctl(
 	struct net_device *dev, u32 cmd, void *arg, u32 len, u32 set)
 {
 	s32 ret = 0;
@@ -69,6 +69,34 @@ s32 wldev_ioctl(
 	ret = dhd_ioctl_entry_local(dev, &ioc, cmd);
 
 	return ret;
+}
+
+
+/*
+SET commands :
+cast buffer to non-const  and call the GET function
+*/
+
+s32 wldev_ioctl_set(
+	struct net_device *dev, u32 cmd, const void *arg, u32 len)
+{
+
+#if defined(STRICT_GCC_WARNINGS) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
+#endif
+	return wldev_ioctl(dev, cmd, (void *)arg, len, 1);
+#if defined(STRICT_GCC_WARNINGS) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
+}
+
+
+s32 wldev_ioctl_get(
+	struct net_device *dev, u32 cmd, void *arg, u32 len)
+{
+	return wldev_ioctl(dev, cmd, (void *)arg, len, 0);
 }
 
 /* Format a iovar buffer, not bsscfg indexed. The bsscfg index will be
@@ -93,8 +121,23 @@ s32 wldev_iovar_getbuf(
 	if (buf_sync) {
 		mutex_lock(buf_sync);
 	}
-	wldev_mkiovar(iovar_name, param, paramlen, buf, buflen);
-	ret = wldev_ioctl(dev, WLC_GET_VAR, buf, buflen, FALSE);
+
+	if (buf && (buflen > 0)) {
+		/* initialize the response buffer */
+		memset(buf, 0, buflen);
+	} else {
+		ret = BCME_BADARG;
+		goto exit;
+	}
+
+	ret = wldev_mkiovar(iovar_name, param, paramlen, buf, buflen);
+
+	if (!ret) {
+		ret = BCME_BUFTOOSHORT;
+		goto exit;
+	}
+	ret = wldev_ioctl_get(dev, WLC_GET_VAR, buf, buflen);
+exit:
 	if (buf_sync)
 		mutex_unlock(buf_sync);
 	return ret;
@@ -112,7 +155,7 @@ s32 wldev_iovar_setbuf(
 	}
 	iovar_len = wldev_mkiovar(iovar_name, param, paramlen, buf, buflen);
 	if (iovar_len > 0)
-		ret = wldev_ioctl(dev, WLC_SET_VAR, buf, iovar_len, TRUE);
+		ret = wldev_ioctl_set(dev, WLC_SET_VAR, buf, iovar_len);
 	else
 		ret = BCME_BUFTOOSHORT;
 
@@ -164,6 +207,11 @@ s32 wldev_mkiovar_bsscfg(
 	u32 namelen;
 	u32 iolen;
 
+	/* initialize buffer */
+	if (!iovar_buf || buflen == 0)
+		return BCME_BADARG;
+	memset(iovar_buf, 0, buflen);
+
 	if (bssidx == 0) {
 		return wldev_mkiovar((s8*)iovar_name, (s8 *)param, paramlen,
 			(s8 *) iovar_buf, buflen);
@@ -212,7 +260,7 @@ s32 wldev_iovar_getbuf_bsscfg(
 	}
 
 	wldev_mkiovar_bsscfg(iovar_name, param, paramlen, buf, buflen, bsscfg_idx);
-	ret = wldev_ioctl(dev, WLC_GET_VAR, buf, buflen, FALSE);
+	ret = wldev_ioctl_get(dev, WLC_GET_VAR, buf, buflen);
 	if (buf_sync) {
 		mutex_unlock(buf_sync);
 	}
@@ -231,7 +279,7 @@ s32 wldev_iovar_setbuf_bsscfg(
 	}
 	iovar_len = wldev_mkiovar_bsscfg(iovar_name, param, paramlen, buf, buflen, bsscfg_idx);
 	if (iovar_len > 0)
-		ret = wldev_ioctl(dev, WLC_SET_VAR, buf, iovar_len, TRUE);
+		ret = wldev_ioctl_set(dev, WLC_SET_VAR, buf, iovar_len);
 	else {
 		ret = BCME_BUFTOOSHORT;
 	}
@@ -278,7 +326,8 @@ int wldev_get_link_speed(
 
 	if (!plink_speed)
 		return -ENOMEM;
-	error = wldev_ioctl(dev, WLC_GET_RATE, plink_speed, sizeof(int), 0);
+	*plink_speed = 0;
+	error = wldev_ioctl_get(dev, WLC_GET_RATE, plink_speed, sizeof(int));
 	if (unlikely(error))
 		return error;
 
@@ -297,7 +346,7 @@ int wldev_get_rssi(
 		return -ENOMEM;
 	bzero(&scb_val, sizeof(scb_val_t));
 
-	error = wldev_ioctl(dev, WLC_GET_RSSI, &scb_val, sizeof(scb_val_t), 0);
+	error = wldev_ioctl_get(dev, WLC_GET_RSSI, &scb_val, sizeof(scb_val_t));
 	if (unlikely(error))
 		return error;
 
@@ -312,7 +361,8 @@ int wldev_get_ssid(
 
 	if (!pssid)
 		return -ENOMEM;
-	error = wldev_ioctl(dev, WLC_GET_SSID, pssid, sizeof(wlc_ssid_t), 0);
+	memset(pssid, 0, sizeof(wlc_ssid_t));
+	error = wldev_ioctl_get(dev, WLC_GET_SSID, pssid, sizeof(wlc_ssid_t));
 	if (unlikely(error))
 		return error;
 	pssid->SSID_len = dtoh32(pssid->SSID_len);
@@ -324,7 +374,8 @@ int wldev_get_band(
 {
 	int error;
 
-	error = wldev_ioctl(dev, WLC_GET_BAND, pband, sizeof(uint), 0);
+	*pband = 0;
+	error = wldev_ioctl_get(dev, WLC_GET_BAND, pband, sizeof(uint));
 	return error;
 }
 
@@ -334,7 +385,7 @@ int wldev_set_band(
 	int error = -1;
 
 	if ((band == WLC_BAND_AUTO) || (band == WLC_BAND_5G) || (band == WLC_BAND_2G)) {
-		error = wldev_ioctl(dev, WLC_SET_BAND, &band, sizeof(band), true);
+		error = wldev_ioctl_set(dev, WLC_SET_BAND, &band, sizeof(band));
 		if (!error)
 			dhd_bus_band_set(dev, band);
 	}
@@ -373,7 +424,8 @@ int wldev_set_country(
 
 		if (user_enforced) {
 			bzero(&scbval, sizeof(scb_val_t));
-			error = wldev_ioctl(dev, WLC_DISASSOC, &scbval, sizeof(scb_val_t), true);
+			error = wldev_ioctl_set(dev, WLC_DISASSOC,
+					&scbval, sizeof(scb_val_t));
 			if (error < 0) {
 				WLDEV_ERROR(("%s: set country failed due to Disassoc error %d\n",
 					__FUNCTION__, error));
@@ -391,7 +443,8 @@ int wldev_set_country(
 			smbuf, sizeof(smbuf), NULL);
 		if (error < 0) {
 			WLDEV_ERROR(("%s: set country for %s as %s rev %d failed\n",
-				__FUNCTION__, country_code, cspec_desired.ccode, cspec_desired.rev));
+				__FUNCTION__, country_code, cspec_desired.ccode,
+				cspec_desired.rev));
 			return error;
 		}
 		dhd_bus_country_set(dev, &cspec_desired, notify);

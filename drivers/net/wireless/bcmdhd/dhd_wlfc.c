@@ -1,7 +1,7 @@
 /*
  * DHD PROP_TXSTATUS Module.
  *
- * Copyright (C) 1999-2015, Broadcom Corporation
+ * Copyright (C) 1999-2016, Broadcom Corporation
  * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: dhd_wlfc.c 587005 2015-09-17 11:26:26Z $
+ * $Id: dhd_wlfc.c 617143 2016-02-04 07:57:06Z $
  *
  */
 
@@ -94,8 +94,8 @@ _dhd_wlfc_prec_enque(struct pktq *pq, int prec, void* p, bool qHead,
 
 
 	ASSERT(prec >= 0 && prec < pq->num_prec);
-	ASSERT(PKTLINK(p) == NULL);         /* queueing chains not allowed */
-
+	/* queueing chains not allowed and no segmented SKB (Kernel-3.18.y) */
+	ASSERT(!((PKTLINK(p) != NULL) && (PKTLINK(p) != p)));
 	ASSERT(!pktq_full(pq));
 	ASSERT(!pktq_pfull(pq, prec));
 
@@ -168,7 +168,7 @@ exit:
 	hang-er: noun, a contrivance on which things are hung, as a hook.
 */
 static void*
-_dhd_wlfc_hanger_create(osl_t *osh, int max_items)
+_dhd_wlfc_hanger_create(dhd_pub_t *dhd, int max_items)
 {
 	int i;
 	wlfc_hanger_t* hanger;
@@ -176,7 +176,8 @@ _dhd_wlfc_hanger_create(osl_t *osh, int max_items)
 	/* allow only up to a specific size for now */
 	ASSERT(max_items == WLFC_HANGER_MAXITEMS);
 
-	if ((hanger = (wlfc_hanger_t*)MALLOC(osh, WLFC_HANGER_SIZE(max_items))) == NULL)
+	if ((hanger = (wlfc_hanger_t*)DHD_OS_PREALLOC(dhd, DHD_PREALLOC_DHD_WLFC_HANGER,
+			WLFC_HANGER_SIZE(max_items))) == NULL)
 		return NULL;
 
 	memset(hanger, 0, WLFC_HANGER_SIZE(max_items));
@@ -189,12 +190,13 @@ _dhd_wlfc_hanger_create(osl_t *osh, int max_items)
 }
 
 static int
-_dhd_wlfc_hanger_delete(osl_t *osh, void* hanger)
+_dhd_wlfc_hanger_delete(dhd_pub_t *dhd, void* hanger)
 {
 	wlfc_hanger_t* h = (wlfc_hanger_t*)hanger;
 
 	if (h) {
-		MFREE(osh, h, WLFC_HANGER_SIZE(h->max_items));
+		DHD_OS_PREFREE(dhd, DHD_PREALLOC_DHD_WLFC_HANGER,
+				h, WLFC_HANGER_SIZE(h->max_items));
 		return BCME_OK;
 	}
 	return BCME_BADARG;
@@ -2531,7 +2533,11 @@ static void
 _dhd_wlfc_reorderinfo_indicate(uint8 *val, uint8 len, uchar *info_buf, uint *info_len)
 {
 	if (info_len) {
-		if (info_buf) {
+		/* Check copy length to avoid buffer overrun. In case of length exceeding
+		*  WLHOST_REORDERDATA_TOTLEN, return failure instead sending incomplete result
+		*  of length WLHOST_REORDERDATA_TOTLEN
+		*/
+		if ((info_buf) && (len <= WLHOST_REORDERDATA_TOTLEN)) {
 			bcopy(val, info_buf, len);
 			*info_len = len;
 		}
@@ -2612,7 +2618,7 @@ int dhd_wlfc_enable(dhd_pub_t *dhd)
 	wlfc->dhdp = dhd;
 
 	if (!WLFC_GET_AFQ(dhd->wlfc_mode)) {
-		wlfc->hanger = _dhd_wlfc_hanger_create(dhd->osh, WLFC_HANGER_MAXITEMS);
+		wlfc->hanger = _dhd_wlfc_hanger_create(dhd, WLFC_HANGER_MAXITEMS);
 		if (wlfc->hanger == NULL) {
 			DHD_OS_PREFREE(dhd, DHD_PREALLOC_DHD_WLFC_INFO,
 				dhd->wlfc_state, sizeof(athost_wl_status_info_t));
@@ -3424,7 +3430,7 @@ dhd_wlfc_deinit(dhd_pub_t *dhd)
 
 	if (!WLFC_GET_AFQ(dhd->wlfc_mode)) {
 		/* delete hanger */
-		_dhd_wlfc_hanger_delete(dhd->osh, wlfc->hanger);
+		_dhd_wlfc_hanger_delete(dhd, wlfc->hanger);
 	}
 
 

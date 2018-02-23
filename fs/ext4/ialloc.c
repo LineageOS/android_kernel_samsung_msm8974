@@ -23,6 +23,7 @@
 #include <linux/bitops.h>
 #include <linux/blkdev.h>
 #include <asm/byteorder.h>
+#include <linux/ratelimit.h>
 
 #include "ext4.h"
 #include "ext4_jbd2.h"
@@ -605,6 +606,27 @@ static int find_group_other(struct super_block *sb, struct inode *parent,
 	return -1;
 }
 
+/**
+ * ext4_has_free_inodes()
+ * @sbi: in-core super block structure.
+ *
+ * Check if filesystem has inodes available for allocation.
+ * On success return 1, return 0 on failure.
+ */
+static inline int ext4_has_free_inodes(struct ext4_sb_info *sbi)
+{
+	if (likely(percpu_counter_read_positive(&sbi->s_freeinodes_counter) >
+			sbi->s_r_inodes_count))
+		return 1;
+
+	/* Hm, nope.  Are (enough) root reserved inodes available? */
+	if (sbi->s_resuid == current_fsuid() ||
+	    ((sbi->s_resgid != 0) && in_group_p(sbi->s_resgid)) ||
+	    capable(CAP_SYS_RESOURCE))
+		return 1;
+	return 0;
+}
+
 /*
  * There are two policies for allocating an inode.  If the new inode is
  * a directory, then a forward search is made for a block group with both
@@ -645,6 +667,11 @@ struct inode *__ext4_new_inode(handle_t *handle, struct inode *dir,
 		return ERR_PTR(-ENOMEM);
 	ei = EXT4_I(inode);
 	sbi = EXT4_SB(sb);
+
+	if (!ext4_has_free_inodes(sbi)) {
+		err = -ENOSPC;
+		goto out;
+	}
 
 	if (!goal)
 		goal = sbi->s_inode_goal;
@@ -909,6 +936,11 @@ got:
 fail:
 	ext4_std_error(sb, err);
 out:
+	if (err == -ENOSPC) {
+		printk_ratelimited(KERN_INFO "Return ENOSPC : No free inode (%d/%u)\n",
+			(int) percpu_counter_read_positive(&sbi->s_freeinodes_counter),
+			le32_to_cpu(sbi->s_es->s_inodes_count));
+	}
 	iput(inode);
 	ret = ERR_PTR(err);
 really_out:

@@ -58,6 +58,12 @@ static DEFINE_SPINLOCK(vnswap_original_bio_lock);
 void vnswap_init_disksize(u64 disksize)
 {
 	int i;
+
+	if ((vnswap_device->init_success & VNSWAP_INIT_DISKSIZE_SUCCESS) != 0x0) {
+		pr_err("%s %d: disksize is already initialized (disksize = %llu)\n",
+				__func__, __LINE__, vnswap_device->disksize);
+		return;
+	}
 	vnswap_device->disksize = PAGE_ALIGN(disksize);
 	if ((vnswap_device->disksize/PAGE_SIZE > MAX_SWAP_AREA_SIZE_PAGES) ||
 		!vnswap_device->disksize) {
@@ -186,14 +192,15 @@ int vnswap_init_backing_storage(void)
 	*/
 	if (vnswap_device->bs_size % (sizeof(unsigned long)*8) != 0) {
 		dprintk("%s %d: backing storage size is misaligned " \
-				"(32 page align)." \
+				"(%d page align)." \
 				"So, it is truncated from %llu pages to %llu pages\n",
-				__func__, __LINE__, vnswap_device->bs_size,
-				vnswap_device->bs_size /
-				(sizeof(unsigned long)*8)*
-				(sizeof(unsigned long)*8));
-		vnswap_device->bs_size = (vnswap_device->bs_size /
-			(sizeof(unsigned long)*8) * (sizeof(unsigned long)*8));
+				__func__, __LINE__,
+				sizeof(unsigned long) * 8,
+				vnswap_device->bs_size,
+				vnswap_device->bs_size / ((sizeof(unsigned long) * 8) * 
+					(sizeof(unsigned long) * 8)));
+		vnswap_device->bs_size = vnswap_device->bs_size /
+		((sizeof(unsigned long) * 8) * (sizeof(unsigned long) * 8));
 	}
 
 	backing_storage_bitmap = vmalloc(vnswap_device->bs_size / 8);
@@ -202,7 +209,7 @@ int vnswap_init_backing_storage(void)
 		goto close_file;
 	}
 
-	for (i = 0; i < vnswap_device->bs_size / 32; i++)
+	for (i = 0; i < vnswap_device->bs_size / (8 * sizeof(unsigned long)); i++)
 		backing_storage_bitmap[i] = 0;
 	backing_storage_bitmap_last_allocated_index = -1;
 

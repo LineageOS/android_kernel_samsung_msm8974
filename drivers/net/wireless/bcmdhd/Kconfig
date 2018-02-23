@@ -68,13 +68,6 @@ config BCM43454
 	  This module adds support for wireless adapters based on
 	  Broadcom 43454 chipset.
 
-config BROADCOM_WIFI
-	bool "Broadcom WiFi Driver"
-	depends on (BCM4330 || BCM4334 || BCM43241)
-	default y
-	---help---
-		This is a configuration for broadcom WLAN driver.
-
 config BCMDHD_FW_PATH
 	depends on WLAN
 	string "Firmware path"
@@ -88,14 +81,6 @@ config BCMDHD_NVRAM_PATH
 	default "/system/etc/wifi/bcmdhd.cal"
 	---help---
 	  Path to the calibration file.
-
-config BCMDHD_WEXT
-	bool "Enable WEXT support"
-	depends on BCMDHD && CFG80211 = n
-	select WIRELESS_EXT
-	select WEXT_PRIV
-	help
-	  Enables WEXT support
 
 config DHD_USE_STATIC_BUF
 	bool "Enable memory preallocation"
@@ -119,7 +104,7 @@ config BROADCOM_WIFI_RESERVED_MEM
 
 config WIFI_BROADCOM_COB
         bool "BROADCOM WIFI COB"
-        depends on (BCM43455 || BCM4335 || BCM4339 || BCM4334 || BCM43241 || BCM4354 || BCM4330 || BCM4358 || BCM4359 || BCM4343)
+        depends on (BCM43455 || BCM4343 || BCM43454)
         ---help---
           This is a configuration for broadcom WIFI COB Type.
 
@@ -157,3 +142,10 @@ config WLAIBSS
 	default y
 	---help---
 	  This is a configuration for Oxygen Network.
+
+config WIFI_MULTIPLE_CHIP
+	bool "Support Muletiple WIFI Chip"
+	depends on (BCM43454 || BCM43455)
+	default n
+	---help---
+		This is a configuration multipul chip project(43454 & 43455).
