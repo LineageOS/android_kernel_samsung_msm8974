@@ -39,6 +39,24 @@
       "revId": "9858e4558e6c80780f1a61ee0ab573d25ff509b1",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78e4e56b_4d5ade44",
+        "filename": "fs/sdfat/sdfat.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 5113,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2018-03-02T16:51:56Z",
+      "side": 1,
+      "message": "nice catch, thanks",
+      "parentUuid": "3e928632_c6d57a72",
+      "revId": "9858e4558e6c80780f1a61ee0ab573d25ff509b1",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
     }
   ]
 }
