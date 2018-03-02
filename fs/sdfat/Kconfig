@@ -29,6 +29,13 @@ config SDFAT_USE_FOR_VFAT
 	help
 	  If you want to register sdFAT as available for VFAT, say Y.
 
+config SDFAT_FAT32_SHORTNAME_SEQ
+	bool "Append count to DOS shortname"
+	default n
+	depends on SDFAT_FS
+	help
+	  If you want to append count to the DOS shortname, say Y.
+
 config SDFAT_DELAYED_META_DIRTY
 	bool "Enable delayed metadata dirty"
 	default y
