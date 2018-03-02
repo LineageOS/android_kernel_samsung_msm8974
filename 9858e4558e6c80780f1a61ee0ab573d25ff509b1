@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95992647_ce85cb9b",
+        "filename": "fs/sdfat/sdfat.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4669,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2018-03-02T16:21:37Z",
+      "side": 1,
+      "message": "probably should be a pr_warn",
+      "range": {
+        "startLine": 4669,
+        "startChar": 3,
+        "endLine": 4669,
+        "endChar": 7
+      },
+      "revId": "9858e4558e6c80780f1a61ee0ab573d25ff509b1",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
