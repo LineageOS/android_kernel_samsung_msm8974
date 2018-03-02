@@ -22,6 +22,23 @@
       "revId": "9858e4558e6c80780f1a61ee0ab573d25ff509b1",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e928632_c6d57a72",
+        "filename": "fs/sdfat/sdfat.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 5113,
+      "author": {
+        "id": 5503
+      },
+      "writtenOn": "2018-03-02T16:45:34Z",
+      "side": 1,
+      "message": "vfat_fs_type",
+      "revId": "9858e4558e6c80780f1a61ee0ab573d25ff509b1",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
     }
   ]
 }
