@@ -4456,6 +4456,9 @@ enum {
 	Opt_discard,
 	Opt_fs,
 	Opt_adj_req,
+#ifdef CONFIG_SDFAT_USE_FOR_VFAT
+	Opt_shortname,
+#endif /* CONFIG_SDFAT_USE_FOR_VFAT */
 };
 
 static const match_table_t sdfat_tokens = {
@@ -4484,6 +4487,9 @@ static const match_table_t sdfat_tokens = {
 	{Opt_discard, "discard"},
 	{Opt_fs, "fs=%s"},
 	{Opt_adj_req, "adj_req"},
+#ifdef CONFIG_SDFAT_USE_FOR_VFAT
+	{Opt_shortname, "shortname=%"},
+#endif /* CONFIG_SDFAT_USE_FOR_VFAT */
 	{Opt_err, NULL}
 };
 
@@ -4650,6 +4656,11 @@ static int parse_options(struct super_block *sb, char *options, int silent,
 			IMSG("adjust request config is not enabled. ignore\n");
 #endif
 			break;
+#ifdef CONFIG_SDFAT_USE_FOR_VFAT
+		case Opt_shortname:
+			IMSG("DRAGONS AHEAD! sdFAT may not handle shortname=%s as expected\n", option);
+			break;
+#endif /* CONFIG_SDFAT_USE_FOR_VFAT */
 		default:
 			if (!silent) {
 				sdfat_msg(sb, KERN_ERR,
@@ -4989,6 +5000,20 @@ static struct file_system_type exfat_fs_type = {
 };
 #endif /* CONFIG_SDFAT_USE_FOR_EXFAT */
 
+#ifdef CONFIG_SDFAT_USE_FOR_VFAT
+static struct file_system_type vfat_fs_type = {
+	.owner       = THIS_MODULE,
+	.name        = "vfat",
+	.mount       = sdfat_fs_mount,
+#ifdef CONFIG_SDFAT_DBG_IOCTL
+	.kill_sb    = sdfat_debug_kill_sb,
+#else
+	.kill_sb    = kill_block_super,
+#endif /* CONFIG_SDFAT_DBG_IOCTL */
+	.fs_flags    = FS_REQUIRES_DEV,
+};
+#endif /* CONFIG_SDFAT_USE_FOR_VFAT */
+
 static int __init init_sdfat_fs(void)
 {
 	int err;
@@ -5035,6 +5060,14 @@ static int __init init_sdfat_fs(void)
 	}
 #endif /* CONFIG_SDFAT_USE_FOR_EXFAT */
 
+#ifdef CONFIG_SDFAT_USE_FOR_VFAT
+	err = register_filesystem(&vfat_fs_type);
+	if (err) {
+		pr_err("[SDFAT] failed to register for vfat filesystem\n");
+		goto error;
+	}
+#endif /* CONFIG_SDFAT_USE_FOR_VFAT */
+
 	return 0;
 error:
 	sdfat_statistics_uninit();
@@ -5067,6 +5100,9 @@ static void __exit exit_sdfat_fs(void)
 #ifdef CONFIG_SDFAT_USE_FOR_EXFAT
 	unregister_filesystem(&exfat_fs_type);
 #endif /* CONFIG_SDFAT_USE_FOR_EXFAT */
+#ifdef CONFIG_SDFAT_USE_FOR_VFAT
+	unregister_filesystem(&exfat_fs_type);
+#endif /* CONFIG_SDFAT_USE_FOR_VFAT */
 	fsapi_shutdown();
 }
 
