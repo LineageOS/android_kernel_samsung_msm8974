@@ -485,18 +485,18 @@
 
 		battery,temp_check_type = <2>; /* _BATTERY_TEMP_CHECK_TEMP */
 		battery,temp_check_count = <1>;
-		battery,temp_high_threshold_event = <650>;
-		battery,temp_high_recovery_event = <440>;
-		battery,temp_low_threshold_event = <(-45)>;
-		battery,temp_low_recovery_event = <0>;
-		battery,temp_high_threshold_normal = <650>;
-		battery,temp_high_recovery_normal = <440>;
-		battery,temp_low_threshold_normal = <(-45)>;
-		battery,temp_low_recovery_normal = <0>;
-		battery,temp_high_threshold_lpm = <650>;
-		battery,temp_high_recovery_lpm = <440>;
-		battery,temp_low_threshold_lpm = <(-45)>;
-		battery,temp_low_recovery_lpm = <0>;
+		battery,temp_high_threshold_event = <450>;
+		battery,temp_high_recovery_event = <400>;
+		battery,temp_low_threshold_event = <0>;
+		battery,temp_low_recovery_event = <50>;
+		battery,temp_high_threshold_normal = <450>;
+		battery,temp_high_recovery_normal = <400>;
+		battery,temp_low_threshold_normal = <0>;
+		battery,temp_low_recovery_normal = <50>;
+		battery,temp_high_threshold_lpm = <450>;
+		battery,temp_high_recovery_lpm = <400>;
+		battery,temp_low_threshold_lpm = <0>;
+		battery,temp_low_recovery_lpm = <50>;
 		battery,full_check_type = <7>; /* SEC_BATTERY_FULLCHARGED_CHGPSY */
 		battery,full_check_type_2nd = <7>; /* SEC_BATTERY_FULLCHARGED_CHGPSY */
 		battery,full_check_count = <1>;
@@ -507,17 +507,38 @@
 		   SEC_BATTERY_FULL_CONDITION_NOTIMEFULL |
 		   SEC_BATTERY_FULL_CONDITION_VCELL */
 		battery,full_condition_type = <13>;
-		battery,full_condition_soc = <93>;
-		battery,full_condition_vcell = <4300>;
+		battery,full_condition_soc = <90>;
+		battery,full_condition_vcell = <4200>;
 
 		battery,recharge_check_count = <1>;
 		battery,recharge_condition_type = <4>; /* SEC_BATTERY_RECHARGE_CONDITION_VCELL */
 		battery,recharge_condition_soc = <98>;
-		battery,recharge_condition_vcell = <4350>;
+		battery,recharge_condition_vcell = <4230>;
 
 		battery,charging_total_time = <21600>;
 		battery,recharging_total_time = <5400>;
 		battery,charging_reset_time = <0>;
+
+		battery,swelling_high_temp_block = <410>;
+		battery,swelling_high_temp_recov = <360>;
+		battery,swelling_low_temp_block_1st = <150>;
+		battery,swelling_low_temp_recov_1st = <200>;
+		battery,swelling_low_temp_block_2nd = <50>;
+		battery,swelling_low_temp_recov_2nd = <100>;
+
+		battery,swelling_low_temp_current = <700>;	/* 0.3C */
+		battery,swelling_low_temp_topoff = <150>;	/* 0.05C */
+		battery,swelling_high_temp_current = <1090>;	/* 0.45C */
+		battery,swelling_high_temp_topoff = <150>;	/* 0.05C */
+		battery,swelling_wc_high_temp_current = <700>;	/* 0.3C */
+		battery,swelling_wc_low_temp_current = <700>;	/* 0.3C */
+
+		battery,swelling_drop_float_voltage = <4150>;
+		battery,swelling_high_rechg_voltage = <4000>;
+		battery,swelling_low_rechg_voltage = <4000>;
+
+		battery,chg_float_voltage = <4300>;
+		battery,expired_time = <12000>;
 
 		charger{
 			status = "disable";
@@ -527,13 +548,13 @@
 			battery,chg_polarity_en = <0>;
 			battery,chg_gpio_status = <0>;
 			battery,chg_polarity_status = <0>;
-			battery,chg_float_voltage = <4400>;
+			battery,chg_float_voltage = <4300>;
 			battery,ovp_uvlo_check_type = <3>; /* SEC_BATTERY_OVP_UVLO_CHGPOLLING */
 
 			battery,input_current_limit = <1800 460 460 1800 460 900 1000 460 460 1000 760 1800 1800 460 1300 400 700 1300 300 1000 1800 460 460>;
-			battery,fast_charging_current = <2100 0 460 2100 460 1200 1000 460 0 1200 900 2100 2100 0 1300 400 700 1300 300 1000 2100 0 0>;
-			battery,full_check_current_1st = <200 0 200 200 200 200 200 200 0 200 200 200 200 0 200 200 200 200 200 200 200 0 0>;
-			battery,full_check_current_2nd = <125 0 125 125 125 125 125 125 0 125 125 125 125 0 125 125 125 125 125 125 125 0 0>;
+			battery,fast_charging_current = <2000 0 460 2000 460 1200 1000 460 0 1200 900 2000 2000 0 1300 400 700 1300 300 1000 2000 0 0>;
+			battery,full_check_current_1st = <300 0 300 300 300 300 300 300 0 300 300 300 300 0 300 300 300 300 300 300 300 0 0>;
+			battery,full_check_current_2nd = <150 0 150 150 150 150 150 150 0 150 150 150 150 0 150 150 150 150 150 150 150 0 0>;
 		};
 	};
 };
