@@ -4775,6 +4775,7 @@ config SWITCH_DUAL_MODEM
 
 config TIMA_RKP
        bool "Enable RKP (Realtime Kernel Protection) TIMA feature"
+       depends on TIMA
        default n
 
 config TIMA_RKP_30
@@ -4845,6 +4846,7 @@ config TIMA
 
 config TIMA_LKMAUTH
        bool "Enable LKM authentication TIMA feature"
+       depends on TIMA && MODULES
        default n
        help
          TIMA authenticates loaded kernel modules. Disable it if you don't
@@ -4860,6 +4862,7 @@ config TIMA_LKMAUTH_CODE_PROT
 
 config TIMA_TEST_INFRA
        tristate "Testing infrastructure for TIMA"
+       depends on TIMA
        default n
        help
          Kernel bits of the TIMA test infrastructure
