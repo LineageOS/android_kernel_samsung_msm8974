@@ -70,7 +70,7 @@ config SDFAT_CHECK_RO_ATTR
 config SDFAT_ALIGNED_MPAGE_WRITE
 	bool "Enable supporting aligned mpage_write"
 	default y
-	depends on SDFAT_FS
+	depends on SDFAT_FS = y
 
 config SDFAT_VIRTUAL_XATTR
 	bool "Virtual xattr support for sdFAT"
