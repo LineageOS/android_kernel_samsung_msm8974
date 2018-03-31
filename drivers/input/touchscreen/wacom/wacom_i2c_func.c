@@ -907,28 +907,27 @@ void wacom_i2c_softkey(struct wacom_i2c *wac_i2c, s16 key, s16 pressed)
 }
 #endif
 
-static void handle_gestures(int x, int y, ktime_t end, struct wacom_i2c *wac_i2c)
+static u16 compute_gesture(s16 x, s16 y, ktime_t end, struct wacom_i2c *wac_i2c)
 {
-	int dx = x - wac_i2c->gesture_start_x;
-	int dy = y - wac_i2c->gesture_start_y;
-	int dt = ktime_to_ms(ktime_sub(end, wac_i2c->gesture_start_time));
+	s32 dx = x - wac_i2c->gesture_start_x;
+	s32 dy = y - wac_i2c->gesture_start_y;
+	s64 dt = ktime_to_ms(ktime_sub(end, wac_i2c->gesture_start_time));
 
 	if (abs(dy) > abs(dx)) {
 		if (abs(dy) > MIN_GEST_DIST) {
-			wac_i2c->gesture_key = dy < 0 ? KEY_PEN_DTU : KEY_PEN_UTD;
-			return;
+			return dy < 0 ? KEY_PEN_DTU : KEY_PEN_UTD;
 		}
 	} else {
 		if (abs(dx) > MIN_GEST_DIST) {
-			wac_i2c->gesture_key = dx < 0 ? KEY_PEN_RTL : KEY_PEN_LTR;
-			return;
+			return dx < 0 ? KEY_PEN_RTL : KEY_PEN_LTR;
 		}
 	}
 
 	if (dt >= LONG_PRESS_TIME) {
-		wac_i2c->gesture_key = KEY_PEN_LP;
-		return;
+		return KEY_PEN_LP;
 	}
+
+	return 0;
 }
 
 int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
@@ -940,6 +939,7 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 	static s16 x, y, pressure;
 	static s16 tmp;
 	int rdy = 0;
+	u16 key;
 
 #if defined(WACOM_USE_GAIN)
 	u8 gain = 0;
@@ -1166,7 +1166,6 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 				dev_info(&wac_i2c->client->dev,
 						"%s: side on\n",
 						__func__);
-				wac_i2c->gesture_key = -1;
 				wac_i2c->gesture_start_x = x;
 				wac_i2c->gesture_start_y = y;
 				wac_i2c->gesture_start_time = ktime_get();
@@ -1174,10 +1173,9 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 				dev_info(&wac_i2c->client->dev,
 						"%s: side off\n",
 						__func__);
-				handle_gestures(x, y, ktime_get(), wac_i2c);
-				if (wac_i2c->gesture_key > -1 &&
-						(wac_i2c->enabled_gestures &
-						(1 << (wac_i2c->gesture_key - 0x2f1)))) {
+				key = compute_gesture(x, y, ktime_get(), wac_i2c);
+				if (key && wac_i2c->enabled_gestures
+						& GEST_KEY2BIT(key)) {
 					input_report_key(wac_i2c->input_dev,
 							wac_i2c->gesture_key, 1);
 					input_sync(wac_i2c->input_dev);
