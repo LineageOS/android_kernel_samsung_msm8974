@@ -1113,7 +1113,7 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 #endif
 			input_report_key(wac_i2c->input_dev,
 					 BTN_STYLUS, stylus);
-			if (!stylus && !wac_i2c->side_pressed) {
+			if (!wac_i2c->enabled_gestures || (!stylus && !wac_i2c->side_pressed)) {
 				input_report_key(wac_i2c->input_dev, BTN_TOUCH, prox);
 			}
 			input_report_key(wac_i2c->input_dev, wac_i2c->tool, 1);
@@ -1176,11 +1176,9 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 				key = compute_gesture(x, y, ktime_get(), wac_i2c);
 				if (key && (wac_i2c->enabled_gestures
 						& GEST_KEY2BIT(key))) {
-					input_report_key(wac_i2c->input_dev,
-							wac_i2c->gesture_key, 1);
+					input_report_key(wac_i2c->input_dev, key, 1);
 					input_sync(wac_i2c->input_dev);
-					input_report_key(wac_i2c->input_dev,
-							wac_i2c->gesture_key, 0);
+					input_report_key(wac_i2c->input_dev, key, 0);
 					input_sync(wac_i2c->input_dev);
 				}
 			}
