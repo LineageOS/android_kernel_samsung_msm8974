@@ -242,7 +242,7 @@
 			label = "hall_flip";
 			gpios = <&pm8941_gpios 36 0>;
 			linux,input-type = <1>;
-			linux,code = <0x15>;
+			linux,code = <0x0>;
 			gpio-key,wakeup;
 			debounce-interval = <15>;
 		};
