@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d41a04f3_4260ec70",
+        "filename": "arch/arm/configs/lineage_h3gduoschn_defconfig",
+        "patchSetId": 4
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 15173
+      },
+      "writtenOn": "2018-04-24T03:22:35Z",
+      "side": 1,
+      "message": "Is this set as well by default?",
+      "range": {
+        "startLine": 530,
+        "startChar": 0,
+        "endLine": 530,
+        "endChar": 21
+      },
+      "revId": "5fae4e1d06a9d6f5ef2ccf138fc49bd922ce596f",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
