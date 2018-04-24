@@ -22,6 +22,30 @@
       "revId": "5fae4e1d06a9d6f5ef2ccf138fc49bd922ce596f",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e940e900_0d412613",
+        "filename": "arch/arm/configs/lineage_h3gduoschn_defconfig",
+        "patchSetId": 4
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2018-04-24T03:30:03Z",
+      "side": 1,
+      "message": "https://gist.github.com/javelinanddart/837e6cda04e1a78a12e040479d7d1cb1 This is a diff of the stock defconfigs. So yes, for some reason.",
+      "parentUuid": "d41a04f3_4260ec70",
+      "range": {
+        "startLine": 530,
+        "startChar": 0,
+        "endLine": 530,
+        "endChar": 21
+      },
+      "revId": "5fae4e1d06a9d6f5ef2ccf138fc49bd922ce596f",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
     }
   ]
 }
