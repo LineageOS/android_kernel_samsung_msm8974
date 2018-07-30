@@ -285,7 +285,9 @@ int parse_dataframe(struct ssp_data *data, char *pchRcvDataFrame, int iLength) {
 			memcpy(&length, pchRcvDataFrame + iDataIdx, 2);
 			iDataIdx += 2;
 			sensortime.batch_count = sensortime.batch_count_fixed = length;
-			sensortime.batch_mode = length > 1 ? BATCH_MODE_RUN : BATCH_MODE_NONE;
+			sensortime.batch_mode = (iSensorData != ACCELEROMETER_SENSOR) && (length > 1)
+					? BATCH_MODE_RUN
+					: BATCH_MODE_NONE;
 			sensortime.irq_diff = data->timestamp - data->lastTimestamp[iSensorData];
 
 			if (sensortime.batch_mode == BATCH_MODE_RUN) {
