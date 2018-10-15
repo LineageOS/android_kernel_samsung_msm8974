@@ -70,6 +70,7 @@ static int32_t sdp_mm_query_proc_loaded(void __user *argp)
 			sdp_resp.sensitive_proc_list[sdp_resp.sensitive_proc_list_len] = p->pid;
 			sdp_resp.sensitive_proc_list_len++;
 		}
+		if (sdp_resp.sensitive_proc_list_len >= MAX_SENSITIVE_PROC) break;
 	}
 	spin_unlock_irqrestore(&sdp_mm.sdp_proc_list_lock, flags);
 	if (copy_to_user(argp, &sdp_resp, sizeof(sdp_resp))) {

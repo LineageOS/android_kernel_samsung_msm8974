@@ -36,7 +36,7 @@ struct dlp_struct {
 	long time;
 	bool lock;
 	struct list_head list;
-	spinlock_t list_lock;
+	struct mutex list_mutex;
 };
 struct dlp_struct dlp_info;
 
@@ -47,7 +47,7 @@ static void dlp_dump_list(void) {
 	
 	printk("============ debug ============\n");	
 
-	spin_lock(&dlp_info.list_lock);
+	mutex_lock(&dlp_info.list_mutex);
 	
 	list_for_each(entry, &dlp_info.list) {
 		tmp = list_entry(entry, struct dlp_struct, list);
@@ -55,7 +55,7 @@ static void dlp_dump_list(void) {
 		printk("DLP : user_id : %d\n", tmp->user_id);
 		printk("DLP : lock : %s\n", tmp->lock ? "true" : "false");
 	}
-	spin_unlock(&dlp_info.list_lock);	
+	mutex_unlock(&dlp_info.list_mutex);
 }
 #endif
 
@@ -63,18 +63,18 @@ static struct dlp_struct *dlp_find_list(int user_id) {
 	struct list_head *entry;
 	struct dlp_struct *tmp;
 	
-	spin_lock(&dlp_info.list_lock);
+	mutex_lock(&dlp_info.list_mutex);
 	
 	list_for_each(entry, &dlp_info.list) {
 		tmp = list_entry(entry, struct dlp_struct, list);
 
 		if(tmp->user_id == user_id) {
 			printk("DLP: found user_id %d\n", user_id); // TODO : deleted
-			spin_unlock(&dlp_info.list_lock);
+			mutex_unlock(&dlp_info.list_mutex);
 			return tmp;
 		}
 	}
-	spin_unlock(&dlp_info.list_lock);
+	mutex_unlock(&dlp_info.list_mutex);
 
 	return NULL;
 }
@@ -102,12 +102,12 @@ static int dlp_add_info(int user_id, bool lock){
    	tmp->user_id = user_id;
 	tmp->lock = lock;
 
-	spin_lock_init(&dlp_info.list_lock);
+	mutex_init(&dlp_info.list_mutex);
 	INIT_LIST_HEAD(&tmp->list);
 
-	spin_lock(&dlp_info.list_lock);
+	mutex_lock(&dlp_info.list_mutex);
 	list_add_tail(&tmp->list, &dlp_info.list);
-	spin_unlock(&dlp_info.list_lock);
+	mutex_unlock(&dlp_info.list_mutex);
 
 	return 0;
 }
@@ -130,9 +130,9 @@ static int dlp_lock_setting(void __user *argp, bool lock) {
 		dlp_add_info(dlp_lock_set.user_id, lock);
 	}
 	else {
-		spin_lock(&dlp_info.list_lock);
+		mutex_lock(&dlp_info.list_mutex);
 		tmp->lock = lock;
-		spin_unlock(&dlp_info.list_lock);
+		mutex_unlock(&dlp_info.list_mutex);
 	}
 
 	return 0;
@@ -192,7 +192,7 @@ static int __init dlp_ioctl_init(void) {
 	}
 
 	INIT_LIST_HEAD(&dlp_info.list);
-	spin_lock_init(&dlp_info.list_lock);
+	mutex_init(&dlp_info.list_mutex);
 
 	printk("DLP: dlp_ioctl initialized\n");
 
