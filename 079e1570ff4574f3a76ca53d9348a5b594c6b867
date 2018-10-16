@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc464b0f_67669055",
+        "filename": "fs/ecryptfs/mm.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 15173
+      },
+      "writtenOn": "2018-10-16T16:45:56Z",
+      "side": 1,
+      "message": "We can kill this file altogether. It should have disappeared with the \"kill SDP\" change.",
+      "revId": "079e1570ff4574f3a76ca53d9348a5b594c6b867",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
