@@ -226,9 +226,9 @@ struct sec_battery_info {
 	unsigned long expired_time;
 	unsigned long cal_safety_time;
 
+	bool charging_block;
 #if defined(CONFIG_BATTERY_SWELLING)
 	unsigned int swelling_mode;
-	bool charging_block;
 	int swelling_full_check_cnt;
 #endif
 	struct mutex current_eventlock;
