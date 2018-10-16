@@ -441,7 +441,6 @@ struct sec_battery_platform_data {
 	/* sustaining event after deactivated (second) */
 	unsigned int event_waiting_time;
 
-#if defined(CONFIG_BATTERY_SWELLING)
 	/* battery swelling */
 	int swelling_high_temp_block;
 	int swelling_high_temp_recov;
@@ -466,7 +465,6 @@ struct sec_battery_platform_data {
 	int swelling_low_temp_recov;
 	unsigned int swelling_high_chg_current;
 	unsigned int swelling_low_chg_current;
-#endif
 
 	/* Monitor setting */
 	sec_battery_monitor_polling_t polling_type;
