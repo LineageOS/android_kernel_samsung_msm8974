@@ -209,6 +209,7 @@ static bool sec_bat_is_lpm(struct sec_battery_info *battery)
 	}
 }
 
+#if defined(CONFIG_BATTERY_SWELLING)
 static void sec_bat_set_current_event(struct sec_battery_info *battery,
 		unsigned int current_event_val, unsigned int current_event_mask)
 {
@@ -224,6 +225,7 @@ static void sec_bat_set_current_event(struct sec_battery_info *battery,
 
 	mutex_unlock(&battery->current_eventlock);
 }
+#endif
 
 static int sec_bat_set_charge(
 				struct sec_battery_info *battery,
@@ -1439,7 +1441,9 @@ static bool sec_bat_temperature_check(
 			return false;
 		}
 	} else {
+#if defined(CONFIG_BATTERY_SWELLING)
 		union power_supply_propval val = {0, };
+#endif
 		/* if recovered from not charging */
 		if ((battery->health == POWER_SUPPLY_HEALTH_GOOD) &&
 			(battery->status ==
