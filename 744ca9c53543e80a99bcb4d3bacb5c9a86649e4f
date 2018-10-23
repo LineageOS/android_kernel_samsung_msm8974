@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eabff273_47a4f5b1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2018-10-23T02:25:43Z",
+      "side": 1,
+      "message": "perhaps \u0027ecryptfs\u0027",
+      "revId": "744ca9c53543e80a99bcb4d3bacb5c9a86649e4f",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
+    }
+  ]
+}
