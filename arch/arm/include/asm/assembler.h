@@ -22,6 +22,8 @@
 
 #include <asm/ptrace.h>
 #include <asm/domain.h>
+#include <asm/opcodes-virt.h>
+#include <asm/asm-offsets.h>
 
 #define IOMEM(x)	(x)
 
@@ -29,8 +31,8 @@
  * Endian independent macros for shifting bytes within registers.
  */
 #ifndef __ARMEB__
-#define pull            lsr
-#define push            lsl
+#define lspull          lsr
+#define lspush          lsl
 #define get_byte_0      lsl #0
 #define get_byte_1	lsr #8
 #define get_byte_2	lsr #16
@@ -40,8 +42,8 @@
 #define put_byte_2	lsl #16
 #define put_byte_3	lsl #24
 #else
-#define pull            lsl
-#define push            lsr
+#define lspull          lsl
+#define lspush          lsr
 #define get_byte_0	lsr #24
 #define get_byte_1	lsr #16
 #define get_byte_2	lsr #8
@@ -50,6 +52,13 @@
 #define put_byte_1	lsl #16
 #define put_byte_2	lsl #8
 #define put_byte_3      lsl #0
+#endif
+
+/* Select code for any configuration running in BE8 mode */
+#ifdef CONFIG_CPU_ENDIAN_BE8
+#define ARM_BE8(code...) code
+#else
+#define ARM_BE8(code...)
 #endif
 
 /*
@@ -135,7 +144,11 @@
  * assumes FIQs are enabled, and that the processor is in SVC mode.
  */
 	.macro	save_and_disable_irqs, oldcpsr
+#ifdef CONFIG_CPU_V7M
+	mrs	\oldcpsr, primask
+#else
 	mrs	\oldcpsr, cpsr
+#endif
 	disable_irq
 	.endm
 
@@ -149,7 +162,11 @@
  * guarantee that this will preserve the flags.
  */
 	.macro	restore_irqs_notrace, oldcpsr
+#ifdef CONFIG_CPU_V7M
+	msr	primask, \oldcpsr
+#else
 	msr	cpsr_c, \oldcpsr
+#endif
 	.endm
 
 	.macro restore_irqs, oldcpsr
@@ -157,6 +174,47 @@
 	asm_trace_hardirqs_on_cond eq
 	restore_irqs_notrace \oldcpsr
 	.endm
+
+/*
+ * Get current thread_info.
+ */
+	.macro	get_thread_info, rd
+ ARM(	mov	\rd, sp, lsr #13	)
+ THUMB(	mov	\rd, sp			)
+ THUMB(	lsr	\rd, \rd, #13		)
+	mov	\rd, \rd, lsl #13
+	.endm
+
+/*
+ * Increment/decrement the preempt count.
+ */
+#ifdef CONFIG_PREEMPT_COUNT
+	.macro	inc_preempt_count, ti, tmp
+	ldr	\tmp, [\ti, #TI_PREEMPT]	@ get preempt count
+	add	\tmp, \tmp, #1			@ increment it
+	str	\tmp, [\ti, #TI_PREEMPT]
+	.endm
+
+	.macro	dec_preempt_count, ti, tmp
+	ldr	\tmp, [\ti, #TI_PREEMPT]	@ get preempt count
+	sub	\tmp, \tmp, #1			@ decrement it
+	str	\tmp, [\ti, #TI_PREEMPT]
+	.endm
+
+	.macro	dec_preempt_count_ti, ti, tmp
+	get_thread_info \ti
+	dec_preempt_count \ti, \tmp
+	.endm
+#else
+	.macro	inc_preempt_count, ti, tmp
+	.endm
+
+	.macro	dec_preempt_count, ti, tmp
+	.endm
+
+	.macro	dec_preempt_count_ti, ti, tmp
+	.endm
+#endif
 
 #define USER(x...)				\
 9999:	x;					\
@@ -211,9 +269,9 @@
 #ifdef CONFIG_SMP
 #if __LINUX_ARM_ARCH__ >= 7
 	.ifeqs "\mode","arm"
-	ALT_SMP(dmb)
+	ALT_SMP(dmb	ish)
 	.else
-	ALT_SMP(W(dmb))
+	ALT_SMP(W(dmb)	ish)
 	.endif
 #elif __LINUX_ARM_ARCH__ == 6
 	ALT_SMP(mcr	p15, 0, r0, c7, c10, 5)	@ dmb
@@ -228,7 +286,14 @@
 #endif
 	.endm
 
-#ifdef CONFIG_THUMB2_KERNEL
+#if defined(CONFIG_CPU_V7M)
+	/*
+	 * setmode is used to assert to be in svc mode during boot. For v7-M
+	 * this is done in __v7m_setup, so setmode can be empty here.
+	 */
+	.macro	setmode, mode, reg
+	.endm
+#elif defined(CONFIG_THUMB2_KERNEL)
 	.macro	setmode, mode, reg
 	mov	\reg, #\mode
 	msr	cpsr_c, \reg
@@ -238,6 +303,38 @@
 	msr	cpsr_c, #\mode
 	.endm
 #endif
+
+/*
+ * Helper macro to enter SVC mode cleanly and mask interrupts. reg is
+ * a scratch register for the macro to overwrite.
+ *
+ * This macro is intended for forcing the CPU into SVC mode at boot time.
+ * you cannot return to the original mode.
+ */
+.macro safe_svcmode_maskall reg:req
+#if __LINUX_ARM_ARCH__ >= 6 && !defined(CONFIG_CPU_V7M)
+	mrs	\reg , cpsr
+	eor	\reg, \reg, #HYP_MODE
+	tst	\reg, #MODE_MASK
+	bic	\reg , \reg , #MODE_MASK
+	orr	\reg , \reg , #PSR_I_BIT | PSR_F_BIT | SVC_MODE
+THUMB(	orr	\reg , \reg , #PSR_T_BIT	)
+	bne	1f
+	orr	\reg, \reg, #PSR_A_BIT
+	adr	lr, BSYM(2f)
+	msr	spsr_cxsf, \reg
+	__MSR_ELR_HYP(14)
+	__ERET
+1:	msr	cpsr_c, \reg
+2:
+#else
+/*
+ * workaround for possibly broken pre-v6 hardware
+ * (akita, Sharp Zaurus C-1000, PXA270-based)
+ */
+	setmode	PSR_F_BIT | PSR_I_BIT | SVC_MODE, \reg
+#endif
+.endm
 
 /*
  * STRT/LDRT access macros with ARM and Thumb-2 variants
@@ -327,5 +424,15 @@
 	bcs	\bad
 #endif
 	.endm
+
+#ifdef CONFIG_KPROBES
+#define _ASM_NOKPROBE(entry)				\
+	.pushsection "_kprobe_blacklist", "aw" ;	\
+	.balign 4 ;					\
+	.long entry;					\
+	.popsection
+#else
+#define _ASM_NOKPROBE(entry)
+#endif
 
 #endif /* __ASM_ASSEMBLER_H__ */
