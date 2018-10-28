@@ -9,6 +9,7 @@
  * published by the Free Software Foundation.
  */
 #include <linux/linkage.h>
+#include <asm/assembler.h>
 
 	.arch	armv7-a
 /*
@@ -23,19 +24,19 @@
 #if defined(CONFIG_DEBUG_ICEDCC)
 
 #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_V6K) || defined(CONFIG_CPU_V7)
-		.macro	loadsp, rb, tmp
+		.macro	loadsp, rb, tmp1, tmp2
 		.endm
 		.macro	writeb, ch, rb
 		mcr	p14, 0, \ch, c0, c5, 0
 		.endm
 #elif defined(CONFIG_CPU_XSCALE)
-		.macro	loadsp, rb, tmp
+		.macro	loadsp, rb, tmp1, tmp2
 		.endm
 		.macro	writeb, ch, rb
 		mcr	p14, 0, \ch, c8, c0, 0
 		.endm
 #else
-		.macro	loadsp, rb, tmp
+		.macro	loadsp, rb, tmp1, tmp2
 		.endm
 		.macro	writeb, ch, rb
 		mcr	p14, 0, \ch, c1, c0, 0
@@ -44,14 +45,14 @@
 
 #else
 
-#include <mach/debug-macro.S>
+#include CONFIG_DEBUG_LL_INCLUDE
 
 		.macro	writeb,	ch, rb
 		senduart \ch, \rb
 		.endm
 
 #if defined(CONFIG_ARCH_SA1100)
-		.macro	loadsp, rb, tmp
+		.macro	loadsp, rb, tmp1, tmp2
 		mov	\rb, #0x80000000	@ physical base address
 #ifdef CONFIG_DEBUG_LL_SER3
 		add	\rb, \rb, #0x00050000	@ Ser3
@@ -59,14 +60,9 @@
 		add	\rb, \rb, #0x00010000	@ Ser1
 #endif
 		.endm
-#elif defined(CONFIG_ARCH_S3C24XX)
-		.macro loadsp, rb, tmp
-		mov	\rb, #0x50000000
-		add	\rb, \rb, #0x4000 * CONFIG_S3C_LOWLEVEL_UART_PORT
-		.endm
 #else
-		.macro	loadsp,	rb, tmp
-		addruart \rb, \tmp
+		.macro	loadsp,	rb, tmp1, tmp2
+		addruart \rb, \tmp1, \tmp2
 		.endm
 #endif
 #endif
@@ -133,10 +129,15 @@ start:
 		.word	start			@ absolute load/run zImage address
 		.word	_edata			@ zImage end address
  THUMB(		.thumb			)
-1:		mov	r7, r1			@ save architecture ID
+1:
+ ARM_BE8(	setend	be )			@ go BE8 if compiled for BE8
+		mrs	r9, cpsr
+#ifdef CONFIG_ARM_VIRT_EXT
+		bl	__hyp_stub_install	@ get into SVC mode, reversibly
+#endif
+		mov	r7, r1			@ save architecture ID
 		mov	r8, r2			@ save atags pointer
 
-#ifndef __ARM_ARCH_2__
 		/*
 		 * Booting from Angel - need to enter SVC mode and disable
 		 * FIQs/IRQs (numeric definitions from angel arm.h source).
@@ -149,13 +150,9 @@ start:
  ARM(		swi	0x123456	)	@ angel_SWI_ARM
  THUMB(		svc	0xab		)	@ angel_SWI_THUMB
 not_angel:
-		mrs	r2, cpsr		@ turn off interrupts to
-		orr	r2, r2, #0xc0		@ prevent angel from running
-		msr	cpsr_c, r2
-#else
-		teqp	pc, #0x0c000003		@ turn off interrupts
-#endif
-
+		safe_svcmode_maskall r0
+		msr	spsr_cxsf, r9		@ Save the CPU boot mode in
+						@ SPSR
 		/*
 		 * Note that some cache flushing and other stuff may
 		 * be needed here - is there an Angel SWI call for this?
@@ -177,7 +174,19 @@ not_angel:
 		ldr	r4, =zreladdr
 #endif
 
-		bl	cache_on
+		/*
+		 * Set up a page table only if it won't overwrite ourself.
+		 * That means r4 < pc && r4 - 16k page directory > &_end.
+		 * Given that r4 > &_end is most unfrequent, we add a rough
+		 * additional 1MB of room for a possible appended DTB.
+		 */
+		mov	r0, pc
+		cmp	r0, r4
+		ldrcc	r0, LC0+32
+		addcc	r0, r0, pc
+		cmpcc	r4, r0
+		orrcc	r4, r4, #1		@ remember we skipped cache_on
+		blcs	cache_on
 
 restart:	adr	r0, LC0
 		ldmia	r0, {r1, r2, r3, r6, r10, r11, r12}
@@ -223,7 +232,7 @@ restart:	adr	r0, LC0
  *   r0  = delta
  *   r2  = BSS start
  *   r3  = BSS end
- *   r4  = final kernel address
+ *   r4  = final kernel address (possibly with LSB set)
  *   r5  = appended dtb size (still unknown)
  *   r6  = _edata
  *   r7  = architecture ID
@@ -271,6 +280,7 @@ restart:	adr	r0, LC0
 		 */
 		cmp	r0, #1
 		sub	r0, r4, #TEXT_OFFSET
+		bic	r0, r0, #1
 		add	r0, r0, #0x100
 		mov	r1, r6
 		sub	r2, sp, r6
@@ -317,12 +327,13 @@ dtb_check_done:
 
 /*
  * Check to see if we will overwrite ourselves.
- *   r4  = final kernel address
+ *   r4  = final kernel address (possibly with LSB set)
  *   r9  = size of decompressed image
  *   r10 = end of this image, including  bss/stack/malloc space if non XIP
  * We basically want:
  *   r4 - 16k page directory >= r10 -> OK
  *   r4 + image length <= address of wont_overwrite -> OK
+ * Note: the possible LSB in r4 is harmless here.
  */
 		add	r10, r10, #16384
 		cmp	r4, r10
@@ -350,6 +361,20 @@ dtb_check_done:
 		/* Get start of code we want to copy and align it down. */
 		adr	r5, restart
 		bic	r5, r5, #31
+
+/* Relocate the hyp vector base if necessary */
+#ifdef CONFIG_ARM_VIRT_EXT
+		mrs	r0, spsr
+		and	r0, r0, #MODE_MASK
+		cmp	r0, #HYP_MODE
+		bne	1f
+
+		bl	__hyp_get_vectors
+		sub	r0, r0, r5
+		add	r0, r0, r10
+		bl	__hyp_set_vectors
+1:
+#endif
 
 		sub	r9, r6, r5		@ size to copy
 		add	r9, r9, #31		@ rounded up to a multiple
@@ -382,7 +407,7 @@ wont_overwrite:
  *   r0  = delta
  *   r2  = BSS start
  *   r3  = BSS end
- *   r4  = kernel execution address
+ *   r4  = kernel execution address (possibly with LSB set)
  *   r5  = appended dtb size (0 if not present)
  *   r7  = architecture ID
  *   r8  = atags pointer
@@ -391,11 +416,8 @@ wont_overwrite:
  *   sp  = stack pointer
  */
 		orrs	r1, r0, r5
-#ifdef CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
-		beq not_relocated_copy
-#else
 		beq	not_relocated
-#endif
+
 		add	r11, r11, r0
 		add	r12, r12, r0
 
@@ -408,9 +430,6 @@ wont_overwrite:
 		add	r2, r2, r0
 		add	r3, r3, r0
 
-#ifdef CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
-        bl copy_compressed
-#endif
 		/*
 		 * Relocate all entries in the GOT table.
 		 * Bump bss entries to _edata + dtb size
@@ -451,6 +470,15 @@ not_relocated:	mov	r0, #0
 		cmp	r2, r3
 		blo	1b
 
+		/*
+		 * Did we skip the cache setup earlier?
+		 * That is indicated by the LSB in r4.
+		 * Do it now if so.
+		 */
+		tst	r4, #1
+		bic	r4, r4, #1
+		blne	cache_on
+
 /*
  * The C runtime environment should now be setup sufficiently.
  * Set up some pointers, and start decompressing.
@@ -465,11 +493,29 @@ not_relocated:	mov	r0, #0
 		bl	decompress_kernel
 		bl	cache_clean_flush
 		bl	cache_off
-		mov	r0, #0			@ must be zero
 		mov	r1, r7			@ restore architecture number
 		mov	r2, r8			@ restore atags pointer
- ARM(		mov	pc, r4	)		@ call kernel
- THUMB(		bx	r4	)		@ entry point is always ARM
+
+#ifdef CONFIG_ARM_VIRT_EXT
+		mrs	r0, spsr		@ Get saved CPU boot mode
+		and	r0, r0, #MODE_MASK
+		cmp	r0, #HYP_MODE		@ if not booted in HYP mode...
+		bne	__enter_kernel		@ boot kernel directly
+
+		adr	r12, .L__hyp_reentry_vectors_offset
+		ldr	r0, [r12]
+		add	r0, r0, r12
+
+		bl	__hyp_set_vectors
+		__HVC(0)			@ otherwise bounce to hyp mode
+
+		b	.			@ should never be reached
+
+		.align	2
+.L__hyp_reentry_vectors_offset:	.long	__hyp_reentry_vectors - .
+#else
+		b	__enter_kernel
+#endif
 
 		.align	2
 		.type	LC0, #object
@@ -481,6 +527,7 @@ LC0:		.word	LC0			@ r1
 		.word	_got_start		@ r11
 		.word	_got_end		@ ip
 		.word	.L_user_stack_end	@ sp
+		.word	_end - restart + 16384 + 1024*1024
 		.size	LC0, . - LC0
 
 #ifdef CONFIG_ARCH_RPC
@@ -489,46 +536,6 @@ params:		ldr	r0, =0x10000100		@ params_phys for RPC
 		mov	pc, lr
 		.ltorg
 		.align
-#endif
-
-/*
- * change@ksingh.sra-dallas - Copying the zImage to a secure location 
- * this copy will be used to computer integrity for FIPS validation
- */
-#ifdef CONFIG_CRYPTO_FIPS_OLD_INTEGRITY_CHECK
-not_relocated_copy:
-		bl copy_compressed
-		b not_relocated
-
-copy_compressed:
-		// preserve the registers
-		PUSH {r1, r2, r4, r8, r9, r10}
-
-		// source address - zImage load address
-		movw r1, #:lower16:FIPS_KERNEL_RAM_BASE
-		movt r1, #:upper16:FIPS_KERNEL_RAM_BASE
-
-		// destination address - location where zImage copy will be made
-		movw r9, #:lower16:CONFIG_CRYPTO_FIPS_INTEG_COPY_ADDRESS
-	        movt r9, #:upper16:CONFIG_CRYPTO_FIPS_INTEG_COPY_ADDRESS
-
-1:
-		// makes the copy of zImage
-		ldmia	r1!, {r10}
-		stmia	r9!, {r10}
-		cmp	r1, r2
-		blo	1b
-
-		// copy the padded hash of zImage
-		.rept 8
-		ldmia	r1!, {r10}
-		stmia	r9!, {r10}
-		.endr
-
-		// restore the registers
-		POP {r1, r2, r4, r8, r9, r10}
-		// go back to where we came from
-		mov	pc, lr
 #endif
 
 /*
@@ -661,6 +668,15 @@ __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
 		mov	pc, lr
 ENDPROC(__setup_mmu)
 
+@ Enable unaligned access on v6, to allow better code generation
+@ for the decompressor C code:
+__armv6_mmu_cache_on:
+		mrc	p15, 0, r0, c1, c0, 0	@ read SCTLR
+		bic	r0, r0, #2		@ A (no unaligned access fault)
+		orr	r0, r0, #1 << 22	@ U (v6 unaligned access model)
+		mcr	p15, 0, r0, c1, c0, 0	@ write SCTLR
+		b	__armv4_mmu_cache_on
+
 __arm926ejs_mmu_cache_on:
 #ifdef CONFIG_CPU_DCACHE_WRITETHROUGH
 		mov	r0, #4			@ put dcache in WT mode
@@ -678,9 +694,7 @@ __armv4_mmu_cache_on:
 		mrc	p15, 0, r0, c1, c0, 0	@ read control reg
 		orr	r0, r0, #0x5000		@ I-cache enable, RR cache replacement
 		orr	r0, r0, #0x0030
-#ifdef CONFIG_CPU_ENDIAN_BE8
-		orr	r0, r0, #1 << 25	@ big-endian page tables
-#endif
+ ARM_BE8(	orr	r0, r0, #1 << 25 )	@ big-endian page tables
 		bl	__common_mmu_cache_on
 		mov	r0, #0
 		mcr	p15, 0, r0, c8, c7, 0	@ flush I,D TLBs
@@ -703,14 +717,19 @@ __armv7_mmu_cache_on:
 		bic	r0, r0, #1 << 28	@ clear SCTLR.TRE
 		orr	r0, r0, #0x5000		@ I-cache enable, RR cache replacement
 		orr	r0, r0, #0x003c		@ write buffer
+		bic	r0, r0, #2		@ A (no unaligned access fault)
+		orr	r0, r0, #1 << 22	@ U (v6 unaligned access model)
+						@ (needed for ARM1176)
 #ifdef CONFIG_MMU
-#ifdef CONFIG_CPU_ENDIAN_BE8
-		orr	r0, r0, #1 << 25	@ big-endian page tables
-#endif
+ ARM_BE8(	orr	r0, r0, #1 << 25 )	@ big-endian page tables
+		mrcne   p15, 0, r6, c2, c0, 2   @ read ttb control reg
 		orrne	r0, r0, #1		@ MMU enabled
 		movne	r1, #0xfffffffd		@ domain 0 = client
+		bic     r6, r6, #1 << 31        @ 32-bit translation system
+		bic     r6, r6, #(7 << 0) | (1 << 4)	@ use only ttbr0
 		mcrne	p15, 0, r3, c2, c0, 0	@ load page table pointer
 		mcrne	p15, 0, r1, c3, c0, 0	@ load domain access control
+		mcrne   p15, 0, r6, c2, c0, 2   @ load ttb control
 #endif
 		mcr	p15, 0, r0, c7, c5, 4	@ ISB
 		mcr	p15, 0, r0, c1, c0, 0	@ load control register
@@ -732,19 +751,6 @@ __fa526_cache_on:
 		bl	__common_mmu_cache_on
 		mov	r0, #0
 		mcr	p15, 0, r0, c8, c7, 0	@ flush UTLB
-		mov	pc, r12
-
-__arm6_mmu_cache_on:
-		mov	r12, lr
-		mov	r6, #CB_BITS | 0x12	@ U
-		bl	__setup_mmu
-		mov	r0, #0
-		mcr	p15, 0, r0, c7, c0, 0	@ invalidate whole cache v3
-		mcr	p15, 0, r0, c5, c0, 0	@ invalidate whole TLB v3
-		mov	r0, #0x30
-		bl	__common_mmu_cache_on
-		mov	r0, #0
-		mcr	p15, 0, r0, c5, c0, 0	@ invalidate whole TLB v3
 		mov	pc, r12
 
 __common_mmu_cache_on:
@@ -811,32 +817,21 @@ call_cache_fn:	adr	r12, proc_types
 		.align	2
 		.type	proc_types,#object
 proc_types:
-		.word	0x41560600		@ ARM6/610
-		.word	0xffffffe0
-		W(b)	__arm6_mmu_cache_off	@ works, but slow
-		W(b)	__arm6_mmu_cache_off
-		mov	pc, lr
- THUMB(		nop				)
-@		b	__arm6_mmu_cache_on		@ untested
-@		b	__arm6_mmu_cache_off
-@		b	__armv3_mmu_cache_flush
-
-#if !defined(CONFIG_CPU_V7)
-		/* This collides with some V7 IDs, preventing correct detection */
-		.word	0x00000000		@ old ARM ID
-		.word	0x0000f000
+		.word	0x41000000		@ old ARM ID
+		.word	0xff00f000
 		mov	pc, lr
  THUMB(		nop				)
 		mov	pc, lr
  THUMB(		nop				)
 		mov	pc, lr
  THUMB(		nop				)
-#endif
 
 		.word	0x41007000		@ ARM7/710
 		.word	0xfff8fe00
-		W(b)	__arm7_mmu_cache_off
-		W(b)	__arm7_mmu_cache_off
+		mov	pc, lr
+ THUMB(		nop				)
+		mov	pc, lr
+ THUMB(		nop				)
 		mov	pc, lr
  THUMB(		nop				)
 
@@ -943,7 +938,7 @@ proc_types:
 
 		.word	0x0007b000		@ ARMv6
 		.word	0x000ff000
-		W(b)	__armv4_mmu_cache_on
+		W(b)	__armv6_mmu_cache_on
 		W(b)	__armv4_mmu_cache_off
 		W(b)	__armv6_mmu_cache_flush
 
@@ -1035,21 +1030,6 @@ __armv7_mmu_cache_off:
 		mcr	p15, 0, r0, c7, c5, 4	@ ISB
 		mov	pc, r12
 
-__arm6_mmu_cache_off:
-		mov	r0, #0x00000030		@ ARM6 control reg.
-		b	__armv3_mmu_cache_off
-
-__arm7_mmu_cache_off:
-		mov	r0, #0x00000070		@ ARM7 control reg.
-		b	__armv3_mmu_cache_off
-
-__armv3_mmu_cache_off:
-		mcr	p15, 0, r0, c1, c0, 0	@ turn MMU and cache off
-		mov	r0, #0
-		mcr	p15, 0, r0, c7, c0, 0	@ invalidate whole cache v3
-		mcr	p15, 0, r0, c5, c0, 0	@ invalidate whole TLB v3
-		mov	pc, lr
-
 /*
  * Clean and flush the cache to maintain consistency.
  *
@@ -1064,6 +1044,8 @@ cache_clean_flush:
 		b	call_cache_fn
 
 __armv4_mpu_cache_flush:
+		tst	r4, #1
+		movne	pc, lr
 		mov	r2, #1
 		mov	r3, #0
 		mcr	p15, 0, ip, c7, c6, 0	@ invalidate D cache
@@ -1081,6 +1063,8 @@ __armv4_mpu_cache_flush:
 		mov	pc, lr
 		
 __fa526_cache_flush:
+		tst	r4, #1
+		movne	pc, lr
 		mov	r1, #0
 		mcr	p15, 0, r1, c7, c14, 0	@ clean and invalidate D cache
 		mcr	p15, 0, r1, c7, c5, 0	@ flush I cache
@@ -1089,13 +1073,16 @@ __fa526_cache_flush:
 
 __armv6_mmu_cache_flush:
 		mov	r1, #0
-		mcr	p15, 0, r1, c7, c14, 0	@ clean+invalidate D
+		tst	r4, #1
+		mcreq	p15, 0, r1, c7, c14, 0	@ clean+invalidate D
 		mcr	p15, 0, r1, c7, c5, 0	@ invalidate I+BTB
-		mcr	p15, 0, r1, c7, c15, 0	@ clean+invalidate unified
+		mcreq	p15, 0, r1, c7, c15, 0	@ clean+invalidate unified
 		mcr	p15, 0, r1, c7, c10, 4	@ drain WB
 		mov	pc, lr
 
 __armv7_mmu_cache_flush:
+		tst	r4, #1
+		bne	iflush
 		mrc	p15, 0, r10, c0, c1, 5	@ read ID_MMFR1
 		tst	r10, #0xf << 16		@ hierarchical cache (ARMv7)
 		mov	r10, #0
@@ -1156,6 +1143,8 @@ iflush:
 		mov	pc, lr
 
 __armv5tej_mmu_cache_flush:
+		tst	r4, #1
+		movne	pc, lr
 1:		mrc	p15, 0, r15, c7, c14, 3	@ test,clean,invalidate D cache
 		bne	1b
 		mcr	p15, 0, r0, c7, c5, 0	@ flush I cache
@@ -1163,6 +1152,8 @@ __armv5tej_mmu_cache_flush:
 		mov	pc, lr
 
 __armv4_mmu_cache_flush:
+		tst	r4, #1
+		movne	pc, lr
 		mov	r2, #64*1024		@ default: 32K dcache size (*2)
 		mov	r11, #32		@ default: 32 byte line size
 		mrc	p15, 0, r3, c0, c0, 1	@ read cache type
@@ -1196,6 +1187,8 @@ no_cache_id:
 
 __armv3_mmu_cache_flush:
 __armv3_mpu_cache_flush:
+		tst	r4, #1
+		movne	pc, lr
 		mov	r1, #0
 		mcr	p15, 0, r1, c7, c0, 0	@ invalidate whole cache v3
 		mov	pc, lr
@@ -1226,7 +1219,7 @@ phex:		adr	r3, phexbuf
 		b	1b
 
 @ puts corrupts {r0, r1, r2, r3}
-puts:		loadsp	r3, r1
+puts:		loadsp	r3, r2, r1
 1:		ldrb	r2, [r0], #1
 		teq	r2, #0
 		moveq	pc, lr
@@ -1243,8 +1236,8 @@ puts:		loadsp	r3, r1
 @ putc corrupts {r0, r1, r2, r3}
 putc:
 		mov	r2, r0
+		loadsp	r3, r1, r0
 		mov	r0, #0
-		loadsp	r3, r1
 		b	2b
 
 @ memdump corrupts {r0, r1, r2, r3, r10, r11, r12, lr}
@@ -1278,6 +1271,25 @@ memdump:	mov	r12, r0
 #endif
 
 		.ltorg
+
+#ifdef CONFIG_ARM_VIRT_EXT
+.align 5
+__hyp_reentry_vectors:
+		W(b)	.			@ reset
+		W(b)	.			@ undef
+		W(b)	.			@ svc
+		W(b)	.			@ pabort
+		W(b)	.			@ dabort
+		W(b)	__enter_kernel		@ hyp
+		W(b)	.			@ irq
+		W(b)	.			@ fiq
+#endif /* CONFIG_ARM_VIRT_EXT */
+
+__enter_kernel:
+		mov	r0, #0			@ must be 0
+ ARM(		mov	pc, r4	)		@ call kernel
+ THUMB(		bx	r4	)		@ entry point is always ARM
+
 reloc_code_end:
 
 		.align
