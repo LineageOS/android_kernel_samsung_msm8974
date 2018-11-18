@@ -963,7 +963,7 @@ struct dst_entry * ip6_route_output(struct net *net, const struct sock *sk,
 	
 	fl6->flowi6_iif = LOOPBACK_IFINDEX;
 
-	fl6->flowi6_iif = net->loopback_dev->ifindex;
+	fl6->flowi6_iif = LOOPBACK_IFINDEX;
 
 	if ((sk && sk->sk_bound_dev_if) || rt6_need_strict(&fl6->daddr))
 		flags |= RT6_LOOKUP_F_IFACE;
