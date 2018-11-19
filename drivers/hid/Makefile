@@ -9,6 +9,7 @@ endif
 
 obj-$(CONFIG_HID)		+= hid.o
 obj-$(CONFIG_UHID)		+= uhid.o
+obj-$(CONFIG_HID_GENERIC_BT)	+= hid-generic-bt.o
 
 hid-$(CONFIG_HIDRAW)		+= hidraw.o
 
