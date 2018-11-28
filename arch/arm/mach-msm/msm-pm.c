@@ -43,9 +43,8 @@
 #include "spm.h"
 #include "pm-boot.h"
 #include "clock.h"
-#ifdef CONFIG_SEC_DEBUG
+
 #include <mach/sec_debug.h>
-#endif
 
 #define CREATE_TRACE_POINTS
 #include <mach/trace_msm_low_power.h>
