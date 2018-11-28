@@ -36,9 +36,7 @@
 #include <asm/tls.h>
 #include <asm/system_misc.h>
 
-#ifdef CONFIG_SEC_DEBUG
 #include <mach/sec_debug.h>
-#endif
 
 #include <trace/events/exception.h>
 
