@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da00fa30_a91ccca5",
+        "filename": "drivers/platform/msm/qpnp-power-on.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 11801
+      },
+      "writtenOn": "2018-11-29T04:17:26Z",
+      "side": 0,
+      "message": "I\u0027d prefer #ifndef CONFIG_SEC_DEBUG",
+      "revId": "952e869db1ed093b71ea682d1436b1f862d1cf6b",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
+    }
+  ]
+}
