@@ -809,7 +809,7 @@ static int add_new_gdb(handle_t *handle, struct inode *inode,
 	ext4_kvfree(o_group_desc);
 
 	le16_add_cpu(&es->s_reserved_gdt_blocks, -1);
-	err = ext4_handle_dirty_metadata(handle, NULL, EXT4_SB(sb)->s_sbh);
+	err = ext4_handle_dirty_super_now(handle, sb);
 	if (err)
 		ext4_std_error(sb, err);
 
@@ -981,6 +981,8 @@ static void update_backups(struct super_block *sb,
 		goto exit_err;
 	}
 
+	ext4_superblock_csum_set(sb, (struct ext4_super_block *)data);
+
 	while ((group = ext4_list_backups(sb, &three, &five, &seven)) < last) {
 		struct buffer_head *bh;
 
@@ -1080,6 +1082,47 @@ static int ext4_add_new_descs(handle_t *handle, struct super_block *sb,
 	return err;
 }
 
+static struct buffer_head *ext4_get_bitmap(struct super_block *sb, __u64 block)
+{
+	struct buffer_head *bh = sb_getblk(sb, block);
+	if (!bh)
+		return NULL;
+
+	if (bitmap_uptodate(bh))
+		return bh;
+
+	lock_buffer(bh);
+	if (bh_submit_read(bh) < 0) {
+		unlock_buffer(bh);
+		brelse(bh);
+		return NULL;
+	}
+	unlock_buffer(bh);
+
+	return bh;
+}
+
+static int ext4_set_bitmap_checksums(struct super_block *sb,
+				     ext4_group_t group,
+				     struct ext4_group_desc *gdp,
+				     struct ext4_new_group_data *group_data)
+{
+	struct buffer_head *bh;
+
+	if (!EXT4_HAS_RO_COMPAT_FEATURE(sb,
+					EXT4_FEATURE_RO_COMPAT_METADATA_CSUM))
+		return 0;
+
+	bh = ext4_get_bitmap(sb, group_data->inode_bitmap);
+	if (!bh)
+		return -EIO;
+	ext4_inode_bitmap_csum_set(sb, group, gdp, bh,
+				   EXT4_INODES_PER_GROUP(sb) / 8);
+	brelse(bh);
+
+	return 0;
+}
+
 /*
  * ext4_setup_new_descs() will set up the group descriptor descriptors of a flex bg
  */
@@ -1112,6 +1155,12 @@ static int ext4_setup_new_descs(handle_t *handle, struct super_block *sb,
 		memset(gdp, 0, EXT4_DESC_SIZE(sb));
 		ext4_block_bitmap_set(sb, gdp, group_data->block_bitmap);
 		ext4_inode_bitmap_set(sb, gdp, group_data->inode_bitmap);
+		err = ext4_set_bitmap_checksums(sb, group, gdp, group_data);
+		if (err) {
+			ext4_std_error(sb, err);
+			break;
+		}
+
 		ext4_inode_table_set(sb, gdp, group_data->inode_table);
 		ext4_free_group_clusters_set(sb, gdp,
 			EXT4_NUM_B2C(sbi, group_data->free_blocks_count));
