@@ -149,7 +149,7 @@ void crypto_init_proc(int *fips_error)
 	crypto_proc_fips_init();
 }
 #else
-void __init crypto_init_proc(void)
+void crypto_init_proc(void)
 {
 	proc_create("crypto", 0, NULL, &proc_crypto_ops);
 	crypto_proc_fips_init();
