@@ -441,30 +441,21 @@ struct sec_battery_platform_data {
 	/* sustaining event after deactivated (second) */
 	unsigned int event_waiting_time;
 
+#if defined(CONFIG_BATTERY_SWELLING)
 	/* battery swelling */
 	int swelling_high_temp_block;
 	int swelling_high_temp_recov;
-	int swelling_low_temp_block_1st;
-	int swelling_low_temp_recov_1st;
-	int swelling_low_temp_block_2nd;
-	int swelling_low_temp_recov_2nd;
-	unsigned int swelling_low_temp_current;
-	unsigned int swelling_low_temp_topoff;
-	unsigned int swelling_high_temp_current;
-	unsigned int swelling_high_temp_topoff;
-	unsigned int swelling_wc_high_temp_current;
-	unsigned int swelling_wc_low_temp_current;
+	int swelling_low_temp_block;
+	int swelling_low_temp_recov;
+
+	unsigned int swelling_high_chg_current;
+	unsigned int swelling_low_chg_current;
 
 	unsigned int swelling_normal_float_voltage;
 	unsigned int swelling_drop_float_voltage;
 	unsigned int swelling_high_rechg_voltage;
 	unsigned int swelling_low_rechg_voltage;
-	unsigned int swelling_drop_voltage_condition;
-
-	int swelling_low_temp_block;
-	int swelling_low_temp_recov;
-	unsigned int swelling_high_chg_current;
-	unsigned int swelling_low_chg_current;
+#endif
 
 	/* Monitor setting */
 	sec_battery_monitor_polling_t polling_type;
@@ -598,13 +589,8 @@ struct sec_battery_platform_data {
 	int siop_level;
 	bool siop_activated;
 
-	unsigned int expired_time;
-	unsigned int recharging_expired_time;
-	int standard_curr;
-
 	/* ADC setting */
 	unsigned int adc_check_count;
-
 	/* ADC type for each channel */
 	unsigned int adc_type[];
 };

@@ -35,7 +35,7 @@ static int msm_buf_mngr_get_buf(struct msm_buf_mngr_device *buf_mngr_dev,
 	new_entry->vb2_buf = buf_mngr_dev->vb2_ops.get_buf(buf_info->session_id,
 		buf_info->stream_id);
 	if (!new_entry->vb2_buf) {
-		pr_debug("%s:Get buf is null\n", __func__);
+		pr_err("%s:Get buf is null\n", __func__);	// add debug log for getting buffer fail CN#01399812
 		kfree(new_entry);
 		return -EINVAL;
 	}
@@ -166,6 +166,9 @@ static long msm_buf_mngr_subdev_ioctl(struct v4l2_subdev *sd,
 	switch (cmd) {
 	case VIDIOC_MSM_BUF_MNGR_GET_BUF:
 		rc = msm_buf_mngr_get_buf(buf_mngr_dev, argp);
+		if (rc != 0) {
+			pr_err("%s cmd = %d, rc = %d \n", __func__, cmd, rc);	// add debug log for getting buffer fail CN#01399812
+		}
 		break;
 	case VIDIOC_MSM_BUF_MNGR_BUF_DONE:
 		rc = msm_buf_mngr_buf_done(buf_mngr_dev, argp);

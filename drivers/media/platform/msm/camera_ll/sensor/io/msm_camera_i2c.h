@@ -17,6 +17,9 @@
 #include <media/v4l2-subdev.h>
 #include <media/msm_cam_sensor.h>
 
+//8K Max supported
+#define I2C_REG_DATA_MAX (8*1024)
+
 struct msm_camera_i2c_client {
 	struct msm_camera_i2c_fn_t *i2c_func_tbl;
 	struct i2c_client *client;

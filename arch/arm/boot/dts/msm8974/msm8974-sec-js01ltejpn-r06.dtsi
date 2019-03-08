@@ -280,7 +280,7 @@
 			label = "hall_flip";
 			gpios = <&pm8941_gpios 36 0>;
 			linux,input-type = <1>;
-			linux,code = <0x15>;
+			linux,code = <0x0>;
 			gpio-key,wakeup;
 			debounce-interval = <15>;
 		};
@@ -496,11 +496,6 @@
 			ssp,ap-rev=<5>;
 			qcom,temphumidity_sensor-vadc = <&pm8941_vadc>;
 		};
-	};
-
-	/* BLSP#3 */
-	i2c@f9925000 {
-		status = "disabled";
 	};
 
 	aliases {

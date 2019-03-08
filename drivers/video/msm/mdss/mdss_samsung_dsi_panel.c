@@ -1804,6 +1804,10 @@ static ssize_t mipi_samsung_backlight_store(struct device *dev,
 {
 	int bl_level = atoi(buf);
 
+#if defined(CONFIG_FB_MSM_MIPI_SAMSUNG_OCTA_VIDEO_FULL_HD_PT_PANEL)
+	if (!msd.dstat.is_smart_dim_loaded)
+		return size;
+#endif
 	pr_info("%s : level (%d)\n",__func__,bl_level);
 
 	msd.dstat.bright_level = bl_level;

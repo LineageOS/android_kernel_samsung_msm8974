@@ -83,7 +83,9 @@ static struct msm_gpiomux_config gpio_nc_configs[] __initdata = {
 #endif
 	GPIOMUX_SET_NC(85),
 	GPIOMUX_SET_NC(89),
+#if !defined(CONFIG_MACH_KLIMT_LTE_DCM)
 	GPIOMUX_SET_NC(90),
+#endif
 	GPIOMUX_SET_NC(101),
 	GPIOMUX_SET_NC(102),
 	GPIOMUX_SET_NC(105),
@@ -291,6 +293,7 @@ static struct gpiomux_setting wcnss_5wire_active_cfg = {
 	.pull = GPIOMUX_PULL_DOWN,
 };
 #endif
+#if !defined(CONFIG_MACH_KLIMT_LTE_DCM)
 static struct gpiomux_setting ath_gpio_active_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_2MA,
@@ -302,6 +305,7 @@ static struct gpiomux_setting ath_gpio_suspend_cfg = {
 	.drv = GPIOMUX_DRV_2MA,
 	.pull = GPIOMUX_PULL_DOWN,
 };
+#endif
 
 static struct gpiomux_setting gpio_i2c_config = {
 	.func = GPIOMUX_FUNC_3,
@@ -601,6 +605,52 @@ static struct msm_gpiomux_config mhl_configs[] __initdata = {
 		.settings = {
 			[GPIOMUX_ACTIVE]    = &mhl_active_cfg,
 			[GPIOMUX_SUSPENDED] = &mhl_suspend_cfg,
+		},
+	},
+};
+#endif
+#if defined(CONFIG_MACH_KLIMT_LTE_DCM)
+static struct gpiomux_setting tmm_rst_active_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_8MA,
+	.pull = GPIOMUX_PULL_DOWN,
+	.dir = GPIOMUX_OUT_LOW,
+};
+
+static struct gpiomux_setting tmm_rst_suspend_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_DOWN,
+	.dir = GPIOMUX_OUT_LOW,
+};
+
+static struct gpiomux_setting ts_valid_active_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_8MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_IN,
+};
+
+static struct gpiomux_setting ts_valid_suspend_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_IN,
+};
+
+static struct msm_gpiomux_config isdbt_configs[] __initdata = {
+	{
+		.gpio      = 79, /* TMM_RST */
+		.settings = {
+			[GPIOMUX_ACTIVE]    = &tmm_rst_active_cfg,
+			[GPIOMUX_SUSPENDED] = &tmm_rst_suspend_cfg,
+		},
+	},
+	{
+		.gpio      = 90, /* ISDBT_TS_VALID */
+		.settings = {
+			[GPIOMUX_ACTIVE]    = &ts_valid_active_cfg,
+			[GPIOMUX_SUSPENDED] = &ts_valid_suspend_cfg,
 		},
 	},
 };
@@ -1149,6 +1199,7 @@ static struct msm_gpiomux_config msm_sensor_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_suspend_config[1],
 		},
 	},
+#if !defined(CONFIG_MACH_KLIMT_LTE_DCM)
 	{
 		.gpio = 90, /* CAM1_RST_N */
 		.settings = {
@@ -1156,6 +1207,7 @@ static struct msm_gpiomux_config msm_sensor_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_suspend_config[1],
 		},
 	},
+#endif
 	{
 		.gpio = 92, /* CAM2_RST_N */
 		.settings = {
@@ -1285,6 +1337,7 @@ static struct msm_gpiomux_config msm_sensor_configs_dragonboard[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_suspend_config[1],
 		},
 	},
+#if !defined(CONFIG_MACH_KLIMT_LTE_DCM)
 	{
 		.gpio = 90, /* CAM1_RST_N */
 		.settings = {
@@ -1292,6 +1345,7 @@ static struct msm_gpiomux_config msm_sensor_configs_dragonboard[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_suspend_config[1],
 		},
 	},
+#endif
 #ifndef CONFIG_SENSORS_VFS61XX
 	{
 		.gpio = 94, /* CAM2_RST_N */
@@ -1451,6 +1505,7 @@ static struct msm_gpiomux_config wcnss_5wire_interface[] = {
 	},
 };
 #endif
+#if !defined(CONFIG_MACH_KLIMT_LTE_DCM)
 static struct msm_gpiomux_config ath_gpio_configs[] = {
 	{
 		.gpio = 79,
@@ -1460,6 +1515,7 @@ static struct msm_gpiomux_config ath_gpio_configs[] = {
 		},
 	},
 };
+#endif
 
 static struct gpiomux_setting gpio_speaker_suspend_config = {
 	.func = GPIOMUX_FUNC_GPIO,
@@ -1801,9 +1857,11 @@ void __init msm_8974_init_gpiomux(void)
 	msm_gpiomux_btuart_install();
 #endif
 
+#if !defined(CONFIG_MACH_KLIMT_LTE_DCM)
 	if (of_board_is_liquid())
 		msm_gpiomux_install_nowrite(ath_gpio_configs,
 					ARRAY_SIZE(ath_gpio_configs));
+#endif
 	msm_gpiomux_install(msm8974_slimbus_config,
 			ARRAY_SIZE(msm8974_slimbus_config));
 
@@ -1843,6 +1901,9 @@ void __init msm_8974_init_gpiomux(void)
 	msm_gpiomux_install(msm_hdmi_configs, ARRAY_SIZE(msm_hdmi_configs));
 #ifdef CONFIG_VIDEO_MHL_V2
 	msm_gpiomux_install(mhl_configs, ARRAY_SIZE(mhl_configs));
+#endif
+#if defined(CONFIG_MACH_KLIMT_LTE_DCM)
+	msm_gpiomux_install(isdbt_configs, ARRAY_SIZE(isdbt_configs));
 #endif
 	msm_gpiomux_install(hw_rev_configs, ARRAY_SIZE(hw_rev_configs));
 #ifndef CONFIG_SENSORS_VFS61XX

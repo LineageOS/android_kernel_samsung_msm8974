@@ -78,6 +78,36 @@ static void msm_cci_set_clk_param(struct cci_device *cci_dev)
 	return;
 }
 
+static int32_t msm_cci_i2c_config_sync_timer(struct v4l2_subdev *sd,
+	struct msm_camera_cci_ctrl *c_ctrl)
+{
+	struct cci_device *cci_dev;
+	cci_dev = v4l2_get_subdevdata(sd);
+	msm_camera_io_w(c_ctrl->cci_info->cid, cci_dev->base +
+		CCI_SET_CID_SYNC_TIMER_0_ADDR + (c_ctrl->cci_info->cid * 0x4));
+	return 0;
+}
+
+static int32_t msm_cci_i2c_set_freq(struct v4l2_subdev *sd,
+	struct msm_camera_cci_ctrl *c_ctrl)
+{
+	struct cci_device *cci_dev;
+	uint32_t val;
+	cci_dev = v4l2_get_subdevdata(sd);
+	val = c_ctrl->cci_info->freq;
+	msm_camera_io_w(val, cci_dev->base + CCI_I2C_M0_SCL_CTL_ADDR +
+		c_ctrl->cci_info->cci_i2c_master*0x100);
+	msm_camera_io_w(val, cci_dev->base + CCI_I2C_M0_SDA_CTL_0_ADDR +
+		c_ctrl->cci_info->cci_i2c_master*0x100);
+	msm_camera_io_w(val, cci_dev->base + CCI_I2C_M0_SDA_CTL_1_ADDR +
+		c_ctrl->cci_info->cci_i2c_master*0x100);
+	msm_camera_io_w(val, cci_dev->base + CCI_I2C_M0_SDA_CTL_2_ADDR +
+		c_ctrl->cci_info->cci_i2c_master*0x100);
+	msm_camera_io_w(val, cci_dev->base + CCI_I2C_M0_MISC_CTL_ADDR +
+		c_ctrl->cci_info->cci_i2c_master*0x100);
+	return 0;
+}
+
 static void msm_cci_flush_queue(struct cci_device *cci_dev,
 	enum cci_i2c_master_t master)
 {
@@ -194,23 +224,14 @@ static int32_t msm_cci_data_queue(struct cci_device *cci_dev,
 		pr_err("%s failed line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
-
-	reg_addr = i2c_cmd->reg_addr;
+	/* assume total size within the max queue */
 	while (cmd_size) {
-		CDBG("%s cmd_size %d addr 0x%x data 0x%x\n", __func__,
+		CDBG("%s cmd_size %d addr 0x%x data 0x%x", __func__,
 			cmd_size, i2c_cmd->reg_addr, i2c_cmd->reg_data);
 		delay = i2c_cmd->delay;
 		data[i++] = CCI_I2C_WRITE_CMD;
-
-		/* in case of multiple command
-		* MSM_CCI_I2C_WRITE : address is not continuous, so update
-		*			address for a new packet.
-		* MSM_CCI_I2C_WRITE_SEQ : address is continuous, need to keep
-		*			the incremented address for a
-		*			new packet */
-		if (c_ctrl->cmd == MSM_CCI_I2C_WRITE)
+		if (i2c_cmd->reg_addr)
 			reg_addr = i2c_cmd->reg_addr;
-
 		/* either byte or word addr */
 		if (i2c_msg->addr_type == MSM_CAMERA_I2C_BYTE_ADDR)
 			data[i++] = reg_addr;
@@ -237,10 +258,7 @@ static int32_t msm_cci_data_queue(struct cci_device *cci_dev,
 					break;
 			}
 			i2c_cmd++;
-			--cmd_size;
-		} while ((c_ctrl->cmd == MSM_CCI_I2C_WRITE_SEQ) &&
-				(cmd_size > 0) && (i <= 10));
-
+		} while (--cmd_size && !i2c_cmd->reg_addr && (i <= 10));
 		data[0] |= ((i-1) << 4);
 		len = ((i-1)/4) + 1;
 		rc = msm_cci_validate_queue(cci_dev, len, master, queue);
@@ -475,7 +493,7 @@ static int32_t msm_cci_i2c_read_bytes(struct v4l2_subdev *sd,
 	uint16_t read_bytes = 0;
 
 	if (!sd || !c_ctrl) {
-		pr_err("%s:%d sd %p c_ctrl %p\n", __func__,
+		pr_err("%s:%d sd %pK c_ctrl %pK\n", __func__,
 			__LINE__, sd, c_ctrl);
 		return -EINVAL;
 	}
@@ -658,7 +676,7 @@ static int32_t msm_cci_init(struct v4l2_subdev *sd,
 
 
 	if (!cci_dev || !c_ctrl) {
-		pr_err("%s:%d failed: invalid params %p %p\n", __func__,
+		pr_err("%s:%d failed: invalid params %pK %pK\n", __func__,
 			__LINE__, cci_dev, c_ctrl);
 
 		rc = -ENOMEM;
@@ -790,11 +808,18 @@ static int32_t msm_cci_config(struct v4l2_subdev *sd,
 	case MSM_CCI_RELEASE:
 		rc = msm_cci_release(sd);
 		break;
+	case MSM_CCI_SET_SID:
+		break;
+	case MSM_CCI_SET_FREQ:
+		rc = msm_cci_i2c_set_freq(sd, cci_ctrl);
+		break;
+	case MSM_CCI_SET_SYNC_CID:
+		rc = msm_cci_i2c_config_sync_timer(sd, cci_ctrl);
+		break;
 	case MSM_CCI_I2C_READ:
 		rc = msm_cci_i2c_read_bytes(sd, cci_ctrl);
 		break;
 	case MSM_CCI_I2C_WRITE:
-	case MSM_CCI_I2C_WRITE_SEQ:
 		rc = msm_cci_i2c_write(sd, cci_ctrl, 0);
         break;
 	case MSM_CCI_I2C_WRITE_BURST:
@@ -1071,7 +1096,7 @@ static int __devinit msm_cci_probe(struct platform_device *pdev)
 {
 	struct cci_device *new_cci_dev;
 	int rc = 0;
-	CDBG("%s: pdev %p device id = %d\n", __func__, pdev, pdev->id);
+	CDBG("%s: pdev %pK device id = %d\n", __func__, pdev, pdev->id);
 	new_cci_dev = kzalloc(sizeof(struct cci_device), GFP_KERNEL);
 	if (!new_cci_dev) {
 		pr_err("%s: no enough memory\n", __func__);
@@ -1083,7 +1108,7 @@ static int __devinit msm_cci_probe(struct platform_device *pdev)
 			ARRAY_SIZE(new_cci_dev->msm_sd.sd.name), "msm_cci");
 	v4l2_set_subdevdata(&new_cci_dev->msm_sd.sd, new_cci_dev);
 	platform_set_drvdata(pdev, &new_cci_dev->msm_sd.sd);
-	CDBG("%s sd %p\n", __func__, &new_cci_dev->msm_sd.sd);
+	CDBG("%s sd %pK\n", __func__, &new_cci_dev->msm_sd.sd);
 	if (pdev->dev.of_node)
 		of_property_read_u32((&pdev->dev)->of_node,
 			"cell-index", &pdev->id);
@@ -1140,7 +1165,7 @@ static int __devinit msm_cci_probe(struct platform_device *pdev)
 		pr_err("%s: failed to add child nodes, rc=%d\n", __func__, rc);
 	new_cci_dev->cci_state = CCI_STATE_DISABLED;
 	g_cci_subdev = &new_cci_dev->msm_sd.sd;
-	CDBG("%s cci subdev %p\n", __func__, &new_cci_dev->msm_sd.sd);
+	CDBG("%s cci subdev %pK\n", __func__, &new_cci_dev->msm_sd.sd);
 	CDBG("%s line %d\n", __func__, __LINE__);
         pr_warn("%s : Succeed!", __func__);
 	return 0;
