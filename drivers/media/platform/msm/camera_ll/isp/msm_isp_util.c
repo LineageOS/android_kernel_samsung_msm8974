@@ -384,7 +384,7 @@ long msm_isp_ioctl(struct v4l2_subdev *sd,
 		break;
 	case VIDIOC_MSM_ISP_SET_SRC_STATE:
 		mutex_lock(&vfe_dev->core_mutex);
-		msm_isp_set_src_state(vfe_dev, arg);
+		rc = msm_isp_set_src_state(vfe_dev, arg);
 		mutex_unlock(&vfe_dev->core_mutex);
 		break;
 	case VIDIOC_MSM_ISP_REQUEST_STATS_STREAM:
@@ -425,13 +425,13 @@ static int msm_isp_send_hw_cmd(struct vfe_device *vfe_dev,
 	uint32_t *cfg_data, uint32_t cmd_len)
 {
 	if (!vfe_dev || !reg_cfg_cmd) {
-		pr_err("%s:%d failed: vfe_dev %p reg_cfg_cmd %p\n", __func__,
+		pr_err("%s:%d failed: vfe_dev %pK reg_cfg_cmd %pK\n", __func__,
 			__LINE__, vfe_dev, reg_cfg_cmd);
 		return -EINVAL;
 	}
 	if ((reg_cfg_cmd->cmd_type != VFE_CFG_MASK) &&
 		(!cfg_data || !cmd_len)) {
-		pr_err("%s:%d failed: cmd type %d cfg_data %p cmd_len %d\n",
+		pr_err("%s:%d failed: cmd type %d cfg_data %pK cmd_len %d\n",
 			__func__, __LINE__, reg_cfg_cmd->cmd_type, cfg_data,
 			cmd_len);
 		return -EINVAL;
@@ -570,6 +570,9 @@ static int msm_isp_send_hw_cmd(struct vfe_device *vfe_dev,
 		lo_tbl_ptr = cfg_data +
 			reg_cfg_cmd->u.dmi_info.lo_tbl_offset/4;
 
+		if (reg_cfg_cmd->cmd_type == VFE_WRITE_DMI_64BIT) {
+			reg_cfg_cmd->u.dmi_info.len = reg_cfg_cmd->u.dmi_info.len/2;
+		}
 		for (i = 0; i < reg_cfg_cmd->u.dmi_info.len/4; i++) {
 			lo_val = *lo_tbl_ptr++;
 			if (reg_cfg_cmd->cmd_type == VFE_WRITE_DMI_16BIT) {
@@ -656,6 +659,10 @@ int msm_isp_proc_cmd(struct vfe_device *vfe_dev, void *arg)
 	struct msm_vfe_reg_cfg_cmd *reg_cfg_cmd;
 	uint32_t *cfg_data;
 
+	if (!proc_cmd->num_cfg) {
+		pr_err("%s: Passed num_cfg as 0\n", __func__);
+		return -EINVAL;
+	}
 	reg_cfg_cmd = kzalloc(sizeof(struct msm_vfe_reg_cfg_cmd)*
 		proc_cmd->num_cfg, GFP_KERNEL);
 	if (!reg_cfg_cmd) {
@@ -967,11 +974,14 @@ void msm_isp_do_tasklet(unsigned long data)
 	}
 }
 
-void msm_isp_set_src_state(struct vfe_device *vfe_dev, void *arg)
+int msm_isp_set_src_state(struct vfe_device *vfe_dev, void *arg)
 {
 	struct msm_vfe_axi_src_state *src_state = arg;
+	if (src_state->input_src >= VFE_SRC_MAX)
+		return -EINVAL;
 	vfe_dev->axi_data.src_info[src_state->input_src].active =
 	src_state->src_active;
+	return 0;
 }
 
 int msm_isp_open_node(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
@@ -1036,7 +1046,9 @@ void msm_isp_end_avtimer(void)
 
 int msm_isp_close_node(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
+	long rc;
 	struct vfe_device *vfe_dev = v4l2_get_subdevdata(sd);
+	ISP_DBG("%s\n", __func__);
 	mutex_lock(&vfe_dev->realtime_mutex);
 	mutex_lock(&vfe_dev->core_mutex);
 
@@ -1047,7 +1059,10 @@ int msm_isp_close_node(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 		return -ENODEV;
 	}
 
-	vfe_dev->hw_info->vfe_ops.axi_ops.halt(vfe_dev);
+	rc = vfe_dev->hw_info->vfe_ops.axi_ops.halt(vfe_dev);
+	if (rc <= 0)
+		pr_err("%s: halt timeout rc=%ld\n", __func__, rc);
+
 	vfe_dev->buf_mgr->ops->buf_mgr_deinit(vfe_dev->buf_mgr);
 	vfe_dev->hw_info->vfe_ops.core_ops.release_hw(vfe_dev);
 	vfe_dev->vfe_open_cnt--;

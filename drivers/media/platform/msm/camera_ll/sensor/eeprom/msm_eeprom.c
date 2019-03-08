@@ -246,12 +246,15 @@ static int msm_eeprom_match_id(struct msm_eeprom_ctrl_t *e_ctrl)
 	rc = msm_camera_spi_query_id(client, 0, &id[0], 2);
 	if (rc < 0)
 		return rc;
-	pr_info("%s: read 0x%x 0x%x, check 0x%x 0x%x\n", __func__, id[0],
-	     id[1], client->spi_client->mfr_id, client->spi_client->device_id);
-	if (id[0] != client->spi_client->mfr_id
-		    || id[1] != client->spi_client->device_id)
-		return -ENODEV;
-	return 0;
+	pr_info("%s: read 0x%x 0x%x, check 0:0x%x 0x%x 1:0x%x 0x%x\n", __func__,
+	id[0], id[1], client->spi_client->mfr_id0, client->spi_client->device_id0,
+	client->spi_client->mfr_id1, client->spi_client->device_id1);
+
+	if ((id[0] == client->spi_client->mfr_id0 && id[1] == client->spi_client->device_id0)
+	|| (id[0] == client->spi_client->mfr_id1 && id[1] == client->spi_client->device_id1))
+		return 0;
+
+	return -ENODEV;
 }
 /**
   * msm_eeprom_power_up() - power up eeprom if it's not on
@@ -627,7 +630,7 @@ static long msm_eeprom_subdev_ioctl(struct v4l2_subdev *sd,
 	struct msm_eeprom_ctrl_t *e_ctrl = v4l2_get_subdevdata(sd);
 	void __user *argp = (void __user *)arg;
 	CDBG("%s E\n", __func__);
-	CDBG("%s:%d a_ctrl %p argp %p\n", __func__, __LINE__, e_ctrl, argp);
+	CDBG("%s:%d a_ctrl %pK argp %pK\n", __func__, __LINE__, e_ctrl, argp);
 	switch (cmd) {
 	case VIDIOC_MSM_SENSOR_GET_SUBDEV_ID:
 		return msm_eeprom_get_subdev_id(e_ctrl, argp);
@@ -851,13 +854,22 @@ static int msm_eeprom_spi_parse_of(struct msm_camera_spi_client *spic)
 		return rc;
 	}
 	spic->erase_size = tmp[0];
-	rc = of_property_read_u32_array(of, "qcom,eeprom-id", tmp, 2);
+
+	rc = of_property_read_u32_array(of, "qcom,eeprom-id0", tmp, 2);
 	if (rc < 0) {
-		pr_err("%s: Failed to get eeprom id\n", __func__);
+		pr_err("%s: Failed to get eeprom id 0\n", __func__);
 		return rc;
 	}
-	spic->mfr_id = tmp[0];
-	spic->device_id = tmp[1];
+	spic->mfr_id0 = tmp[0];
+	spic->device_id0 = tmp[1];
+
+	rc = of_property_read_u32_array(of, "qcom,eeprom-id1", tmp, 2);
+	if (rc < 0) {
+		pr_err("%s: Failed to get eeprom id 1\n", __func__);
+		return rc;
+	}
+	spic->mfr_id1 = tmp[0];
+	spic->device_id1 = tmp[1];
 
 	return 0;
 }

@@ -725,6 +725,11 @@ int msm_isp_proc_cmd(struct vfe_device *vfe_dev, void *arg)
 		goto copy_cmd_failed;
 	}
 
+#ifdef CONFIG_SEC_S_PROJECT
+	for (i = 0; i < proc_cmd->num_cfg; i++)
+		msm_isp_send_hw_cmd(vfe_dev, &reg_cfg_cmd[i],
+			cfg_data, proc_cmd->cmd_len);
+#else
 	//pr_err("%s: platform_id=%u, kernel_id=%u\n", __func__,proc_cmd->frame_id, vfe_dev->frame_id);
 	if( (vfe_dev->frame_id == proc_cmd->frame_id && vfe_dev->eof_event_occur != 1)
 		|| proc_cmd->frame_id == 0) {
@@ -737,6 +742,7 @@ int msm_isp_proc_cmd(struct vfe_device *vfe_dev, void *arg)
 		pr_err("%s: skip hw update, platform_id=%u, kernel_id=%u, eof_event_occur=%u\n",
 			__func__,proc_cmd->frame_id, vfe_dev->frame_id, vfe_dev->eof_event_occur);
 	}
+#endif
 
 	if (copy_to_user(proc_cmd->cfg_data,
 			 cfg_data, proc_cmd->cmd_len)) {

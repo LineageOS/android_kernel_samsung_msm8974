@@ -1382,6 +1382,11 @@ static irqreturn_t touchkey_interrupt(int irq, void *dev_id)
 #if !defined(CONFIG_SEC_S_PROJECT)
 	int CurrMenuValue, CurrBackValue;
 #endif
+#ifdef TK_KEYPAD_ENABLE
+	if (!tkey_i2c->keypad_enable) {
+		return IRQ_HANDLED;
+	}
+#endif
 	if (unlikely(!touchkey_probe)) {
 		dev_err(&tkey_i2c->client->dev, "%s: Touchkey is not probed\n", __func__);
 		return IRQ_HANDLED;
@@ -2196,6 +2201,35 @@ struct device_attribute *attr, const char *buf,
 }
 #endif
 
+#ifdef TK_KEYPAD_ENABLE
+static ssize_t sec_keypad_enable_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct touchkey_i2c *tkey_i2c = dev_get_drvdata(dev);
+
+	return sprintf(buf, "%d\n", tkey_i2c->keypad_enable ? 1 : 0);
+}
+
+static ssize_t sec_keypad_enable_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct touchkey_i2c *tkey_i2c = dev_get_drvdata(dev);
+	bool val;
+
+	if (sysfs_streq(buf, "0"))
+		val = false;
+	else if (sysfs_streq(buf, "1"))
+		val = true;
+	else
+		return -EINVAL;
+
+	tkey_i2c->keypad_enable = val;
+	//input_sync(tkey_i2c->input_dev);
+
+	return count;
+}
+#endif
+
 static DEVICE_ATTR(brightness, S_IRUGO | S_IWUSR | S_IWGRP, NULL,
 		   touchkey_led_control);
 #ifdef TK_USE_RECENT
@@ -2261,6 +2295,10 @@ static DEVICE_ATTR(flip_mode, S_IRUGO | S_IWUSR | S_IWGRP, NULL,
 #if defined(TOUCHKEY_BOOSTER)
 static DEVICE_ATTR(boost_level, S_IWUSR | S_IWGRP, NULL, touchkey_boost_level);
 #endif
+#ifdef TK_KEYPAD_ENABLE
+static DEVICE_ATTR(keypad_enable, S_IRUGO | S_IWUSR | S_IWGRP,
+		   sec_keypad_enable_show, sec_keypad_enable_store);
+#endif
 
 #ifdef TKEY_GRIP_MODE
 static DEVICE_ATTR(grip_mode, S_IRUGO | S_IWUSR | S_IWGRP, touchkey_grip_mode_show,
@@ -2318,6 +2356,9 @@ static struct attribute *touchkey_attributes[] = {
 #endif
 #ifdef TKEY_GRIP_MODE
 	&dev_attr_grip_mode.attr,
+#endif
+#ifdef TK_KEYPAD_ENABLE
+	&dev_attr_keypad_enable.attr,
 #endif
 	NULL,
 };
@@ -2825,6 +2866,9 @@ static int i2c_touchkey_probe(struct i2c_client *client,
 #endif
 	msleep(300);//50
 	tkey_i2c->enabled = true;
+#ifdef TK_KEYPAD_ENABLE
+	tkey_i2c->keypad_enable = true;
+#endif
 
 	ret = touchkey_i2c_check(tkey_i2c);
 	if (ret < 0) {

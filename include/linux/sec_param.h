@@ -29,10 +29,15 @@ struct sec_param_data {
 #ifdef CONFIG_SEC_MONITOR_BATTERY_REMOVAL
 	unsigned int normal_poweroff;
 #endif
+#ifdef CONFIG_MACH_KLIMT_LTE_DCM
+	unsigned int enable_diag;
+#endif
 #ifdef CONFIG_RESTART_REASON_SEC_PARAM
 	unsigned int param_restart_reason;
 #endif
+#ifndef CONFIG_MACH_KLIMT_LTE_DCM
 	unsigned int reserved0;
+#endif
 };
 
 enum sec_param_index {
@@ -56,10 +61,15 @@ enum sec_param_index {
 #ifdef CONFIG_SEC_MONITOR_BATTERY_REMOVAL
 	param_index_normal_poweroff,
 #endif
+#ifdef CONFIG_MACH_KLIMT_LTE_DCM
+	param_index_enable_diag,
+#endif
 #ifdef CONFIG_RESTART_REASON_SEC_PARAM
 	param_index_restart_reason,
 #endif
+#ifndef CONFIG_MACH_KLIMT_LTE_DCM
 	param_index_reserved0,
+#endif
 };
 
 extern bool sec_open_param(void);

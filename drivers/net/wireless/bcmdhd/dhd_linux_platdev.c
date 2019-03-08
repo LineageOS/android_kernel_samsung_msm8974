@@ -84,6 +84,7 @@ extern void* wl_cfg80211_get_dhdp(void);
 extern int bcm_bt_lock(int cookie);
 extern void bcm_bt_unlock(int cookie);
 static int lock_cookie_wifi = 'W' | 'i'<<8 | 'F'<<16 | 'i'<<24;	/* cookie is "WiFi" */
+static bool is4335_revb0 = true;
 #endif /* ENABLE_4335BT_WAR */
 
 wifi_adapter_info_t* dhd_wifi_platform_get_adapter(uint32 bus_type, uint32 bus_num, uint32 slot_num)
@@ -170,7 +171,11 @@ int wifi_platform_set_power(wifi_adapter_info_t *adapter, bool on, unsigned long
 		}
 #endif /* ENABLE_4335BT_WAR */
 
+#ifdef ENABLE_4335BT_WAR
+		err = plat_data->set_power(on, is4335_revb0);
+#else
 		err = plat_data->set_power(on);
+#endif
 	}
 
 	if (msec && !err)

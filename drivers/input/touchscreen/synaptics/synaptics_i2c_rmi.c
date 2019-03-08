@@ -5047,7 +5047,11 @@ static void synaptics_get_firmware_name(struct synaptics_rmi4_data *rmi4_data)
 		rmi4_data->firmware_name = FW_IMAGE_NAME_NONE;
 	} else if (rmi4_data->ic_version == SYNAPTICS_PRODUCT_ID_S5707) {
 		if (strncmp(rmi4_data->dt_data->project, "Klimt", 5) == 0)
+#if defined(CONFIG_MACH_KLIMT_LTE_DCM)
+			rmi4_data->firmware_name = FW_IMAGE_NAME_S5707_KLIMT_V16;
+#else
 			rmi4_data->firmware_name = FW_IMAGE_NAME_S5707_KLIMT;
+#endif
 		else if (strncmp(rmi4_data->dt_data->project, "RUBENS", 6) == 0)
 			rmi4_data->firmware_name = FW_IMAGE_NAME_S5707_RUBENS;
 		else 

@@ -809,6 +809,12 @@ static irqreturn_t cypress_touchkey_interrupt(int irq, void *dev_id)
 	int press;
 	int ret;
 
+#ifdef TK_KEYPAD_ENABLE
+	if (!atomic_read(&info->keypad_enable)) {
+		goto out;
+	}
+#endif
+
 	ret = gpio_get_value(info->pdata->gpio_int);
 	if (ret) {
 		dev_info(&info->client->dev,
@@ -1527,6 +1533,43 @@ static ssize_t cypress_touchkey_flip_cover_mode_enable(struct device *dev,
 #endif
 
 
+#ifdef TK_KEYPAD_ENABLE
+static ssize_t sec_keypad_enable_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct cypress_touchkey_info *info = dev_get_drvdata(dev);
+
+	return sprintf(buf, "%d\n", atomic_read(&info->keypad_enable));
+}
+
+static ssize_t sec_keypad_enable_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct cypress_touchkey_info *info = dev_get_drvdata(dev);
+	unsigned int val;
+	int i;
+
+	if (sysfs_streq(buf, "0"))
+		val = 0;
+	else if (sysfs_streq(buf, "1"))
+		val = 1;
+	else
+		return -EINVAL;
+
+	atomic_set(&info->keypad_enable, val);
+	if (val) {
+		for (i = 0; i < ARRAY_SIZE(info->keycode); i++)
+			set_bit(info->keycode[i], info->input_dev->keybit);
+	} else {
+		for (i = 0; i < ARRAY_SIZE(info->keycode); i++)
+			clear_bit(info->keycode[i], info->input_dev->keybit);
+	}
+	input_sync(info->input_dev);
+
+	return count;
+}
+#endif
+
 static DEVICE_ATTR(touchkey_firm_update_status, S_IRUGO | S_IWUSR | S_IWGRP,
 		cypress_touchkey_firm_status_show, NULL);
 static DEVICE_ATTR(touchkey_firm_version_panel, S_IRUGO,
@@ -1572,6 +1615,11 @@ static DEVICE_ATTR(flip_mode, S_IRUGO | S_IWUSR | S_IWGRP, NULL,
 		cypress_touchkey_flip_cover_mode_enable);
 #endif
 
+#ifdef TK_KEYPAD_ENABLE
+static DEVICE_ATTR(keypad_enable, S_IRUGO|S_IWUSR, sec_keypad_enable_show,
+		sec_keypad_enable_store);
+#endif
+
 static struct attribute *touchkey_attributes[] = {
 	&dev_attr_touchkey_firm_update_status.attr,
 	&dev_attr_touchkey_firm_version_panel.attr,
@@ -1595,6 +1643,9 @@ static struct attribute *touchkey_attributes[] = {
 #endif
 #ifdef TKEY_FLIP_MODE
 	&dev_attr_flip_mode.attr,
+#endif
+#ifdef TK_KEYPAD_ENABLE
+	&dev_attr_keypad_enable.attr,
 #endif
 	NULL,
 };
@@ -1778,6 +1829,10 @@ static int __devinit cypress_touchkey_probe(struct i2c_client *client,
 	set_bit(EV_KEY, input_dev->evbit);
 	set_bit(EV_LED, input_dev->evbit);
 	set_bit(LED_MISC, input_dev->ledbit);
+
+#ifdef TK_KEYPAD_ENABLE
+	atomic_set(&info->keypad_enable, 1);
+#endif
 
 	for (i = 0; i < pdata->keycodes_size; i++) {
 		info->keycode[i] = pdata->touchkey_keycode[i];

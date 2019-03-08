@@ -270,6 +270,7 @@
 #define FW_IMAGE_NAME_S5100_PSLTE	"tsp_synaptics/synaptics_s5100_pslte.fw"
 #define FW_IMAGE_NAME_S5707		"tsp_synaptics/synaptics_s5707.fw"
 #define FW_IMAGE_NAME_S5707_KLIMT	"tsp_synaptics/synaptics_s5707_klimt.fw"
+#define FW_IMAGE_NAME_S5707_KLIMT_V16	"tsp_synaptics/synaptics_s5707_klimt_v16.fw"
 #define FW_IMAGE_NAME_S5707_RUBENS	"tsp_synaptics/synaptics_s5707_rubens.fw"
 #define FW_IMAGE_NAME_S5708		"tsp_synaptics/synaptics_s5708.fw"
 #define FW_IMAGE_NAME_S5050		"tsp_synaptics/synaptics_s5050.fw"

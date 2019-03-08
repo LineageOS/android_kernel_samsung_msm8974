@@ -133,6 +133,8 @@ enum BOOST_LEVEL {
 
 //#define TKEY_GRIP_MODE
 
+#define TK_KEYPAD_ENABLE
+
 enum {
 	FW_NONE = 0,
 	FW_BUILT_IN,
@@ -222,6 +224,9 @@ struct touchkey_i2c {
 	const struct firmware *firm_data;
 	struct fw_image *fw_img;
 	bool do_checksum;
+#ifdef TK_KEYPAD_ENABLE
+	bool keypad_enable;
+#endif
 };
 
 extern struct class *sec_class;
