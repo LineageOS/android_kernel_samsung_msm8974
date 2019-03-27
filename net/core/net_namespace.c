@@ -152,6 +152,7 @@ static __net_init int setup_net(struct net *net)
 
 	atomic_set(&net->count, 1);
 	atomic_set(&net->passive, 1);
+	get_random_bytes(&net->hash_mix, sizeof(u32));
 	net->dev_base_seq = 1;
 
 #ifdef NETNS_REFCNT_DEBUG
