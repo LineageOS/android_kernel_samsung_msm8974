@@ -126,6 +126,9 @@ struct adv_entry {
 	u8 flags;
 };
 
+/* Min encryption key size to match with SMP */
+#define HCI_MIN_ENC_KEY_SIZE		7
+
 #define NUM_REASSEMBLY 4
 struct hci_dev {
 	struct list_head list;
