@@ -1696,20 +1696,25 @@ static inline __le16 ext4_rec_len_to_disk(unsigned len, unsigned blocksize)
 static inline u32 ext4_chksum(struct ext4_sb_info *sbi, u32 crc,
 			      const void *address, unsigned int length)
 {
+/*
 	struct {
 		struct shash_desc shash;
 		char ctx[crypto_shash_descsize(sbi->s_chksum_driver)];
 	} desc;
+*/
+	char desc[sizeof(struct shash_desc) + crypto_shash_descsize(sbi->s_chksum_driver)
+		+ CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
+	struct shash_desc *shash = (struct shash_desc *)desc;
 	int err;
 
-	desc.shash.tfm = sbi->s_chksum_driver;
-	desc.shash.flags = 0;
-	*(u32 *)desc.ctx = crc;
+	shash->tfm = sbi->s_chksum_driver;
+	shash->flags = 0;
+	*(u32 *)desc = crc;
 
-	err = crypto_shash_update(&desc.shash, address, length);
+	err = crypto_shash_update(shash, address, length);
 	BUG_ON(err);
 
-	return *(u32 *)desc.ctx;
+	return *(u32 *)desc;
 }
 
 #ifdef __KERNEL__
