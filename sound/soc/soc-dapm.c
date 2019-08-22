@@ -269,6 +269,9 @@ out:
 static void dapm_set_path_status(struct snd_soc_dapm_widget *w,
 	struct snd_soc_dapm_path *p, int i)
 {
+	if (!p->name)
+		return;
+
 	switch (w->id) {
 	case snd_soc_dapm_switch:
 	case snd_soc_dapm_mixer:
