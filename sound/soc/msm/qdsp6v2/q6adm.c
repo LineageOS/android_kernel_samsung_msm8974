@@ -650,7 +650,8 @@ static int32_t adm_callback(struct apr_client_data *data, void *priv)
 			/* is big enough and has a valid param size */
 			if ((payload[0] == 0) && (data->payload_size >
 				(4 * sizeof(*payload))) &&
-				(data->payload_size - 4 >=
+				(data->payload_size -
+				(4 * sizeof(*payload)) >=
 				payload[3]) &&
 				(ARRAY_SIZE(adm_get_parameters)-1 >=
 				payload[3])) {
