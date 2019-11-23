@@ -285,7 +285,7 @@ static void ak09911c_work_func(struct work_struct *work)
 	unsigned long delay = nsecs_to_jiffies(atomic_read(&data->delay));
 	unsigned long pdelay = atomic_read(&data->delay);
 
-	ts = ktime_to_timespec(alarm_get_elapsed_realtime());
+	get_monotonic_boottime(&ts);
 	data->timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 
 	ret = ak09911c_read_mag_xyz(data, &mag);
