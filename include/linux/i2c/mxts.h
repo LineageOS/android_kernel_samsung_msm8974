@@ -32,7 +32,6 @@
 #include <asm/system_info.h>
 
 #if defined(CONFIG_SEC_LT03_PROJECT)
-#define USE_MENU_TOUCHKEY	/* OS upgrade model: menu key */
 #define MXT_FIRMWARE_NAME	"mXT1664S_n.fw"
 #define WORKAROUND_THRESHOLD /* Former HW revision device changes register value to reduce the RF noise */
 
