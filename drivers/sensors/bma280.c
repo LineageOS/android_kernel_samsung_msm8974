@@ -441,11 +441,14 @@ static void bma280_work_func(struct work_struct *work)
 	struct bma280_v acc;
 	struct bma280_p *data = container_of(work, struct bma280_p, work);
 
-	struct timespec ts = ktime_to_timespec(alarm_get_elapsed_realtime());
-	u64 timestamp_new = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+	struct timespec ts;
+	u64 timestamp_new;
 	int time_hi, time_lo;
 	//u64 diff = 0ULL;
 	u64 delay = ktime_to_ns(data->poll_delay);
+
+	get_monotonic_boottime(&ts);
+	timestamp_new = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 
 	ret = bma280_read_accel_xyz(data, &acc);
 	if (ret < 0)

@@ -19,7 +19,7 @@
 #ifndef _SENSORS_CORE_H_
 #define _SENSORS_CORE_H_
 
-#include <linux/android_alarm.h>
+#include <linux/hrtimer.h>
 /* report timestamp from kernel (for Android L) */
 #define TIME_LO_MASK 0x00000000FFFFFFFF
 #define TIME_HI_MASK 0xFFFFFFFF00000000
