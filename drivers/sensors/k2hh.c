@@ -510,9 +510,12 @@ static void k2hh_work_func(struct work_struct *work)
 	int ret;
 	struct k2hh_v acc;
 	struct k2hh_p *data = container_of(work, struct k2hh_p, work);
-	struct timespec ts = ktime_to_timespec(alarm_get_elapsed_realtime());
-	u64 timestamp_new = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+	struct timespec ts;
+	u64 timestamp_new;
 	int time_hi, time_lo;
+
+	get_monotonic_boottime(&ts);
+	timestamp_new = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 
 	ret = k2hh_read_accel_xyz(data, &acc);
 	if (ret < 0)
