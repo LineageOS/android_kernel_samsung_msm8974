@@ -25,6 +25,7 @@
 		qcom,te-gpio = <&msmgpio 12 0>;
 
 		qcom,mdss-pan-broadcast-mode = <1>;
+		qcom,cont-splash-enabled = <1>;
 
 		qcom,mdss-pan-res = <800 2560>;
 		qcom,mdss-pan-size = <112 180>; /* <Width> <Height> real size of panel in mm */
@@ -65,7 +66,7 @@
 		qcom,mdss-pan-dsi-tx-eot-append = <1>;
 		qcom,panel-phy-regulatorSettings = [07 09 03 00  /* Regualotor settings */
 						    20 00 01];
-		qcom,panel-phy-timingSettings = [33 3A 26 00 6A 6E 2C 3E 2F 03 04 00];
+		qcom,panel-phy-timingSettings = [DA 3A 26 00 6A 6E 2C 3E 2F 03 04 00];
 		qcom,panel-phy-strengthCtrl = [ff 06];		/*!!!! */
 		qcom,panel-phy-bistCtrl = [00 00 b1 ff
                                               00 00];   /*!!!! BIST Ctrl settings */
@@ -203,11 +204,7 @@
 
 			samsung,panel-elvss-lowtemp-cmds-list = [
 								29 01 00 00 00 00 02 B0 05
-								29 01 00 00 00 00 02 B8 00
-								29 01 00 00 00 00 02 B6 8C];	/* Low Temperature Command */
-			samsung,panel-elvss-lowtemp2-cmds-list = [
-								29 01 00 00 00 00 02 B0 14
-								29 01 00 00 00 00 02 B6 00];	/* Low Temperature Command: default */
+								29 01 00 00 00 00 02 B8 00];	/* Low Temperature Command */
 
 			samsung,panel-gamma-cmds-list = [
 					29 01 00 00 00 00 22            /* Brightness Condition Set - Gamma 2.2 Setting*/
@@ -217,6 +214,7 @@
 						80 80 80 80 80 80 80 00
 						00 00
 					29 01 00 00 00 00 02 F7 03		/* Gamma, LTPS(AID) update */
+					29 01 00 00 00 00 02 F7 00
 				];
 
 			samsung,panel-gamma-hbm-cmds-list = [
@@ -245,76 +243,73 @@
 			 * ************************************************************************************************************************
 			 */
 			samsung,panel-aid-cmds-list = [
-				29 01 00 00 00 00 03 B2 09 E3  /* 0  samsung_brightness_aor_ 2cd_98.3 */
-				29 01 00 00 00 00 03 B2 09 D1  /* 1  samsung_brightness_aor_ 3cd_97.6 */
-				29 01 00 00 00 00 03 B2 09 BE  /* 2  samsung_brightness_aor_ 4cd_96.8 */
-				29 01 00 00 00 00 03 B2 09 AA  /* 3  samsung_brightness_aor_ 5cd_96.0 */
-				29 01 00 00 00 00 03 B2 09 98  /* 4  samsung_brightness_aor_ 6cd_95.3 */
-				29 01 00 00 00 00 03 B2 09 85  /* 5  samsung_brightness_aor_ 7cd_94.6 */
-				29 01 00 00 00 00 03 B2 09 73  /* 6  samsung_brightness_aor_ 8cd_93.9 */
-				29 01 00 00 00 00 03 B2 09 5F  /* 7  samsung_brightness_aor_ 9cd_93.1 */
-				29 01 00 00 00 00 03 B2 09 4D  /* 8  samsung_brightness_aor_10cd_92.4 */
-				29 01 00 00 00 00 03 B2 09 38  /* 9  samsung_brightness_aor_11cd_91.6 */
-				29 01 00 00 00 00 03 B2 09 25  /* 10 samsung_brightness_aor_12cd_90.9 */
-				29 01 00 00 00 00 03 B2 09 11  /* 11 samsung_brightness_aor_13cd_90.1 */
+				29 01 00 00 00 00 03 B2 09 BE  /* 0  samsung_brightness_aor_ 4cd_96.8 */
+				29 01 00 00 00 00 03 B2 09 AA  /* 1  samsung_brightness_aor_ 5cd_96.0 */
+				29 01 00 00 00 00 03 B2 09 98  /* 2  samsung_brightness_aor_ 6cd_95.3 */
+				29 01 00 00 00 00 03 B2 09 85  /* 3  samsung_brightness_aor_ 7cd_94.6 */
+				29 01 00 00 00 00 03 B2 09 73  /* 4  samsung_brightness_aor_ 8cd_93.9 */
+				29 01 00 00 00 00 03 B2 09 5F  /* 5  samsung_brightness_aor_ 9cd_93.1 */
+				29 01 00 00 00 00 03 B2 09 4D  /* 6  samsung_brightness_aor_10cd_92.4 */
+				29 01 00 00 00 00 03 B2 09 38  /* 7  samsung_brightness_aor_11cd_91.6 */
+				29 01 00 00 00 00 03 B2 09 25  /* 8  samsung_brightness_aor_12cd_90.9 */
+				29 01 00 00 00 00 03 B2 09 11  /* 9  samsung_brightness_aor_13cd_90.1 */
 
-				29 01 00 00 00 00 03 B2 08 FE  /* 12 samsung_brightness_aor_14cd_89.4 */
-				29 01 00 00 00 00 03 B2 08 EA  /* 13 samsung_brightness_aor_15cd_88.6 */
-				29 01 00 00 00 00 03 B2 08 D7  /* 14 samsung_brightness_aor_16cd_87.8 */
-				29 01 00 00 00 00 03 B2 08 C3  /* 15 samsung_brightness_aor_17cd_87.1 */
-				29 01 00 00 00 00 03 B2 08 9B  /* 16 samsung_brightness_aor_19cd_85.5 */
-				29 01 00 00 00 00 03 B2 08 87  /* 17 samsung_brightness_aor_20cd_84.7 */
-				29 01 00 00 00 00 03 B2 08 73  /* 18 samsung_brightness_aor_21cd_84.0 */
-				29 01 00 00 00 00 03 B2 08 5F  /* 19 samsung_brightness_aor_22cd_83.2 */
-				29 01 00 00 00 00 03 B2 08 36  /* 20 samsung_brightness_aor_24cd_81.6 */
-				29 01 00 00 00 00 03 B2 08 22  /* 21 samsung_brightness_aor_25cd_80.8 */
+				29 01 00 00 00 00 03 B2 08 FE  /* 10 samsung_brightness_aor_14cd_89.4 */
+				29 01 00 00 00 00 03 B2 08 EA  /* 11 samsung_brightness_aor_15cd_88.6 */
+				29 01 00 00 00 00 03 B2 08 D7  /* 12 samsung_brightness_aor_16cd_87.8 */
+				29 01 00 00 00 00 03 B2 08 C3  /* 13 samsung_brightness_aor_17cd_87.1 */
+				29 01 00 00 00 00 03 B2 08 9B  /* 14 samsung_brightness_aor_19cd_85.5 */
+				29 01 00 00 00 00 03 B2 08 87  /* 15 samsung_brightness_aor_20cd_84.7 */
+				29 01 00 00 00 00 03 B2 08 73  /* 16 samsung_brightness_aor_21cd_84.0 */
+				29 01 00 00 00 00 03 B2 08 5F  /* 17 samsung_brightness_aor_22cd_83.2 */
+				29 01 00 00 00 00 03 B2 08 36  /* 18 samsung_brightness_aor_24cd_81.6 */
+				29 01 00 00 00 00 03 B2 08 22  /* 19 samsung_brightness_aor_25cd_80.8 */
 
-				29 01 00 00 00 00 03 B2 07 F9  /* 22 samsung_brightness_aor_27cd_79.2 */
-				29 01 00 00 00 00 03 B2 07 D1  /* 23 samsung_brightness_aor_29cd_77.7 */
-				29 01 00 00 00 00 03 B2 07 BB  /* 24 samsung_brightness_aor_30cd_76.8 */
-				29 01 00 00 00 00 03 B2 07 90  /* 25 samsung_brightness_aor_32cd_75.2 */
-				29 01 00 00 00 00 03 B2 07 66  /* 26 samsung_brightness_aor_34cd_73.5 */
-				29 01 00 00 00 00 03 B2 07 26  /* 27 samsung_brightness_aor_37cd_71.0 */
+				29 01 00 00 00 00 03 B2 07 F9  /* 20 samsung_brightness_aor_27cd_79.2 */
+				29 01 00 00 00 00 03 B2 07 D1  /* 21 samsung_brightness_aor_29cd_77.7 */
+				29 01 00 00 00 00 03 B2 07 BB  /* 22 samsung_brightness_aor_30cd_76.8 */
+				29 01 00 00 00 00 03 B2 07 90  /* 23 samsung_brightness_aor_32cd_75.2 */
+				29 01 00 00 00 00 03 B2 07 66  /* 24 samsung_brightness_aor_34cd_73.5 */
+				29 01 00 00 00 00 03 B2 07 26  /* 25 samsung_brightness_aor_37cd_71.0 */
 
-				29 01 00 00 00 00 03 B2 06 FC  /* 28 samsung_brightness_aor_39cd_69.4 */
-				29 01 00 00 00 00 03 B2 06 D1  /* 29 samsung_brightness_aor_41cd_67.7 */
-				29 01 00 00 00 00 03 B2 06 A4  /* 30 samsung_brightness_aor_44cd_66.0 */
-				29 01 00 00 00 00 03 B2 06 4A  /* 31 samsung_brightness_aor_47cd_62.5 */
-				29 01 00 00 00 00 03 B2 06 07  /* 32 samsung_brightness_aor_50cd_59.9 */
+				29 01 00 00 00 00 03 B2 06 FC  /* 26 samsung_brightness_aor_39cd_69.4 */
+				29 01 00 00 00 00 03 B2 06 D1  /* 27 samsung_brightness_aor_41cd_67.7 */
+				29 01 00 00 00 00 03 B2 06 A4  /* 28 samsung_brightness_aor_44cd_66.0 */
+				29 01 00 00 00 00 03 B2 06 4A  /* 29 samsung_brightness_aor_47cd_62.5 */
+				29 01 00 00 00 00 03 B2 06 07  /* 30 samsung_brightness_aor_50cd_59.9 */
 
-				29 01 00 00 00 00 03 B2 05 C6  /* 33 samsung_brightness_aor_53cd_57.4 */
-				29 01 00 00 00 00 03 B2 05 7F  /* 34 samsung_brightness_aor_56cd_54.6 */
-				29 01 00 00 00 00 03 B2 05 22  /* 35 samsung_brightness_aor_60cd_51.0 */
+				29 01 00 00 00 00 03 B2 05 C6  /* 31 samsung_brightness_aor_53cd_57.4 */
+				29 01 00 00 00 00 03 B2 05 7F  /* 32 samsung_brightness_aor_56cd_54.6 */
+				29 01 00 00 00 00 03 B2 05 22  /* 33 samsung_brightness_aor_60cd_51.0 */
 
-				29 01 00 00 00 00 03 B2 04 C5  /* 36 samsung_brightness_aor_64cd_47.4 */
-				29 01 00 00 00 00 03 B2 04 65  /* 37 samsung_brightness_aor_68cd_43.7 */
+				29 01 00 00 00 00 03 B2 04 C5  /* 34 samsung_brightness_aor_64cd_47.4 */
+				29 01 00 00 00 00 03 B2 04 65  /* 35 samsung_brightness_aor_68cd_43.7 */
 
-				29 01 00 00 00 00 03 B2 03 FE  /* 38 samsung_brightness_aor_72_162cd_39.7 */
+				29 01 00 00 00 00 03 B2 03 FE  /* 36 samsung_brightness_aor_72_162cd_39.7 */
 
-				29 01 00 00 00 00 03 B2 03 FE  /* 39 samsung_brightness_aor_172cd_39.7 */
-				29 01 00 00 00 00 03 B2 03 7B  /* 40 samsung_brightness_aor_183cd_34.6 */
-				29 01 00 00 00 00 03 B2 02 E5  /* 41 samsung_brightness_aor_195cd_28.8 */
-				29 01 00 00 00 00 03 B2 02 46  /* 42 samsung_brightness_aor_207cd_22.6 */
-				29 01 00 00 00 00 03 B2 01 99  /* 43 samsung_brightness_aor_220cd_15.9 */
-				29 01 00 00 00 00 03 B2 00 D5  /* 44 samsung_brightness_aor_234cd_8.3 */
-				29 01 00 00 00 00 03 B2 00 0A  /* 45 samsung_brightness_aor_249_300cd_0.4 */
+				29 01 00 00 00 00 03 B2 03 FE  /* 37 samsung_brightness_aor_172cd_39.7 */
+				29 01 00 00 00 00 03 B2 03 7B  /* 38 samsung_brightness_aor_183cd_34.6 */
+				29 01 00 00 00 00 03 B2 02 E5  /* 39 samsung_brightness_aor_195cd_28.8 */
+				29 01 00 00 00 00 03 B2 02 46  /* 40 samsung_brightness_aor_207cd_22.6 */
+				29 01 00 00 00 00 03 B2 01 99  /* 41 samsung_brightness_aor_220cd_15.9 */
+				29 01 00 00 00 00 03 B2 00 D5  /* 42 samsung_brightness_aor_234cd_8.3 */
+				29 01 00 00 00 00 03 B2 00 0A  /* 43 samsung_brightness_aor_249_300cd_0.4 */
 			];
 
 			/* bl_level, Index in aid command list */
 			samsung,panel-aid-map-table = <
-				2	0		3	1		4	2		5	3		6	4
-				7	5		8	6		9	7		10	8		11	9
-				12	10		13	11		14	12		15	13		16	14
-				17	15		19	16		20	17		21	18		22	19
-				24	20		25	21		27	22		29	23		30	24
-				32	25		34	26		37	27		39	28		41	29
-				44	30		47	31		50	32		53	33		56	34
-				60	35		64	36		68	37		72	38		77	38
-				82	38		87	38		93	38		98	38		105	38
-				111	38		119	38		126	38		134	38		143	38
-				152	38		162	38		172	39		183	40		195	41
-				207	42		220	43		234	44		249	45		265	45
-				282	45		300	45
+				4	0		5	1		6	2		7	3		8	4
+				9	5		10	6		11	7		12	8		13	9
+				14	10		15	11		16	12		17	13		19	14
+				20	15		21	16		22	17		24	18		25	19
+				27	20		29	21		30	22		32	23		34	24
+				37	25		39	26		41	27		44	28		47	29
+				50	30		53	31		56	32		60	33		64	34
+				68	35		72	36		77	36		82	36		87	36
+				93	36		98	36		105	36		111	36		119	36
+				126	36		134	36		143	36		152	36		162	36
+				172	37		183	38		195	39		207	40		220	41
+				234	42		249	43		265	43		282	43		300	43
 			>;
 
 			/*
@@ -342,19 +337,18 @@
 
 			/* bl_level , Index in acl command list */
 			samsung,panel-acl-map-table =  <
-				2	2		3	2		4	2		5	2		6	2
-				7	2		8	2		9	2		10	2		11	2
-				12	2		13	2		14	2		15	2		16	2
-				17	2		19	2		20	2		21	2		22	2
-				24	2		25	2		27	2		29	2		30	2
-				32	2		34	2		37	2		39	2		41	2
-				44	2		47	2		50	2		53	2		56	2
-				60	2		64	2		68	2		72	2		77	2
-				82	2		87	2		93	2		98	2		105	2
-				111	2		119	2		126	2		134	2		143	2
-				152	2		162	2		172	2		183	2		195	2
-				207	2		220	2		234	2		249	2		265	2
-				282	2		300	2
+				4	2		5	2		6	2		7	2		8	2
+				9	2		10	2		11	2		12	2		13	2
+				14	2		15	2		16	2		17	2		19	2
+				20	2		21	2		22	2		24	2		25	2
+				27	2		29	2		30	2		32	2		34	2
+				37	2		39	2		41	2		44	2		47	2
+				50	2		53	2		56	2		60	2		64	2
+				68	2		72	2		77	2		82	2		87	2
+				93	2		98	2		105	2		111	2		119	2
+				126	2		134	2		143	2		152	2		162	2
+				172	2		183	2		195	2		207	2		220	2
+				234	2		249	2		265	2		282	2		300	2
 				>;
 
 			/*
@@ -386,19 +380,18 @@
 			/* bl_level, Index in elvss command list */
 			/* bl_level, Index in elvss command list */
 			samsung,panel-smart-acl-elvss-map-table = <
-				2	4		3	4		4	4		5	4		6	4
-				7	4		8	4		9	4		10	4		11	4
-				12	4		13	4		14	4		15	4		16	4
-				17	4		19	4		20	4		21	4		22	4
-				24	4		25	4		27	4		29	4		30	4
-				32	4		34	4		37	4		39	4		41	4
-				44	4		47	4		50	4		53	4		56	4
-				60	4		64	4		68	4		72	4		77	4
-				82	4		87	4		93	4		98	4		105	4
-				111	4		119	4		126	4		134	4		143	4
-				152	4		162	4		172	4		183	4		195	4
-				207	4		220	4		234	4		249	3		265	2
-				282	1		300	0
+				4	4		5	4		6	4		7	4		8	4
+				9	4		10	4		11	4		12	4		13	4
+				14	4		15	4		16	4		17	4		19	4
+				20	4		21	4		22	4		24	4		25	4
+				27	4		29	4		30	4		32	4		34	4
+				37	4		39	4		41	4		44	4		47	4
+				50	4		53	4		56	4		60	4		64	4
+				68	4		72	4		77	4		82	4		87	4
+				93	4		98	4		105	4		111	4		119	4
+				126	4		134	4		143	4		152	4		162	4
+				172	4		183	4		195	4		207	4		220	4
+				234	4		249	3		265	2		282	1		300	0
 					>;
 			/*
 			 * ************************************************************************************************************************
@@ -407,68 +400,66 @@
 			 */
 			samsung,panel-candella-mapping-table = <
 			/*<idx>	  <from>  <till> <candella> */
-				0		0		2		2
-				1		3		3		3
-				2		4		4		4
-				3		5		5		5
-				4		6		6		6
-				5		7		7		7
-				6		8		8		8
-				7		9		9		9
-				8		10		10		10
-				9		11		11		11
-				10		12		12		12
-				11		13		13		13
-				12		14		14		14
-				13		15		15		15
-				14		16		16		16
-				15		17		18		17
-				16		19		19		19
-				17		20		20		20
-				18		21		21		21
-				19		22		23		22
-				20		24		24		24
-				21		25		26		25
-				22		27		28		27
-				23		29		29		29
-				24		30		30		30
-				25		31		31		32
-				26		32		33		34
-				27		34		36		37
-				28		37		37		39
-				29		38		39		41
-				30		40		41		44
-				31		42		44		47
-				32		45		46		50
-				33		47		49		53
-				34		50		51		56
-				35		52		55		60
-				36		56		58		64
-				37		59		61		68
-				38		62		65		72
-				39		66		69		77
-				40		70		73		82
-				41		74		77		87
-				42		78		82		93
-				43		83		86		98
-				44		87		92		105
-				45		93		97		111
-				46		98		104		119
-				47		105		110		126
-				48		111		116		134
-				49		117		124		143
-				50		125		131		152
-				51		132		140		162
-				52		141		148		172
-				53		149		157		183
-				54		158		167		195
-				55		168		177		207
-				56		178		188		220
-				57		189		200		234
-				58		201		212		249
-				59		213		225		265
-				60		226		242		282
-				61		243		255		300
+				0		0		4		4
+				1		5		5		5
+				2		6		6		6
+				3		7		7		7
+				4		8		8		8
+				5		9		9		9
+				6		10		10		10
+				7		11		11		11
+				8		12		12		12
+				9		13		13		13
+				10		14		14		14
+				11		15		15		15
+				12		16		16		16
+				13		17		18		17
+				14		19		19		19
+				15		20		20		20
+				16		21		21		21
+				17		22		23		22
+				18		24		24		24
+				19		25		26		25
+				20		27		28		27
+				21		29		29		29
+				22		30		30		30
+				23		31		31		32
+				24		32		33		34
+				25		34		36		37
+				26		37		37		39
+				27		38		39		41
+				28		40		41		44
+				29		42		44		47
+				30		45		46		50
+				31		47		49		53
+				32		50		51		56
+				33		52		55		60
+				34		56		58		64
+				35		59		61		68
+				36		62		65		72
+				37		66		69		77
+				38		70		73		82
+				39		74		77		87
+				40		78		82		93
+				41		83		86		98
+				42		87		92		105
+				43		93		97		111
+				44		98		104		119
+				45		105		110		126
+				46		111		116		134
+				47		117		124		143
+				48		125		131		152
+				49		132		140		162
+				50		141		148		172
+				51		149		157		183
+				52		158		167		195
+				53		168		177		207
+				54		178		188		220
+				55		189		200		234
+				56		201		212		249
+				57		213		225		265
+				58		226		242		282
+				59		243		255		300
 				>;
 	};
 
@@ -487,6 +478,7 @@
 		qcom,te-gpio = <&msmgpio 12 0>;
 
 		qcom,mdss-pan-broadcast-mode = <1>;
+		qcom,cont-splash-enabled = <1>;
 
 		qcom,mdss-pan-res = <800 2560>;
 		qcom,mdss-pan-size = <112 180>; /* <Width> <Height> real size of panel in mm */
@@ -527,7 +519,7 @@
 		qcom,mdss-pan-dsi-tx-eot-append = <1>;
 		qcom,panel-phy-regulatorSettings = [07 09 03 00  /* Regualotor settings */
 						    20 00 01];
-		qcom,panel-phy-timingSettings = [33 3A 26 00 6A 6E 2C 3E 2F 03 04 00];
+		qcom,panel-phy-timingSettings = [DA 3A 26 00 6A 6E 2C 3E 2F 03 04 00];
 
 		qcom,panel-phy-strengthCtrl = [ff 06];		/*!!!! */
 		qcom,panel-phy-bistCtrl = [00 00 b1 ff
@@ -667,11 +659,7 @@
 
 			samsung,panel-elvss-lowtemp-cmds-list = [
 								29 01 00 00 00 00 02 B0 05
-								29 01 00 00 00 00 02 B8 00
-								29 01 00 00 00 00 02 B6 8C];	/* Low Temperature Command */
-			samsung,panel-elvss-lowtemp2-cmds-list = [
-								29 01 00 00 00 00 02 B0 14
-								29 01 00 00 00 00 02 B6 00];	/* Low Temperature Command: default */
+								29 01 00 00 00 00 02 B8 00];	/* Low Temperature Command */
 
 			samsung,panel-gamma-cmds-list = [
 					29 01 00 00 00 00 22            /* Brightness Condition Set - Gamma 2.2 Setting*/
@@ -681,6 +669,7 @@
 						80 80 80 80 80 80 80 00
 						00 00
 					29 01 00 00 00 00 02 F7 03		/* Gamma, LTPS(AID) update */
+					29 01 00 00 00 00 02 F7 00
 				];
 
 			samsung,panel-gamma-hbm-cmds-list = [
@@ -708,76 +697,73 @@
 			 * ************************************************************************************************************************
 			 */
 			samsung,panel-aid-cmds-list = [
-				29 01 00 00 00 00 03 B2 09 E3  /* 0  samsung_brightness_aor_ 2cd_98.3 */
-				29 01 00 00 00 00 03 B2 09 D1  /* 1  samsung_brightness_aor_ 3cd_97.6 */
-				29 01 00 00 00 00 03 B2 09 BE  /* 2  samsung_brightness_aor_ 4cd_96.8 */
-				29 01 00 00 00 00 03 B2 09 AA  /* 3  samsung_brightness_aor_ 5cd_96.0 */
-				29 01 00 00 00 00 03 B2 09 98  /* 4  samsung_brightness_aor_ 6cd_95.3 */
-				29 01 00 00 00 00 03 B2 09 85  /* 5  samsung_brightness_aor_ 7cd_94.6 */
-				29 01 00 00 00 00 03 B2 09 73  /* 6  samsung_brightness_aor_ 8cd_93.9 */
-				29 01 00 00 00 00 03 B2 09 5F  /* 7  samsung_brightness_aor_ 9cd_93.1 */
-				29 01 00 00 00 00 03 B2 09 4D  /* 8  samsung_brightness_aor_10cd_92.4 */
-				29 01 00 00 00 00 03 B2 09 38  /* 9  samsung_brightness_aor_11cd_91.6 */
-				29 01 00 00 00 00 03 B2 09 25  /* 10 samsung_brightness_aor_12cd_90.9 */
-				29 01 00 00 00 00 03 B2 09 11  /* 11 samsung_brightness_aor_13cd_90.1 */
+				29 01 00 00 00 00 03 B2 09 BE  /* 0  samsung_brightness_aor_ 4cd_96.8 */
+				29 01 00 00 00 00 03 B2 09 AA  /* 1  samsung_brightness_aor_ 5cd_96.0 */
+				29 01 00 00 00 00 03 B2 09 98  /* 2  samsung_brightness_aor_ 6cd_95.3 */
+				29 01 00 00 00 00 03 B2 09 85  /* 3  samsung_brightness_aor_ 7cd_94.6 */
+				29 01 00 00 00 00 03 B2 09 73  /* 4  samsung_brightness_aor_ 8cd_93.9 */
+				29 01 00 00 00 00 03 B2 09 5F  /* 5  samsung_brightness_aor_ 9cd_93.1 */
+				29 01 00 00 00 00 03 B2 09 4D  /* 6  samsung_brightness_aor_10cd_92.4 */
+				29 01 00 00 00 00 03 B2 09 38  /* 7  samsung_brightness_aor_11cd_91.6 */
+				29 01 00 00 00 00 03 B2 09 25  /* 8  samsung_brightness_aor_12cd_90.9 */
+				29 01 00 00 00 00 03 B2 09 11  /* 9  samsung_brightness_aor_13cd_90.1 */
 
-				29 01 00 00 00 00 03 B2 08 FE  /* 12 samsung_brightness_aor_14cd_89.4 */
-				29 01 00 00 00 00 03 B2 08 EA  /* 13 samsung_brightness_aor_15cd_88.6 */
-				29 01 00 00 00 00 03 B2 08 D7  /* 14 samsung_brightness_aor_16cd_87.8 */
-				29 01 00 00 00 00 03 B2 08 C3  /* 15 samsung_brightness_aor_17cd_87.1 */
-				29 01 00 00 00 00 03 B2 08 9B  /* 16 samsung_brightness_aor_19cd_85.5 */
-				29 01 00 00 00 00 03 B2 08 87  /* 17 samsung_brightness_aor_20cd_84.7 */
-				29 01 00 00 00 00 03 B2 08 73  /* 18 samsung_brightness_aor_21cd_84.0 */
-				29 01 00 00 00 00 03 B2 08 5F  /* 19 samsung_brightness_aor_22cd_83.2 */
-				29 01 00 00 00 00 03 B2 08 36  /* 20 samsung_brightness_aor_24cd_81.6 */
-				29 01 00 00 00 00 03 B2 08 22  /* 21 samsung_brightness_aor_25cd_80.8 */
+				29 01 00 00 00 00 03 B2 08 FE  /* 10 samsung_brightness_aor_14cd_89.4 */
+				29 01 00 00 00 00 03 B2 08 EA  /* 11 samsung_brightness_aor_15cd_88.6 */
+				29 01 00 00 00 00 03 B2 08 D7  /* 12 samsung_brightness_aor_16cd_87.8 */
+				29 01 00 00 00 00 03 B2 08 C3  /* 13 samsung_brightness_aor_17cd_87.1 */
+				29 01 00 00 00 00 03 B2 08 9B  /* 14 samsung_brightness_aor_19cd_85.5 */
+				29 01 00 00 00 00 03 B2 08 87  /* 15 samsung_brightness_aor_20cd_84.7 */
+				29 01 00 00 00 00 03 B2 08 73  /* 16 samsung_brightness_aor_21cd_84.0 */
+				29 01 00 00 00 00 03 B2 08 5F  /* 17 samsung_brightness_aor_22cd_83.2 */
+				29 01 00 00 00 00 03 B2 08 36  /* 18 samsung_brightness_aor_24cd_81.6 */
+				29 01 00 00 00 00 03 B2 08 22  /* 19 samsung_brightness_aor_25cd_80.8 */
 
-				29 01 00 00 00 00 03 B2 07 F9  /* 22 samsung_brightness_aor_27cd_79.2 */
-				29 01 00 00 00 00 03 B2 07 D1  /* 23 samsung_brightness_aor_29cd_77.7 */
-				29 01 00 00 00 00 03 B2 07 BB  /* 24 samsung_brightness_aor_30cd_76.8 */
-				29 01 00 00 00 00 03 B2 07 90  /* 25 samsung_brightness_aor_32cd_75.2 */
-				29 01 00 00 00 00 03 B2 07 66  /* 26 samsung_brightness_aor_34cd_73.5 */
-				29 01 00 00 00 00 03 B2 07 26  /* 27 samsung_brightness_aor_37cd_71.0 */
+				29 01 00 00 00 00 03 B2 07 F9  /* 20 samsung_brightness_aor_27cd_79.2 */
+				29 01 00 00 00 00 03 B2 07 D1  /* 21 samsung_brightness_aor_29cd_77.7 */
+				29 01 00 00 00 00 03 B2 07 BB  /* 22 samsung_brightness_aor_30cd_76.8 */
+				29 01 00 00 00 00 03 B2 07 90  /* 23 samsung_brightness_aor_32cd_75.2 */
+				29 01 00 00 00 00 03 B2 07 66  /* 24 samsung_brightness_aor_34cd_73.5 */
+				29 01 00 00 00 00 03 B2 07 26  /* 25 samsung_brightness_aor_37cd_71.0 */
 
-				29 01 00 00 00 00 03 B2 06 FC  /* 28 samsung_brightness_aor_39cd_69.4 */
-				29 01 00 00 00 00 03 B2 06 D1  /* 29 samsung_brightness_aor_41cd_67.7 */
-				29 01 00 00 00 00 03 B2 06 A4  /* 30 samsung_brightness_aor_44cd_66.0 */
-				29 01 00 00 00 00 03 B2 06 4A  /* 31 samsung_brightness_aor_47cd_62.5 */
-				29 01 00 00 00 00 03 B2 06 07  /* 32 samsung_brightness_aor_50cd_59.9 */
+				29 01 00 00 00 00 03 B2 06 FC  /* 26 samsung_brightness_aor_39cd_69.4 */
+				29 01 00 00 00 00 03 B2 06 D1  /* 27 samsung_brightness_aor_41cd_67.7 */
+				29 01 00 00 00 00 03 B2 06 A4  /* 28 samsung_brightness_aor_44cd_66.0 */
+				29 01 00 00 00 00 03 B2 06 4A  /* 29 samsung_brightness_aor_47cd_62.5 */
+				29 01 00 00 00 00 03 B2 06 07  /* 30 samsung_brightness_aor_50cd_59.9 */
 
-				29 01 00 00 00 00 03 B2 05 C6  /* 33 samsung_brightness_aor_53cd_57.4 */
-				29 01 00 00 00 00 03 B2 05 7F  /* 34 samsung_brightness_aor_56cd_54.6 */
-				29 01 00 00 00 00 03 B2 05 22  /* 35 samsung_brightness_aor_60cd_51.0 */
+				29 01 00 00 00 00 03 B2 05 C6  /* 31 samsung_brightness_aor_53cd_57.4 */
+				29 01 00 00 00 00 03 B2 05 7F  /* 32 samsung_brightness_aor_56cd_54.6 */
+				29 01 00 00 00 00 03 B2 05 22  /* 33 samsung_brightness_aor_60cd_51.0 */
 
-				29 01 00 00 00 00 03 B2 04 C5  /* 36 samsung_brightness_aor_64cd_47.4 */
-				29 01 00 00 00 00 03 B2 04 65  /* 37 samsung_brightness_aor_68cd_43.7 */
+				29 01 00 00 00 00 03 B2 04 C5  /* 34 samsung_brightness_aor_64cd_47.4 */
+				29 01 00 00 00 00 03 B2 04 65  /* 35 samsung_brightness_aor_68cd_43.7 */
 
-				29 01 00 00 00 00 03 B2 03 FE  /* 38 samsung_brightness_aor_72_162cd_39.7 */
+				29 01 00 00 00 00 03 B2 03 FE  /* 36 samsung_brightness_aor_72_162cd_39.7 */
 
-				29 01 00 00 00 00 03 B2 03 FE  /* 39 samsung_brightness_aor_172cd_39.7 */
-				29 01 00 00 00 00 03 B2 03 7B  /* 40 samsung_brightness_aor_183cd_34.6 */
-				29 01 00 00 00 00 03 B2 02 E5  /* 41 samsung_brightness_aor_195cd_28.8 */
-				29 01 00 00 00 00 03 B2 02 46  /* 42 samsung_brightness_aor_207cd_22.6 */
-				29 01 00 00 00 00 03 B2 01 99  /* 43 samsung_brightness_aor_220cd_15.9 */
-				29 01 00 00 00 00 03 B2 00 D5  /* 44 samsung_brightness_aor_234cd_8.3 */
-				29 01 00 00 00 00 03 B2 00 0A  /* 45 samsung_brightness_aor_249_300cd_0.4 */
+				29 01 00 00 00 00 03 B2 03 FE  /* 37 samsung_brightness_aor_172cd_39.7 */
+				29 01 00 00 00 00 03 B2 03 7B  /* 38 samsung_brightness_aor_183cd_34.6 */
+				29 01 00 00 00 00 03 B2 02 E5  /* 39 samsung_brightness_aor_195cd_28.8 */
+				29 01 00 00 00 00 03 B2 02 46  /* 40 samsung_brightness_aor_207cd_22.6 */
+				29 01 00 00 00 00 03 B2 01 99  /* 41 samsung_brightness_aor_220cd_15.9 */
+				29 01 00 00 00 00 03 B2 00 D5  /* 42 samsung_brightness_aor_234cd_8.3 */
+				29 01 00 00 00 00 03 B2 00 0A  /* 43 samsung_brightness_aor_249_300cd_0.4 */
 			];
 
 			/* bl_level, Index in aid command list */
 			samsung,panel-aid-map-table = <
-				2	0		3	1		4	2		5	3		6	4
-				7	5		8	6		9	7		10	8		11	9
-				12	10		13	11		14	12		15	13		16	14
-				17	15		19	16		20	17		21	18		22	19
-				24	20		25	21		27	22		29	23		30	24
-				32	25		34	26		37	27		39	28		41	29
-				44	30		47	31		50	32		53	33		56	34
-				60	35		64	36		68	37		72	38		77	38
-				82	38		87	38		93	38		98	38		105	38
-				111	38		119	38		126	38		134	38		143	38
-				152	38		162	38		172	39		183	40		195	41
-				207	42		220	43		234	44		249	45		265	45
-				282	45		300	45
+				4	0		5	1		6	2		7	3		8	4
+				9	5		10	6		11	7		12	8		13	9
+				14	10		15	11		16	12		17	13		19	14
+				20	15		21	16		22	17		24	18		25	19
+				27	20		29	21		30	22		32	23		34	24
+				37	25		39	26		41	27		44	28		47	29
+				50	30		53	31		56	32		60	33		64	34
+				68	35		72	36		77	36		82	36		87	36
+				93	36		98	36		105	36		111	36		119	36
+				126	36		134	36		143	36		152	36		162	36
+				172	37		183	38		195	39		207	40		220	41
+				234	42		249	43		265	43		282	43		300	43
 			>;
 
 			/*
@@ -790,7 +776,8 @@
 					29 01 00 00 00 00 02 B5 51
 					29 01 00 00 00 00 02 55 01
 					29 01 00 00 00 00 03 F0 A5 A5
-			]; /* ACL on, B5 <- 0x51 */
+			];
+
 
 			samsung,panel-acl-cmds-list = [
 					29 01 00 00 00 00 02 55 00
@@ -804,19 +791,18 @@
 
 			/* bl_level , Index in acl command list */
 			samsung,panel-acl-map-table =  <
-				2	2		3	2		4	2		5	2		6	2
-				7	2		8	2		9	2		10	2		11	2
-				12	2		13	2		14	2		15	2		16	2
-				17	2		19	2		20	2		21	2		22	2
-				24	2		25	2		27	2		29	2		30	2
-				32	2		34	2		37	2		39	2		41	2
-				44	2		47	2		50	2		53	2		56	2
-				60	2		64	2		68	2		72	2		77	2
-				82	2		87	2		93	2		98	2		105	2
-				111	2		119	2		126	2		134	2		143	2
-				152	2		162	2		172	2		183	2		195	2
-				207	2		220	2		234	2		249	2		265	2
-				282	2		300	2
+				4	2		5	2		6	2		7	2		8	2
+				9	2		10	2		11	2		12	2		13	2
+				14	2		15	2		16	2		17	2		19	2
+				20	2		21	2		22	2		24	2		25	2
+				27	2		29	2		30	2		32	2		34	2
+				37	2		39	2		41	2		44	2		47	2
+				50	2		53	2		56	2		60	2		64	2
+				68	2		72	2		77	2		82	2		87	2
+				93	2		98	2		105	2		111	2		119	2
+				126	2		134	2		143	2		152	2		162	2
+				172	2		183	2		195	2		207	2		220	2
+				234	2		249	2		265	2		282	2		300	2
 				>;
 			/*
 			 * ************************************************************************************************************************
@@ -847,19 +833,18 @@
 			/* bl_level, Index in elvss command list */
 			/* bl_level, Index in elvss command list */
 			samsung,panel-smart-acl-elvss-map-table = <
-				2	4		3	4		4	4		5	4		6	4
-				7	4		8	4		9	4		10	4		11	4
-				12	4		13	4		14	4		15	4		16	4
-				17	4		19	4		20	4		21	4		22	4
-				24	4		25	4		27	4		29	4		30	4
-				32	4		34	4		37	4		39	4		41	4
-				44	4		47	4		50	4		53	4		56	4
-				60	4		64	4		68	4		72	4		77	4
-				82	4		87	4		93	4		98	4		105	4
-				111	4		119	4		126	4		134	4		143	4
-				152	4		162	4		172	4		183	4		195	4
-				207	4		220	4		234	4		249	3		265	2
-				282	1		300	0
+				4	4		5	4		6	4		7	4		8	4
+				9	4		10	4		11	4		12	4		13	4
+				14	4		15	4		16	4		17	4		19	4
+				20	4		21	4		22	4		24	4		25	4
+				27	4		29	4		30	4		32	4		34	4
+				37	4		39	4		41	4		44	4		47	4
+				50	4		53	4		56	4		60	4		64	4
+				68	4		72	4		77	4		82	4		87	4
+				93	4		98	4		105	4		111	4		119	4
+				126	4		134	4		143	4		152	4		162	4
+				172	4		183	4		195	4		207	4		220	4
+				234	4		249	3		265	2		282	1		300	0
 					>;
 			/*
 			 * ************************************************************************************************************************
@@ -868,70 +853,67 @@
 			 */
 			samsung,panel-candella-mapping-table = <
 			/*<idx>	  <from>  <till> <candella> */
-				0		0		2		2
-				1		3		3		3
-				2		4		4		4
-				3		5		5		5
-				4		6		6		6
-				5		7		7		7
-				6		8		8		8
-				7		9		9		9
-				8		10		10		10
-				9		11		11		11
-				10		12		12		12
-				11		13		13		13
-				12		14		14		14
-				13		15		15		15
-				14		16		16		16
-				15		17		18		17
-				16		19		19		19
-				17		20		20		20
-				18		21		21		21
-				19		22		23		22
-				20		24		24		24
-				21		25		26		25
-				22		27		28		27
-				23		29		29		29
-				24		30		30		30
-				25		31		31		32
-				26		32		33		34
-				27		34		36		37
-				28		37		37		39
-				29		38		39		41
-				30		40		41		44
-				31		42		44		47
-				32		45		46		50
-				33		47		49		53
-				34		50		51		56
-				35		52		55		60
-				36		56		58		64
-				37		59		61		68
-				38		62		65		72
-				39		66		69		77
-				40		70		73		82
-				41		74		77		87
-				42		78		82		93
-				43		83		86		98
-				44		87		92		105
-				45		93		97		111
-				46		98		104		119
-				47		105		110		126
-				48		111		116		134
-				49		117		124		143
-				50		125		131		152
-				51		132		140		162
-				52		141		148		172
-				53		149		157		183
-				54		158		167		195
-				55		168		177		207
-				56		178		188		220
-				57		189		200		234
-				58		201		212		249
-				59		213		225		265
-				60		226		242		282
-				61		243		255		300
+				0		0		4		4
+				1		5		5		5
+				2		6		6		6
+				3		7		7		7
+				4		8		8		8
+				5		9		9		9
+				6		10		10		10
+				7		11		11		11
+				8		12		12		12
+				9		13		13		13
+				10		14		14		14
+				11		15		15		15
+				12		16		16		16
+				13		17		18		17
+				14		19		19		19
+				15		20		20		20
+				16		21		21		21
+				17		22		23		22
+				18		24		24		24
+				19		25		26		25
+				20		27		28		27
+				21		29		29		29
+				22		30		30		30
+				23		31		31		32
+				24		32		33		34
+				25		34		36		37
+				26		37		37		39
+				27		38		39		41
+				28		40		41		44
+				29		42		44		47
+				30		45		46		50
+				31		47		49		53
+				32		50		51		56
+				33		52		55		60
+				34		56		58		64
+				35		59		61		68
+				36		62		65		72
+				37		66		69		77
+				38		70		73		82
+				39		74		77		87
+				40		78		82		93
+				41		83		86		98
+				42		87		92		105
+				43		93		97		111
+				44		98		104		119
+				45		105		110		126
+				46		111		116		134
+				47		117		124		143
+				48		125		131		152
+				49		132		140		162
+				50		141		148		172
+				51		149		157		183
+				52		158		167		195
+				53		168		177		207
+				54		178		188		220
+				55		189		200		234
+				56		201		212		249
+				57		213		225		265
+				58		226		242		282
+				59		243		255		300
 				>;
 	};
-
 };
 
