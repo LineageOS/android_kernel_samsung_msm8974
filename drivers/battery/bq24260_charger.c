@@ -509,6 +509,17 @@ bool bq24260_hal_chg_set_property(struct i2c_client *client,
 			}
 		}
 
+#if defined(CONFIG_MUIC_SUPPORT_MULTIMEDIA_DOCK)
+		if(charger->is_mdock) {
+			if(charger->is_smartotg)
+				charger->cable_type = POWER_SUPPLY_TYPE_SMART_OTG;
+			else
+				charger->cable_type = POWER_SUPPLY_TYPE_MDOCK_TA;
+
+			pr_debug("%s: cable type %d\n", __func__, charger->cable_type);
+		}
+#endif
+
 		if (charger->charging_current >= 0)
 			bq24260_charger_function_conrol(client);
 
@@ -671,10 +682,24 @@ static int bq24260_chg_set_property(struct power_supply *psy,
 		charger->cable_type = val->intval;
 		if (val->intval == POWER_SUPPLY_TYPE_BATTERY || \
 			val->intval == POWER_SUPPLY_TYPE_OTG || \
-			val->intval == POWER_SUPPLY_TYPE_POWER_SHARING)
+			val->intval == POWER_SUPPLY_TYPE_POWER_SHARING) {
 			charger->is_charging = false;
-		else
+#if defined(CONFIG_MUIC_SUPPORT_MULTIMEDIA_DOCK)
+			charger->is_mdock = false;
+			charger->is_smartotg = false;
+#endif
+		}
+		else {
 			charger->is_charging = true;
+#if defined(CONFIG_MUIC_SUPPORT_MULTIMEDIA_DOCK)
+			if(val->intval == POWER_SUPPLY_TYPE_SMART_NOTG)
+				charger->is_smartotg = false;
+			else if (val->intval == POWER_SUPPLY_TYPE_SMART_OTG)
+				charger->is_smartotg = true;
+			if (val->intval == POWER_SUPPLY_TYPE_MDOCK_TA)
+				charger->is_mdock = true;
+#endif
+		}
 
 		/* current setting */
 		if (!(charger->pdata->cable_source_type &
