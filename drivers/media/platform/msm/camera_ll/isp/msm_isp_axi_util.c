@@ -420,6 +420,10 @@ void msm_isp_sof_notify(struct vfe_device *vfe_dev,
 
 	sof_event.frame_id = vfe_dev->axi_data.src_info[frame_src].frame_id;
 	sof_event.timestamp = ts->event_time;
+#ifdef CONFIG_SEC_LT03_PROJECT
+	vfe_dev->frame_id = vfe_dev->axi_data.src_info[frame_src].frame_id;
+	vfe_dev->eof_event_occur = 0;
+#endif
 	msm_isp_send_event(vfe_dev, ISP_EVENT_SOF, &sof_event);
 }
 

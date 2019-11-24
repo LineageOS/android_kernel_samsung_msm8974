@@ -246,11 +246,21 @@ static int msm_eeprom_match_id(struct msm_eeprom_ctrl_t *e_ctrl)
 	rc = msm_camera_spi_query_id(client, 0, &id[0], 2);
 	if (rc < 0)
 		return rc;
+#ifdef CONFIG_SEC_LT03_PROJECT
+	pr_info("%s: read 0x%x 0x%x, check 0:0x%x 0x%x 1:0x%x 0x%x\n", __func__,
+	id[0], id[1], client->spi_client->mfr_id0, client->spi_client->device_id0,
+	client->spi_client->mfr_id1, client->spi_client->device_id1);
+
+	if ((id[0] != client->spi_client->mfr_id0 || id[1] != client->spi_client->device_id0)
+	&& (id[0] != client->spi_client->mfr_id1 || id[1] != client->spi_client->device_id1))
+		return -ENODEV;
+#else
 	pr_info("%s: read 0x%x 0x%x, check 0x%x 0x%x\n", __func__, id[0],
 	     id[1], client->spi_client->mfr_id, client->spi_client->device_id);
 	if (id[0] != client->spi_client->mfr_id
 		    || id[1] != client->spi_client->device_id)
 		return -ENODEV;
+#endif
 	return 0;
 }
 /**
@@ -851,6 +861,23 @@ static int msm_eeprom_spi_parse_of(struct msm_camera_spi_client *spic)
 		return rc;
 	}
 	spic->erase_size = tmp[0];
+#ifdef CONFIG_SEC_LT03_PROJECT
+	rc = of_property_read_u32_array(of, "qcom,eeprom-id0", tmp, 2);
+	if (rc < 0) {
+		pr_err("%s: Failed to get eeprom id 0\n", __func__);
+		return rc;
+	}
+	spic->mfr_id0 = tmp[0];
+	spic->device_id0 = tmp[1];
+
+	rc = of_property_read_u32_array(of, "qcom,eeprom-id1", tmp, 2);
+	if (rc < 0) {
+		pr_err("%s: Failed to get eeprom id 1\n", __func__);
+		return rc;
+	}
+	spic->mfr_id1 = tmp[0];
+	spic->device_id1 = tmp[1];
+#else
 	rc = of_property_read_u32_array(of, "qcom,eeprom-id", tmp, 2);
 	if (rc < 0) {
 		pr_err("%s: Failed to get eeprom id\n", __func__);
@@ -858,6 +885,7 @@ static int msm_eeprom_spi_parse_of(struct msm_camera_spi_client *spic)
 	}
 	spic->mfr_id = tmp[0];
 	spic->device_id = tmp[1];
+#endif
 
 	return 0;
 }
