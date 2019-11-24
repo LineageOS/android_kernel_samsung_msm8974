@@ -272,7 +272,7 @@ enum msm_vfe_reg_cfg_type {
 struct msm_vfe_cfg_cmd2 {
 	uint16_t num_cfg;
 	uint16_t cmd_len;
-#ifdef CONFIG_MSMB_CAMERA_MM
+#if defined(CONFIG_MSMB_CAMERA_MM) || defined(CONFIG_SEC_LT03_PROJECT)
 	uint32_t frame_id;
 #endif
 	void __user *cfg_data;
