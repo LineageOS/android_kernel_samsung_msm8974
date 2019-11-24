@@ -191,7 +191,7 @@ static void cm3323_work_func_light(struct work_struct *work)
 			struct cm3323_p, work);
 	unsigned long delay = nsecs_to_jiffies(atomic_read(&data->delay));
 
-	ts = ktime_to_timespec(ktime_get_boottime());
+	get_monotonic_boottime(&ts);
 	data->timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 	time_lo = (int)(data->timestamp & TIME_LO_MASK);
 	time_hi = (int)((data->timestamp & TIME_HI_MASK) >> TIME_HI_SHIFT);
