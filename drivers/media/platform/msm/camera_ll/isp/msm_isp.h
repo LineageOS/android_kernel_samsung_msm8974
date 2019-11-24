@@ -421,6 +421,10 @@ struct vfe_device {
 	struct msm_isp_buf_mgr *buf_mgr;
 	int dump_reg;
 	uint32_t vfe_open_cnt;
+#ifdef CONFIG_MACH_LT03_LTE
+	uint32_t frame_id;
+	uint32_t eof_event_occur;
+#endif
 };
 
 #endif
