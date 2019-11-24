@@ -283,8 +283,12 @@ static void msm_vfe40_process_reset_irq(struct vfe_device *vfe_dev,
 static void msm_vfe40_process_halt_irq(struct vfe_device *vfe_dev,
 	uint32_t irq_status0, uint32_t irq_status1)
 {
-	if (irq_status1 & (1 << 8))
+	if (irq_status1 & (1 << 8)) {
 		complete(&vfe_dev->halt_complete);
+#ifdef CONFIG_SEC_LT03_PROJECT
+		msm_camera_io_w(0x0, vfe_dev->vfe_base + 0x2C0);
+#endif
+	}
 }
 
 static void msm_vfe40_process_camif_irq(struct vfe_device *vfe_dev,
@@ -305,8 +309,12 @@ static void msm_vfe40_process_camif_irq(struct vfe_device *vfe_dev,
 			msm_isp_update_framedrop_reg(vfe_dev);
 		}
 	}
-	if (irq_status0 & (1 << 1))
+	if (irq_status0 & (1 << 1)) {
+#ifdef CONFIG_SEC_LT03_PROJECT
+		vfe_dev->eof_event_occur = 1;
+#endif
 		ISP_DBG("%s: EOF IRQ\n", __func__);
+	}
 	if (irq_status0 & (1 << 2))
 		ISP_DBG("%s: EPOCH0 IRQ\n", __func__);
 	if (irq_status0 & (1 << 3))
