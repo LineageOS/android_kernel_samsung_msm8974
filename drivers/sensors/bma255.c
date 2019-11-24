@@ -445,7 +445,7 @@ static void bma255_work_func(struct work_struct *work)
 	struct timespec ts;
 	int time_hi, time_lo;
 
-	ts = ktime_to_timespec(ktime_get_boottime());
+	get_monotonic_boottime(&ts);
 	data->timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 	time_lo = (int)(data->timestamp & TIME_LO_MASK);
 	time_hi = (int)((data->timestamp & TIME_HI_MASK) >> TIME_HI_SHIFT);
