@@ -316,7 +316,7 @@ static void wacom_i2c_set_input_values(struct i2c_client *client,
 	/*softkey*/
 #ifdef WACOM_USE_SOFTKEY
 
-#if defined(CONFIG_SEC_VIENNA_PROJECT)
+#if defined(CONFIG_SEC_VIENNA_PROJECT) || defined(CONFIG_SEC_LT03_PROJECT)
 	__set_bit(KEY_RECENT, input_dev->keybit);
 #else
 	__set_bit(KEY_MENU, input_dev->keybit);

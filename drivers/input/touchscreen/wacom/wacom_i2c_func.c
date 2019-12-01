@@ -847,7 +847,7 @@ static bool wacom_i2c_coord_range(struct wacom_i2c *wac_i2c, s16 *x, s16 *y)
 }
 
 #ifdef WACOM_USE_SOFTKEY
-#if defined(CONFIG_SEC_VIENNA_PROJECT)
+#if defined(CONFIG_SEC_VIENNA_PROJECT) || defined(CONFIG_SEC_LT03_PROJECT)
 static int keycode[] = {
 	KEY_RECENT, KEY_BACK,
 };
