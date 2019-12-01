@@ -81,6 +81,30 @@
       "revId": "a300adba4d1b0e43f536f8ae6195b59a3d9cfb9a",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73ea2eab_3c8c7bd2",
+        "filename": "arch/arm/boot/dts/msm8974/msm8974-mdss-sec.dtsi",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 16185
+      },
+      "writtenOn": "2019-12-01T18:27:00Z",
+      "side": 1,
+      "message": "Sorry, mobile UI made me believe it was introduced in this change.",
+      "parentUuid": "5166afed_da826e7d",
+      "range": {
+        "startLine": 197,
+        "startChar": 53,
+        "endLine": 197,
+        "endChar": 55
+      },
+      "revId": "a300adba4d1b0e43f536f8ae6195b59a3d9cfb9a",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
     }
   ]
 }
