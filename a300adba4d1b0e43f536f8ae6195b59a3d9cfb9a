@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "20031d26_1074a2e9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 16185
+      },
+      "writtenOn": "2019-12-01T01:30:21Z",
+      "side": 1,
+      "message": "this links back here... got a link to this commit?",
+      "revId": "a300adba4d1b0e43f536f8ae6195b59a3d9cfb9a",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5398570c_bdd09be4",
         "filename": "arch/arm/boot/dts/msm8974/msm8974-mdss-sec.dtsi",
         "patchSetId": 2
