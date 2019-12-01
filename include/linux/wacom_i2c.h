@@ -311,6 +311,10 @@ struct wacom_i2c {
 	int gesture_start_x;
 	int gesture_start_y;
 	ktime_t gesture_start_time;
+
+#ifdef WACOM_USE_SOFTKEY
+	atomic_t keypad_enable;
+#endif
 };
 
 struct wacom_g5_platform_data {

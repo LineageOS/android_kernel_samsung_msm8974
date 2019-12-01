@@ -322,6 +322,8 @@ static void wacom_i2c_set_input_values(struct i2c_client *client,
 	__set_bit(KEY_MENU, input_dev->keybit);
 #endif
 	__set_bit(KEY_BACK, input_dev->keybit);
+
+	atomic_set(&wac_i2c->keypad_enable, 1);
 #endif
 }
 
@@ -600,6 +602,49 @@ static ssize_t epen_gestures_store(struct device *dev,
 
 	return count;
 }
+
+#ifdef WACOM_USE_SOFTKEY
+static ssize_t keypad_enable_show(struct device *dev,
+				  struct device_attribute *attr, char *buf)
+{
+	struct wacom_i2c *wac_i2c = dev_get_drvdata(dev);
+
+	return sprintf(buf, "%d\n", atomic_read(&wac_i2c->keypad_enable));
+}
+
+static ssize_t keypad_enable_store(struct device *dev,
+				   struct device_attribute *attr, const char *buf,
+				   size_t count)
+{
+	struct wacom_i2c *wac_i2c = dev_get_drvdata(dev);
+	int i;
+
+	unsigned int val = 0
+	sscanf(buf, "%d", &val);
+	atomic_set(&wac_i2c->keypad_enable, !!val);
+
+	if (val) {
+#if defined(CONFIG_SEC_VIENNA_PROJECT) || defined(CONFIG_SEC_LT03_PROJECT)
+		__set_bit(KEY_RECENT, wac_i2c->input_dev->keybit);
+#else
+		__set_bit(KEY_MENU, wac_i2c->input_dev->keybit);
+#endif
+		__set_bit(KEY_BACK, wac_i2c->input_dev->keybit);
+#endif
+	} else {
+#if defined(CONFIG_SEC_VIENNA_PROJECT) || defined(CONFIG_SEC_LT03_PROJECT)
+		__clear_bit(KEY_RECENT, wac_i2c->input_dev->keybit);
+#else
+		__clear_bit(KEY_MENU, wac_i2c->input_dev->keybit);
+#endif
+		__clear_bit(KEY_BACK, wac_i2c->input_dev->keybit);
+#endif
+	}
+	input_sync(wac_i2c->input_dev->keybit);
+
+	return count;
+}
+#endif
 
 static bool check_update_condition(struct wacom_i2c *wac_i2c, const char buf)
 {
@@ -1109,6 +1154,11 @@ static DEVICE_ATTR(boost_level,
 static DEVICE_ATTR(epen_gestures, S_IWUSR | S_IWGRP | S_IRUGO,
 		   epen_gestures_show, epen_gestures_store);
 
+#ifdef WACOM_USE_SOFTKEY
+static DEVICE_ATTR(keypad_enable, S_IWUSR | S_IWGRP | S_IRUGO,
+		   keypad_enable_show, keypad_enable_store);
+#endif
+
 static struct attribute *epen_attributes[] = {
 #ifdef USE_WACOM_BLOCK_KEYEVENT
 	&dev_attr_epen_delay_time.attr,
@@ -1142,6 +1192,9 @@ static struct attribute *epen_attributes[] = {
 	&dev_attr_boost_level.attr,
 #endif
 	&dev_attr_epen_gestures.attr,
+#ifdef WACOM_USE_SOFTKEY
+	&dev_attr_keypad_enable.attr,
+#endif
 	NULL,
 };
 
