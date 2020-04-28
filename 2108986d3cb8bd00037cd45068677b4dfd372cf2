@@ -22,6 +22,30 @@
       "revId": "2108986d3cb8bd00037cd45068677b4dfd372cf2",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90d5ec9c_ca9474d9",
+        "filename": "drivers/media/platform/msm/camera_ll/sensor/io/msm_camera_io_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 15173
+      },
+      "writtenOn": "2020-04-28T21:12:17Z",
+      "side": 1,
+      "message": "It was",
+      "parentUuid": "f8543c8d_53ec446c",
+      "range": {
+        "startLine": 202,
+        "startChar": 3,
+        "endLine": 202,
+        "endChar": 129
+      },
+      "revId": "2108986d3cb8bd00037cd45068677b4dfd372cf2",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
     }
   ]
 }
