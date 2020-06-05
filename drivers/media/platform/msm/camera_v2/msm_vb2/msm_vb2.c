@@ -257,7 +257,7 @@ static int msm_vb2_buf_done(struct vb2_buffer *vb, int session_id,
 
 	stream = msm_get_stream(session_id, stream_id);
 	if (IS_ERR_OR_NULL(stream))
-		return 0;
+		return -EINVAL;
 	spin_lock_irqsave(&stream->stream_lock, flags);
 	if (vb) {
 		msm_vb2 =
