@@ -23,6 +23,10 @@
  *
  */
 
+#ifndef TIOCPMPUT
+#define TIOCPMPUT	1
+#endif
+
 #ifndef N_HCI
 #define N_HCI	15
 #endif
