@@ -100,6 +100,7 @@ struct msm_session {
 	 * session struct msm_stream */
 	struct msm_queue_head stream_q;
 	struct mutex lock;
+	rwlock_t stream_rwlock;
 };
 
 int msm_cam_get_module_init_status(void);
@@ -113,10 +114,12 @@ int msm_create_stream(unsigned int session_id,
 void msm_delete_stream(unsigned int session_id, unsigned int stream_id);
 int  msm_create_command_ack_q(unsigned int session_id, unsigned int stream_id);
 void msm_delete_command_ack_q(unsigned int session_id, unsigned int stream_id);
-struct msm_stream *msm_get_stream(unsigned int session_id,
+struct msm_session *msm_get_session(unsigned int session_id);
+struct msm_stream *msm_get_stream(struct msm_session *session,
 	unsigned int stream_id);
 struct vb2_queue *msm_get_stream_vb2q(unsigned int session_id,
 	unsigned int stream_id);
 struct msm_stream *msm_get_stream_from_vb2q(struct vb2_queue *q);
+struct msm_session *msm_get_session_from_vb2q(struct vb2_queue *q);
 struct msm_session *msm_session_find(unsigned int session_id);
 #endif /*_MSM_H */
