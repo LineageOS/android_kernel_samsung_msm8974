@@ -695,7 +695,7 @@ int msm_isp_proc_cmd(struct vfe_device *vfe_dev, void *arg)
 #ifdef CONFIG_SEC_LT03_PROJECT
 	} else {
 		rc = MSM_VFE_REG_CFG_FRAME_ID_NOT_MATCH_ERROR;
-		pr_err("%s: skip hw update, platform_id=%u, kernel_id=%u, eof_event_occur=%u\n",
+		pr_err_ratelimited("%s: skip hw update, platform_id=%u, kernel_id=%u, eof_event_occur=%u\n",
 			__func__,proc_cmd->frame_id, vfe_dev->frame_id, vfe_dev->eof_event_occur);
 	}
 #endif
