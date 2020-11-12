@@ -236,7 +236,11 @@ static void pen_insert_work(struct work_struct *work)
 	if (wac_i2c->pen_insert) {
 		if (wac_i2c->battery_saving_mode)
 			wacom_i2c_disable(wac_i2c);
+#ifdef CONFIG_FB
+	} else if (!wac_i2c->fb_disabled) {
+#else
 	} else {
+#endif
 		wacom_i2c_enable(wac_i2c);
 	}
 #endif
@@ -1762,6 +1766,17 @@ static int wacom_i2c_probe(struct i2c_client *client,
 	schedule_delayed_work(&wac_i2c->work_wacom_reset, msecs_to_jiffies(5000));
 #endif
 
+<<<<<<< HEAD   (ecfdc5 scripts/dtc: Remove redundant YYLOC global declaration)
+=======
+#ifdef CONFIG_FB
+	wac_i2c->fb_disabled = false;
+
+	wac_i2c->fb_notif.notifier_call = fb_notifier_callback;
+	if (fb_register_client(&wac_i2c->fb_notif))
+		pr_err("%s: could not create fb notifier\n", __func__);
+#endif
+
+>>>>>>> CHANGE (36dddd input: touchscreen: wacom: Add some state-machine for FB not)
 	return 0;
 
 err_request_irq_pen_inster:
@@ -1804,6 +1819,40 @@ err_wacom_i2c_bootloader_ver:
 	return ret;
 }
 
+<<<<<<< HEAD   (ecfdc5 scripts/dtc: Remove redundant YYLOC global declaration)
+=======
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	struct wacom_i2c *wac_i2c = container_of(self, struct wacom_i2c, fb_notif);
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		int *blank = evdata->data;
+		switch (*blank) {
+		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+		case FB_BLANK_VSYNC_SUSPEND:
+		case FB_BLANK_HSYNC_SUSPEND:
+			wac_i2c->fb_disabled = false;
+			wacom_i2c_enable(wac_i2c);
+			break;
+		case FB_BLANK_POWERDOWN:
+			wac_i2c->fb_disabled = true;
+			wacom_i2c_disable(wac_i2c);
+			break;
+		default:
+			/* Don't handle what we don't understand */
+			break;
+		}
+	}
+
+	return 0;
+}
+#endif
+
+>>>>>>> CHANGE (36dddd input: touchscreen: wacom: Add some state-machine for FB not)
 static const struct i2c_device_id wacom_i2c_id[] = {
 	{"wacom_g5sp_i2c", 0},
 	{},

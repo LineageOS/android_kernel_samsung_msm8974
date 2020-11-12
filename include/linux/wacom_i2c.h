@@ -311,6 +311,14 @@ struct wacom_i2c {
 	int gesture_start_x;
 	int gesture_start_y;
 	ktime_t gesture_start_time;
+<<<<<<< HEAD   (ecfdc5 scripts/dtc: Remove redundant YYLOC global declaration)
+=======
+
+#ifdef CONFIG_FB
+	struct notifier_block fb_notif;
+	bool fb_disabled;
+#endif
+>>>>>>> CHANGE (36dddd input: touchscreen: wacom: Add some state-machine for FB not)
 };
 
 struct wacom_g5_platform_data {
