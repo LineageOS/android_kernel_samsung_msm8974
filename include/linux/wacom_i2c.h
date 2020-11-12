@@ -318,6 +318,7 @@ struct wacom_i2c {
 
 #ifdef CONFIG_FB
 	struct notifier_block fb_notif;
+	bool fb_disabled;
 #endif
 };
 

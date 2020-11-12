@@ -240,7 +240,11 @@ static void pen_insert_work(struct work_struct *work)
 	if (wac_i2c->pen_insert) {
 		if (wac_i2c->battery_saving_mode)
 			wacom_i2c_disable(wac_i2c);
+#ifdef CONFIG_FB
+	} else if (!wac_i2c->fb_disabled) {
+#else
 	} else {
+#endif
 		wacom_i2c_enable(wac_i2c);
 	}
 #endif
@@ -1776,6 +1780,8 @@ static int wacom_i2c_probe(struct i2c_client *client,
 #endif
 
 #ifdef CONFIG_FB
+	wac_i2c->fb_disabled = false;
+
 	wac_i2c->fb_notif.notifier_call = fb_notifier_callback;
 	if (fb_register_client(&wac_i2c->fb_notif))
 		pr_err("%s: could not create fb notifier\n", __func__);
@@ -1837,9 +1843,11 @@ static int fb_notifier_callback(struct notifier_block *self,
 		case FB_BLANK_NORMAL:
 		case FB_BLANK_VSYNC_SUSPEND:
 		case FB_BLANK_HSYNC_SUSPEND:
+			wac_i2c->fb_disabled = false;
 			wacom_i2c_enable(wac_i2c);
 			break;
 		case FB_BLANK_POWERDOWN:
+			wac_i2c->fb_disabled = true;
 			wacom_i2c_disable(wac_i2c);
 			break;
 		default:
