@@ -408,7 +408,7 @@ static void msm_restart_prepare(const char *cmd)
 			}
 			else
 #endif
-				__raw_writel(0x77665501, restart_reason);
+				__raw_writel(0x12345678, restart_reason);
 		}
 
 		printk(KERN_NOTICE "%s : restart_reason = 0x%x\n",
