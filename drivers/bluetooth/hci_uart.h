@@ -23,6 +23,18 @@
  *
  */
 
+#ifndef TIOCPMPUT
+#define TIOCPMPUT	1
+#endif
+
+#ifndef TIOCPMGET
+#define TIOCPMGET	1
+#endif
+
+#ifndef TIOCPMACT
+#define TIOCPMACT	1
+#endif
+
 #ifndef N_HCI
 #define N_HCI	15
 #endif
