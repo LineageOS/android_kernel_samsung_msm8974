@@ -1456,7 +1456,8 @@ unknown:
 		 */
 		switch (ctrl->bRequestType & USB_RECIP_MASK) {
 		case USB_RECIP_INTERFACE:
-			if (!cdev->config || intf >= MAX_CONFIG_INTERFACES)
+			if (!cdev->config || intf >= MAX_CONFIG_INTERFACES ||
+			    !cdev->config->interface[intf])
 				break;
 			f = cdev->config->interface[intf];
 			break;
