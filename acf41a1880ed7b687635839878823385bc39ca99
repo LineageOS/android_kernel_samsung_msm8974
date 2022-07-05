@@ -16,6 +16,23 @@
       "message": "Thoughts?",
       "revId": "acf41a1880ed7b687635839878823385bc39ca99",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f3787c34_41e376ba",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 15173
+      },
+      "writtenOn": "2022-07-05T12:34:09Z",
+      "side": 1,
+      "message": "The commit being reverted is for CVE-2017-5972. If more needs backported then more needs backported ",
+      "revId": "acf41a1880ed7b687635839878823385bc39ca99",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
