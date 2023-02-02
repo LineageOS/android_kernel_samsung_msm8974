@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ca88d11b_4ace34ee",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 24481
+      },
+      "writtenOn": "2023-02-02T19:59:30Z",
+      "side": 1,
+      "message": "Hello Haggerty, \n\nA friend using kltekdi reported that the main charging port does not actually charge, i compiled it with extcon enabled on most recent lineage-18.1 sources and the issue is gone, the main port charges offline and online, Supports Data, and headphone Jack detection works as expected. if possible please implement extcon back into the kdi config.\n\nif you require further tests let us know, if review is required i can ask him to create a gerrit account to review. \n\nConfigs enabled :\n\nCONFIG_EXTCON\u003dy\nCONFIG_EXTCON_MAX77804K\u003dy",
+      "revId": "ab1afb30f713ad8fb3499f9d506a6af960f5bb05",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
