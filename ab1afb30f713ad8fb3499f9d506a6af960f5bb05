@@ -34,6 +34,24 @@
       "parentUuid": "ca88d11b_4ace34ee",
       "revId": "ab1afb30f713ad8fb3499f9d506a6af960f5bb05",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ddc2c18b_b96cb1dc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 24481
+      },
+      "writtenOn": "2023-02-03T17:50:48Z",
+      "side": 1,
+      "message": "\u003e https://review.lineageos.org/c/LineageOS/android_kernel_samsung_msm8974/+/348314\n\nThank you for the prompt reply. im sure the KDI community will appreciate this.",
+      "parentUuid": "41b7e5d9_c3a10576",
+      "revId": "ab1afb30f713ad8fb3499f9d506a6af960f5bb05",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
