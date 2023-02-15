@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cbb61fc8_27fac7ef",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 20508
+      },
+      "writtenOn": "2023-02-15T14:11:56Z",
+      "side": 1,
+      "message": "https://github.com/LineageOS/android_kernel_fairphone_sdm632/commit/033c1202d3c398e08cf423262688d9224b802024",
+      "revId": "e206f4ad7670966e24d00210870de012f0c7970e",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
