@@ -34,6 +34,24 @@
       "parentUuid": "cbb61fc8_27fac7ef",
       "revId": "e206f4ad7670966e24d00210870de012f0c7970e",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a8836780_97653928",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 20508
+      },
+      "writtenOn": "2023-02-16T00:42:25Z",
+      "side": 1,
+      "message": "i use O_TMPFILE backport + Remove AUDITSYSCALL device boot in my case device samsung msm8974 ks01lte",
+      "parentUuid": "b4779c4e_e58ea32c",
+      "revId": "e206f4ad7670966e24d00210870de012f0c7970e",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
